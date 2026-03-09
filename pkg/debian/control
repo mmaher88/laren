@@ -8,7 +8,7 @@ Build-Depends: debhelper-compat (= 13),
                fcitx5-modules-dev,
                libfcitx5core-dev
 Standards-Version: 4.6.2
-Homepage: https://github.com/TODO/laren
+Homepage: https://github.com/mmaher88/laren
 
 Package: fcitx5-laren
 Architecture: any
