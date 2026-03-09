@@ -14,7 +14,17 @@ salam   →  سلام
 
 [**Try the interactive demo**](https://mmaher88.github.io/laren/) · [**Wiki**](https://github.com/mmaher88/laren/wiki)
 
-## Installation
+## Quick install
+
+```bash
+git clone https://github.com/mmaher88/laren.git && cd laren
+./scripts/install.sh
+```
+
+This installs dependencies, builds, installs, configures Fcitx5, and enables Laren automatically.
+After install, switch to Laren with `Ctrl+Space`.
+
+## Package manager install
 
 ### Arch Linux (AUR)
 
@@ -32,7 +42,6 @@ sudo dnf install fcitx5-laren
 ### Ubuntu / Debian
 
 ```bash
-# Add the repository key and source
 DISTRO="xUbuntu_$(lsb_release -rs)"  # or Debian_12
 curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" | sudo gpg --dearmor -o /etc/apt/keyrings/laren.gpg
 echo "deb [signed-by=/etc/apt/keyrings/laren.gpg] https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/ /" | sudo tee /etc/apt/sources.list.d/laren.list
@@ -46,40 +55,14 @@ sudo zypper ar https://download.opensuse.org/repositories/home:/mmaher88:/laren/
 sudo zypper refresh && sudo zypper install fcitx5-laren
 ```
 
-### From source
+## Usage
 
-**Ubuntu / Debian:**
-```bash
-sudo apt install cmake g++ fcitx5-modules-dev libfcitx5core-dev
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
-sudo cmake --install build
-```
+After installing, switch input method with **Ctrl+Space** and start typing in Arabizi.
+Press `Space` or `Enter` to commit the top candidate, or a number key to pick one.
 
-**Fedora:**
-```bash
-sudo dnf install cmake gcc-c++ fcitx5-devel
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
-sudo cmake --install build
-```
+To configure: run `fcitx5-configtool`.
 
-**Arch:**
-```bash
-sudo pacman -S cmake fcitx5
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
-sudo cmake --install build
-```
-
-## Setup
-
-After installing, enable the input method:
-
-1. Open **Fcitx5 Configuration** (or run `fcitx5-configtool`)
-2. Add **Laren** to your input method list
-3. Use your Fcitx5 trigger key (default `Ctrl+Space`) to switch to Laren
-4. Start typing in Arabizi — candidates appear as you type
-5. Press `Space` or `Enter` to commit the top candidate, or a number key to pick one
-
-## Arabizi Mappings
+## Arabizi mappings
 
 | Input | Arabic | Input | Arabic |
 |-------|--------|-------|--------|
@@ -108,7 +91,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 ## Building and testing
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build build -j$(nproc)
 cd build && ctest --output-on-failure
 ```
