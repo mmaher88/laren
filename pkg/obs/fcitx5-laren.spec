@@ -28,8 +28,6 @@ similar to Microsoft Maren.
 %cmake_install
 
 %files
-%license LICENSE
-%doc README.md
 %{_libdir}/fcitx5/laren.so
 %{_datadir}/fcitx5/addon/laren.conf
 %{_datadir}/fcitx5/inputmethod/laren.conf
