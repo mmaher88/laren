@@ -32,3 +32,4 @@ similar to Microsoft Maren.
 %{_datadir}/fcitx5/addon/laren.conf
 %{_datadir}/fcitx5/inputmethod/laren.conf
 %{_datadir}/laren/dictionary.tsv
+%{_datadir}/fcitx5/default/profile
