@@ -40,6 +40,24 @@ private:
     bool is_history_;
 };
 
+// Candidate that commits an emoji
+class EmojiCandidateWord : public fcitx::CandidateWord {
+public:
+    EmojiCandidateWord(LarenState* state, const std::string& emoji,
+                       const std::string& shortcode, size_t index)
+        : state_(state), index_(index) {
+        setText(fcitx::Text(emoji + "  :" + shortcode + ":"));
+    }
+
+    void select(fcitx::InputContext* /*ic*/) const override {
+        state_->commitEmoji(index_);
+    }
+
+private:
+    LarenState* state_;
+    size_t index_;
+};
+
 // Non-selectable separator
 class LarenSeparator : public fcitx::CandidateWord {
 public:
@@ -77,6 +95,146 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
         return false;
     }
 
+    // Colon toggles emoji mode
+    if (key.isSimple() && key.sym() == FcitxKey_colon) {
+        if (emoji_mode_) {
+            // Second colon: if we have an exact match, commit it
+            if (!emoji_candidates_.empty()) {
+                commitEmoji(0);
+                return true;
+            }
+            // No match — exit emoji mode, commit the raw text with colons
+            std::string raw = ":" + buffer_;
+            reset();
+            ic_->commitString(raw + ":");
+            return true;
+        }
+        // Enter emoji mode (only if buffer is empty — no mixing with Arabizi)
+        if (buffer_.empty()) {
+            emoji_mode_ = true;
+            buffer_.clear();
+            emoji_candidates_.clear();
+            cursor_ = 0;
+            updateEmojiUI();
+            return true;
+        }
+        return false;
+    }
+
+    // === Emoji mode input handling ===
+    if (emoji_mode_) {
+        if (key.isSimple()) {
+            auto ch = key.sym();
+            // Accept letters, digits, underscore, hyphen, plus for shortcodes
+            bool valid = (ch >= FcitxKey_a && ch <= FcitxKey_z) ||
+                         (ch >= FcitxKey_A && ch <= FcitxKey_Z) ||
+                         (ch >= FcitxKey_0 && ch <= FcitxKey_9) ||
+                         ch == FcitxKey_underscore || ch == FcitxKey_minus ||
+                         ch == FcitxKey_plus;
+            if (valid) {
+                buffer_ += static_cast<char>(tolower(static_cast<int>(ch)));
+                cursor_ = 0;
+                emoji_candidates_ = engine_->emojiMap().find_by_prefix(buffer_, 50);
+                updateEmojiUI();
+                return true;
+            }
+        }
+
+        // Space or Enter: commit selected emoji
+        if (key.sym() == FcitxKey_space || key.sym() == FcitxKey_Return) {
+            if (!emoji_candidates_.empty()) {
+                size_t idx = static_cast<size_t>(cursor_);
+                if (idx < emoji_candidates_.size()) {
+                    commitEmoji(idx);
+                } else {
+                    commitEmoji(0);
+                }
+            } else {
+                // No matches — commit raw text
+                std::string raw = ":" + buffer_;
+                reset();
+                ic_->commitString(raw + " ");
+            }
+            return true;
+        }
+
+        // Number keys 1-9: select specific emoji
+        if (key.sym() >= FcitxKey_1 && key.sym() <= FcitxKey_9) {
+            size_t idx = key.sym() - FcitxKey_1;
+            if (idx < emoji_candidates_.size()) {
+                commitEmoji(idx);
+            }
+            return true;
+        }
+
+        // Arrow navigation
+        if (key.sym() == FcitxKey_Down && !emoji_candidates_.empty()) {
+            cursor_ = (cursor_ + 1) % static_cast<int>(emoji_candidates_.size());
+            updateEmojiUI();
+            syncPageToCursor();
+            return true;
+        }
+        if (key.sym() == FcitxKey_Up && !emoji_candidates_.empty()) {
+            int n = static_cast<int>(emoji_candidates_.size());
+            cursor_ = (cursor_ - 1 + n) % n;
+            updateEmojiUI();
+            syncPageToCursor();
+            return true;
+        }
+
+        // Page navigation
+        if (key.sym() == FcitxKey_Page_Down || key.sym() == FcitxKey_Next) {
+            auto cl = ic_->inputPanel().candidateList();
+            if (cl) {
+                auto* pageable = cl->toPageable();
+                if (pageable && pageable->hasNext()) {
+                    pageable->next();
+                    ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
+                }
+            }
+            return true;
+        }
+        if (key.sym() == FcitxKey_Page_Up || key.sym() == FcitxKey_Prior) {
+            auto cl = ic_->inputPanel().candidateList();
+            if (cl) {
+                auto* pageable = cl->toPageable();
+                if (pageable && pageable->hasPrev()) {
+                    pageable->prev();
+                    ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
+                }
+            }
+            return true;
+        }
+
+        // Left/Right: consume
+        if (key.sym() == FcitxKey_Left || key.sym() == FcitxKey_Right) {
+            return true;
+        }
+
+        // Backspace
+        if (key.sym() == FcitxKey_BackSpace) {
+            if (buffer_.empty()) {
+                reset(); // exit emoji mode
+            } else {
+                buffer_.pop_back();
+                cursor_ = 0;
+                emoji_candidates_ = engine_->emojiMap().find_by_prefix(buffer_, 50);
+                updateEmojiUI();
+            }
+            return true;
+        }
+
+        // Escape: cancel emoji mode
+        if (key.sym() == FcitxKey_Escape) {
+            reset();
+            return true;
+        }
+
+        return true; // consume all other keys in emoji mode
+    }
+
+    // === Normal Arabizi mode ===
+
     // Handle letter, digit, and apostrophe input
     if (key.isSimple()) {
         auto ch = key.sym();
@@ -104,6 +262,15 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
             updateUI();
             return true;
         }
+    }
+
+    // Arabic punctuation pass-through (works with empty or non-empty buffer)
+    if (key.sym() == FcitxKey_question) {
+        if (!buffer_.empty()) {
+            commitSelected(); // commit current candidate first
+        }
+        ic_->commitString("؟");
+        return true;
     }
 
     // Only process special keys if we have content in the buffer
@@ -179,7 +346,6 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
         commitByDisplayIndex(idx);
         return true;
     }
-
 
     // Backspace: remove last character
     if (key.sym() == FcitxKey_BackSpace) {
@@ -391,6 +557,59 @@ void LarenState::commitRaw() {
     commitText(buffer_);
 }
 
+void LarenState::commitEmoji(size_t index) {
+    if (index < emoji_candidates_.size()) {
+        auto& emoji = emoji_candidates_[index]->emoji;
+        debugLog("commitEmoji: " + emoji);
+        emoji_mode_ = false;
+        emoji_candidates_.clear();
+        buffer_.clear();
+        cursor_ = 0;
+        auto& panel = ic_->inputPanel();
+        panel.reset();
+        ic_->commitString(emoji);
+        ic_->updatePreedit();
+        ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
+    }
+}
+
+void LarenState::updateEmojiUI() {
+    auto& panel = ic_->inputPanel();
+    panel.reset();
+
+    // Show ":shortcode" as preedit
+    std::string preedit_str = ":" + buffer_;
+    fcitx::Text preedit;
+    preedit.append(preedit_str, fcitx::TextFormatFlag::Underline);
+    if (ic_->capabilityFlags().test(fcitx::CapabilityFlag::Preedit)) {
+        panel.setClientPreedit(preedit);
+    } else {
+        panel.setPreedit(preedit);
+    }
+
+    panel.setAuxUp(fcitx::Text(preedit_str));
+
+    if (!emoji_candidates_.empty()) {
+        auto candidateList = std::make_unique<LarenCandidateList>();
+        candidateList->setPageSize(9);
+        candidateList->setLayoutHint(fcitx::CandidateLayoutHint::Vertical);
+
+        for (size_t i = 0; i < emoji_candidates_.size(); ++i) {
+            candidateList->append<EmojiCandidateWord>(
+                this, emoji_candidates_[i]->emoji,
+                emoji_candidates_[i]->shortcode, i);
+        }
+
+        candidateList->setSelectionKey(fcitx::Key::keyListFromString(
+            "1 2 3 4 5 6 7 8 9"));
+        candidateList->setGlobalCursorIndex(cursor_);
+        panel.setCandidateList(std::move(candidateList));
+    }
+
+    ic_->updatePreedit();
+    ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
+}
+
 void LarenState::commitText(const std::string& text) {
     ic_->commitString(text + " ");
     buffer_.clear();
@@ -409,6 +628,8 @@ void LarenState::reset() {
     cached_candidates_.clear();
     history_candidate_.reset();
     has_history_ = false;
+    emoji_mode_ = false;
+    emoji_candidates_.clear();
     cursor_ = 0;
     auto& panel = ic_->inputPanel();
     panel.reset();

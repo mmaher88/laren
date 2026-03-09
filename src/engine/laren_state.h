@@ -4,6 +4,7 @@
 #include <fcitx/inputcontextproperty.h>
 #include <fcitx/candidatelist.h>
 #include "core/candidate.h"
+#include "core/emoji_map.h"
 #include <optional>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ public:
     void commitCandidate(size_t index);
     void commitRaw();
     void commitHistory();
+    void commitEmoji(size_t index);
 
 private:
     LarenEngine* engine_;
@@ -33,8 +35,13 @@ private:
     bool has_history_ = false;
     int cursor_ = 0;  // Currently highlighted candidate index
 
+    // Emoji mode
+    bool emoji_mode_ = false;
+    std::vector<const core::EmojiEntry*> emoji_candidates_;
+
     void updateCandidates();
     void updateUI();
+    void updateEmojiUI();
     void commitSelected();
     void commitByDisplayIndex(size_t display_idx);
     void commitText(const std::string& text);

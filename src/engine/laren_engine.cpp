@@ -30,6 +30,7 @@ LarenEngine::LarenEngine(fcitx::Instance* instance)
       }) {
 
     loadDictionary();
+    loadEmoji();
     loadHistory();
 
     instance->inputContextManager().registerProperty("larenState", &factory_);
@@ -117,6 +118,36 @@ void LarenEngine::reset(const fcitx::InputMethodEntry& /*entry*/,
     auto* ic = event.inputContext();
     auto* state = ic->propertyFor(&factory_);
     state->reset();
+}
+
+void LarenEngine::loadEmoji() {
+    std::string emoji_path;
+
+#if LAREN_HAS_STANDARDPATHS
+    auto& paths = fcitx::StandardPaths::global();
+    auto path = paths.locate(fcitx::StandardPathsType::Data,
+                             "laren/emoji.tsv");
+    if (path.empty()) {
+        path = paths.locate(fcitx::StandardPathsType::PkgData,
+                            "laren/emoji.tsv");
+    }
+    emoji_path = path.empty() ? "/usr/share/laren/emoji.tsv" : path.string();
+#else
+    auto& paths = fcitx::StandardPath::global();
+    emoji_path = paths.locate(fcitx::StandardPath::Type::Data,
+                              "laren/emoji.tsv");
+    if (emoji_path.empty()) {
+        emoji_path = paths.locate(fcitx::StandardPath::Type::PkgData,
+                                  "laren/emoji.tsv");
+    }
+    if (emoji_path.empty()) {
+        emoji_path = "/usr/share/laren/emoji.tsv";
+    }
+#endif
+
+    debugLog("Emoji path: " + emoji_path);
+    emoji_map_.load_tsv(emoji_path);
+    debugLog("Emoji loaded, entries=" + std::to_string(emoji_map_.size()));
 }
 
 void LarenEngine::loadHistory() {

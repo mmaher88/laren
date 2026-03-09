@@ -1,3 +1,9 @@
+fcitx5-laren (0.2.4-1) unstable; urgency=medium
+
+  * Add Arabic question mark support and emoji shortcodes.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Mon, 09 Mar 2026 17:00:00 -0400
+
 fcitx5-laren (0.2.3-1) unstable; urgency=medium
 
   * Fix transliteration: support multi-char expansions and hamza variants.

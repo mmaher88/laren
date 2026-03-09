@@ -8,6 +8,7 @@
 
 #include "engine/laren_state.h"
 #include "core/transliterator.h"
+#include "core/emoji_map.h"
 #include "dict/dictionary.h"
 
 #include <memory>
@@ -33,6 +34,7 @@ public:
                fcitx::InputContextEvent& event) override;
 
     const core::Transliterator& transliterator() const { return transliterator_; }
+    const core::EmojiMap& emojiMap() const { return emoji_map_; }
     fcitx::Instance* instance() const { return instance_; }
 
     auto* stateFactory() { return &factory_; }
@@ -46,8 +48,10 @@ private:
     fcitx::FactoryFor<LarenState> factory_;
     std::shared_ptr<dict::Dictionary> dictionary_;
     core::Transliterator transliterator_;
+    core::EmojiMap emoji_map_;
 
     void loadDictionary();
+    void loadEmoji();
     void loadHistory();
     void saveHistory();
 

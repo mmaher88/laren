@@ -1,5 +1,5 @@
 Name:           fcitx5-laren
-Version:        0.2.3
+Version:        0.2.4
 Release:        1%{?dist}
 Summary:        Arabizi to Arabic transliteration engine for Fcitx5
 License:        GPL-3.0-or-later
@@ -59,6 +59,7 @@ echo ""
 %{_datadir}/fcitx5/inputmethod/laren.conf
 %dir %{_datadir}/laren
 %{_datadir}/laren/dictionary.tsv
+%{_datadir}/laren/emoji.tsv
 %{_datadir}/fcitx5/default/profile
 %dir %{_datadir}/icons/hicolor
 %dir %{_datadir}/icons/hicolor/scalable

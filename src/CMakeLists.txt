@@ -17,6 +17,7 @@ add_library(laren_core STATIC
     core/transliterator.cpp
     core/rule_engine.cpp
     core/ranker.cpp
+    core/emoji_map.cpp
 )
 target_link_libraries(laren_core PUBLIC laren_dict)
 
@@ -40,6 +41,7 @@ install(FILES "${CMAKE_SOURCE_DIR}/resources/laren-im.conf"
         DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod")
 
 install(FILES "${CMAKE_SOURCE_DIR}/data/dictionary.tsv"
+              "${CMAKE_SOURCE_DIR}/data/emoji.tsv"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/laren")
 
 install(FILES "${CMAKE_SOURCE_DIR}/resources/default-profile"
