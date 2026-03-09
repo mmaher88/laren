@@ -26,7 +26,7 @@ add_library(laren MODULE
     engine/laren_state.cpp
 )
 target_link_libraries(laren PRIVATE laren_core Fcitx5::Core)
-set_target_properties(laren PROPERTIES PREFIX "")
+set_target_properties(laren PROPERTIES PREFIX "" NO_SONAME ON INSTALL_RPATH "")
 
 # Install targets
 install(TARGETS laren DESTINATION "${FCITX_INSTALL_ADDONDIR}")
