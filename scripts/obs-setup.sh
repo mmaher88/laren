@@ -46,8 +46,8 @@ osc meta prj "$PROJECT" -F - <<EOF
     <path project="Ubuntu:24.04" repository="universe"/>
     <arch>x86_64</arch>
   </repository>
-  <repository name="xUbuntu_24.10">
-    <path project="Ubuntu:24.10" repository="universe"/>
+  <repository name="xUbuntu_25.10">
+    <path project="Ubuntu:25.10" repository="universe"/>
     <arch>x86_64</arch>
   </repository>
   <repository name="Debian_12">
