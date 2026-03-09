@@ -139,3 +139,4 @@ echo "  Switch input method: Ctrl+Space"
 echo "  Configure:           fcitx5-configtool"
 echo ""
 echo "  If Fcitx5 doesn't start on login, log out and back in."
+exit 0
