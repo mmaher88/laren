@@ -6,481 +6,492 @@
 <title>Laren — Interactive Transliteration Demo</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: #0f172a;
   color: #e2e8f0;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 8px 14px;
+  gap: 5px;
+  min-width: 900px;
 }
 
-h1 {
-  text-align: center;
-  font-size: 2.2rem;
-  margin-bottom: 0.3rem;
+/* ── Top bar ── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.top-bar h1 {
+  font-size: 1.25rem;
   background: linear-gradient(135deg, #38bdf8, #818cf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
 }
 
-.subtitle {
-  text-align: center;
-  color: #94a3b8;
-  margin-bottom: 2rem;
-  font-size: 1.05rem;
-}
-
-.input-section {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.input-section input {
-  font-size: 1.8rem;
-  padding: 0.7rem 1.5rem;
-  border-radius: 12px;
+.top-bar input {
+  flex: 1;
+  max-width: 360px;
+  font-size: 1.1rem;
+  padding: 5px 14px;
+  border-radius: 8px;
   border: 2px solid #334155;
   background: #1e293b;
   color: #f1f5f9;
-  text-align: center;
-  width: min(100%, 500px);
   outline: none;
   transition: border-color 0.3s;
   font-family: 'Courier New', monospace;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
 }
 
-.input-section input:focus { border-color: #818cf8; }
-.input-section input::placeholder { color: #475569; letter-spacing: 0.05em; }
+.top-bar input:focus { border-color: #818cf8; }
+.top-bar input::placeholder { color: #475569; letter-spacing: 0.05em; font-size: 0.9rem; }
 
-.steps {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.step {
-  background: #1e293b;
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 1px solid #334155;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s, transform 0.5s;
-}
-
-.step.visible { opacity: 1; transform: translateY(0); }
-
-.step-header {
+.top-bar .pipe-summary {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.step-num {
-  background: linear-gradient(135deg, #818cf8, #38bdf8);
-  color: #0f172a;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #64748b;
   flex-shrink: 0;
 }
 
-/* Character mappings */
-.char-mappings { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.top-bar .pipe-summary .pv { color: #94a3b8; font-weight: 600; }
+.top-bar .pipe-summary .pa { color: #475569; }
 
-.char-card {
-  background: #0f172a;
-  border-radius: 12px;
-  padding: 0.8rem;
-  min-width: 80px;
+.footer {
+  flex-shrink: 0;
   text-align: center;
-  border: 1px solid #334155;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 2px 0;
+  font-size: 0.72rem;
 }
 
-.char-card.visible { opacity: 1; transform: scale(1); }
+.footer a { color: #818cf8; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer code { color: #94a3b8; }
 
-.char-latin {
-  font-size: 1.4rem;
+/* ── Dashboard ── */
+.dash {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #475569;
+  gap: 8px;
+}
+
+.empty-state .icon { font-size: 2.5rem; }
+.empty-state .sub { font-size: 0.75rem; color: #334155; }
+
+.dash-grid {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 240px;
+  grid-template-areas:
+    "mappings mappings"
+    "trie     results";
+  gap: 5px;
+}
+
+/* ── Panels ── */
+.panel {
+  background: #1e293b;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.panel.visible { opacity: 1; }
+
+.panel-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.panel-label .num {
+  background: linear-gradient(135deg, #818cf8, #38bdf8);
+  color: #0f172a;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+/* ── Mappings Panel ── */
+.panel-mappings {
+  grid-area: mappings;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  flex-wrap: wrap;
+}
+
+.mapping-cards {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.m-card {
+  background: #0f172a;
+  border-radius: 6px;
+  padding: 3px 6px;
+  text-align: center;
+  border: 1px solid #334155;
+  min-width: 44px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.m-card.visible { opacity: 1; transform: scale(1); }
+
+.m-card .lat {
+  font-size: 0.85rem;
   font-weight: 700;
   color: #38bdf8;
   font-family: 'Courier New', monospace;
-  margin-bottom: 0.3rem;
+  line-height: 1.1;
 }
 
-.char-arrow { color: #475569; font-size: 0.8rem; margin-bottom: 0.3rem; }
-
-.char-arabic { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
-
-.arabic-option {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  padding: 0.2rem 0.5rem;
-  font-size: 1.1rem;
-  direction: rtl;
-  transition: all 0.3s;
+.m-card .ar-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 1px;
 }
 
-.arabic-option.skip { color: #22c55e; font-size: 0.75rem; font-style: italic; direction: ltr; }
-.arabic-option.highlight { border-color: #22c55e; background: #052e16; box-shadow: 0 0 8px rgba(34, 197, 94, 0.3); }
-
-/* Branching math */
-.branch-math { text-align: center; font-size: 1.3rem; padding: 1rem; font-family: 'Courier New', monospace; }
-.branch-math .multiply { color: #818cf8; margin: 0 0.3rem; }
-.branch-math .total { color: #22c55e; font-weight: 700; font-size: 1.5rem; }
-
-/* Pipeline */
-.pipeline { display: flex; align-items: center; justify-content: center; gap: 0.3rem; flex-wrap: wrap; padding: 0.5rem 0; }
-
-.pipe-node {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.85rem;
-  text-align: center;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.4s;
-  min-width: 90px;
-}
-
-.pipe-node.visible { opacity: 1; transform: scale(1); }
-.pipe-node.active { border-color: #818cf8; box-shadow: 0 0 12px rgba(129, 140, 248, 0.3); }
-.pipe-node.done { border-color: #22c55e; box-shadow: 0 0 12px rgba(34, 197, 94, 0.2); }
-
-.pipe-arrow { color: #475569; font-size: 1.2rem; opacity: 0; transition: opacity 0.3s; }
-.pipe-arrow.visible { opacity: 1; }
-
-/* ── Trie Visualization ── */
-.trie-step-layout { display: flex; flex-direction: column; gap: 1rem; }
-
-.trie-explainer {
+.m-card .ar-opt {
+  font-size: 0.7rem;
   color: #94a3b8;
-  font-size: 0.85rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
+  direction: rtl;
 }
 
-.trie-explainer b { color: #e2e8f0; }
+.m-card .ar-opt.skip {
+  color: #22c55e;
+  font-size: 0.55rem;
+  font-style: italic;
+  direction: ltr;
+}
 
-.trie-svg-container {
-  overflow-x: auto;
-  text-align: center;
-  padding: 1rem 0.5rem;
+.m-card .cnt { font-size: 0.5rem; color: #475569; margin-top: 1px; }
+
+.branch-eq {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.branch-eq .bv { color: #38bdf8; }
+.branch-eq .bm { color: #818cf8; }
+.branch-eq .bt { color: #22c55e; font-weight: 700; font-size: 0.85rem; }
+.branch-eq .bi { font-size: 0.6rem; color: #475569; margin-left: 4px; }
+
+/* ── Trie Panel ── */
+.panel-trie {
+  grid-area: trie;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  min-height: 0;
+}
+
+.trie-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.trie-legend {
+  display: flex;
+  gap: 8px;
+  font-size: 0.6rem;
+  color: #64748b;
+}
+
+.trie-legend-item { display: flex; align-items: center; gap: 3px; }
+
+.lg-circle {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+.lg-circle.lg-default { background: #1e293b; border-color: #475569; }
+.lg-circle.lg-word { background: #1e293b; border-color: #475569; outline: 1.5px solid #854d0e; outline-offset: 1px; }
+.lg-circle.lg-found { background: #052e16; border-color: #22c55e; }
+.lg-circle.lg-dead { background: #450a0a; border-color: #ef4444; }
+
+.trie-svg-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #0f172a;
-  border-radius: 12px;
-  border: 1px solid #334155;
+  border-radius: 6px;
+  border: 1px solid #1e293b;
+  position: relative;
 }
 
-.trie-svg { max-width: 100%; height: auto; }
-
-.trie-circle {
-  fill: #1e293b;
-  stroke: #475569;
-  stroke-width: 2;
-  transition: fill 0.4s, stroke 0.4s;
+.trie-svg {
+  max-width: 100%;
+  max-height: 100%;
 }
 
-.trie-word-ring {
-  fill: none;
-  stroke: #854d0e;
-  stroke-width: 2;
-  opacity: 0.5;
-  transition: stroke 0.4s, opacity 0.4s;
-}
+.trie-circle { fill: #1e293b; stroke: #475569; stroke-width: 2; transition: fill 0.4s, stroke 0.4s; }
+.trie-word-ring { fill: none; stroke: #854d0e; stroke-width: 2; opacity: 0.5; transition: stroke 0.4s, opacity 0.4s; }
+.trie-text { fill: #94a3b8; font-size: 13px; font-family: 'Segoe UI', system-ui, sans-serif; transition: fill 0.4s; pointer-events: none; }
+.trie-edge { stroke: #334155; stroke-width: 1.5; transition: stroke 0.4s, stroke-width 0.3s; }
 
-.trie-text {
-  fill: #94a3b8;
-  font-size: 14px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  transition: fill 0.4s;
-  pointer-events: none;
-}
-
-.trie-edge {
-  stroke: #334155;
-  stroke-width: 1.5;
-  transition: stroke 0.4s, stroke-width 0.3s;
-}
-
-/* Trie animation states */
 .trie-node-g.visiting .trie-circle { fill: #1e1b4b; stroke: #818cf8; stroke-width: 2.5; }
 .trie-node-g.visiting .trie-text { fill: #c7d2fe; }
 .trie-node-g.visiting .trie-word-ring { stroke: #818cf8; opacity: 0.8; }
-
 .trie-node-g.found .trie-circle { fill: #052e16; stroke: #22c55e; stroke-width: 2.5; }
 .trie-node-g.found .trie-text { fill: #bbf7d0; }
 .trie-node-g.found .trie-word-ring { stroke: #22c55e; opacity: 0.9; }
-
 .trie-node-g.dead-end .trie-circle { fill: #450a0a; stroke: #ef4444; stroke-width: 2.5; }
 .trie-node-g.dead-end .trie-text { fill: #fecaca; }
-
 .trie-edge.visiting { stroke: #818cf8; stroke-width: 2.5; }
 .trie-edge.found { stroke: #22c55e; stroke-width: 2.5; }
 .trie-edge.dead-end { stroke: #ef4444; stroke-width: 2; stroke-dasharray: 5 3; }
 
-/* Pulse animation on current node */
 @keyframes trie-pulse {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.4)); }
-  50% { filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.8)); }
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(129, 140, 248, 0.4)); }
+  50% { filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.8)); }
 }
 .trie-node-g.current { animation: trie-pulse 0.8s ease-in-out infinite; }
 
-.trie-legend {
+.trie-bottom {
   display: flex;
-  gap: 1.2rem;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-.trie-legend-item { display: flex; align-items: center; gap: 0.3rem; }
-
-.legend-circle {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid;
+  gap: 5px;
+  margin-top: 4px;
   flex-shrink: 0;
+  max-height: 110px;
+  overflow: hidden;
 }
 
-.legend-circle.default { background: #1e293b; border-color: #475569; }
-.legend-circle.word { background: #1e293b; border-color: #475569; outline: 2px solid #854d0e; outline-offset: 1px; }
-.legend-circle.found { background: #052e16; border-color: #22c55e; }
-.legend-circle.dead { background: #450a0a; border-color: #ef4444; }
-
-/* Lookup cards */
-.lookup-section { margin-top: 1.2rem; }
-
-.lookup-section-title {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #94a3b8;
-  margin-bottom: 0.8rem;
-}
-
-.lookup-cards {
-  display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.lookup-card {
+.lk-card {
+  flex: 1;
   background: #0f172a;
   border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  min-width: 180px;
-  max-width: 260px;
-  flex: 1;
+  border-radius: 6px;
+  padding: 4px 6px;
+  min-width: 0;
   opacity: 0;
-  transform: translateY(15px);
-  transition: all 0.4s;
+  transition: opacity 0.3s;
 }
 
-.lookup-card.visible { opacity: 1; transform: translateY(0); }
-.lookup-card.found-card { border-color: #166534; }
-.lookup-card.not-found-card { border-color: #7f1d1d; }
+.lk-card.visible { opacity: 1; }
+.lk-card.lk-found { border-color: #166534; }
+.lk-card.lk-miss { border-color: #7f1d1d; }
 
-.lookup-word {
-  font-size: 1.3rem;
-  direction: rtl;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #e2e8f0;
-}
+.lk-word { font-size: 0.9rem; direction: rtl; text-align: center; font-weight: 600; margin-bottom: 2px; }
 
-.lookup-trace {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 0.5rem;
-}
+.lk-trace { display: flex; flex-direction: column; gap: 1px; }
 
-.trace-step {
-  font-size: 0.78rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+.tr-step {
+  font-size: 0.58rem;
   font-family: 'Courier New', monospace;
+  color: #64748b;
+  direction: rtl;
   opacity: 0;
-  transform: translateX(-8px);
-  transition: all 0.3s;
+  transition: opacity 0.25s;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  direction: rtl;
+  gap: 3px;
+  line-height: 1.3;
 }
 
-.trace-step.visible { opacity: 1; transform: translateX(0); }
-.trace-step.ok { color: #86efac; }
-.trace-step.fail { color: #fca5a5; }
+.tr-step.visible { opacity: 1; }
+.tr-step.ok { color: #86efac; }
+.tr-step.fail { color: #fca5a5; }
 
-.trace-step .word-badge {
+.tr-step .wb {
   background: #422006;
   color: #fbbf24;
-  font-size: 0.65rem;
-  padding: 0 0.4rem;
-  border-radius: 3px;
+  font-size: 0.5rem;
+  padding: 0 3px;
+  border-radius: 2px;
   direction: ltr;
   white-space: nowrap;
 }
 
-.lookup-result {
+.lk-result {
   text-align: center;
   font-weight: 700;
-  font-size: 0.8rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-top: 2px;
   opacity: 0;
-  transition: opacity 0.4s;
+  transition: opacity 0.3s;
 }
 
-.lookup-result.visible { opacity: 1; }
+.lk-result.visible { opacity: 1; }
+.lk-result.lk-ok { color: #22c55e; background: #052e16; }
+.lk-result.lk-no { color: #ef4444; background: #450a0a; }
 
-.lookup-result.is-found { color: #22c55e; background: #052e16; }
-.lookup-result.is-not-found { color: #ef4444; background: #450a0a; }
-
-/* Dictionary results */
-.dict-results { display: flex; flex-direction: column; gap: 0.5rem; }
-
-.dict-word {
+/* ── Results Panel ── */
+.panel-results {
+  grid-area: results;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  background: #0f172a;
-  border: 1px solid #334155;
-  opacity: 0;
-  transform: translateX(-20px);
-  transition: all 0.4s;
+  flex-direction: column;
+  padding: 8px;
+  min-height: 0;
+  gap: 6px;
 }
 
-.dict-word.visible { opacity: 1; transform: translateX(0); }
-.dict-word.match { border-color: #22c55e; background: #052e16; }
-.dict-word.no-match { border-color: #334155; opacity: 0.5; }
+.result-hero {
+  text-align: center;
+  padding: 6px 0;
+  flex-shrink: 0;
+}
 
-.dict-word .arabic { font-size: 1.5rem; direction: rtl; min-width: 100px; text-align: center; }
-.dict-word .status { font-size: 1.2rem; }
-
-.dict-word .freq-bar-container { flex: 1; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; }
-.dict-word .freq-bar { height: 100%; border-radius: 4px; transition: width 1s ease-out; width: 0; }
-.dict-word.match .freq-bar { background: linear-gradient(90deg, #22c55e, #38bdf8); }
-
-.dict-word .freq-label { font-size: 0.8rem; color: #94a3b8; min-width: 80px; text-align: right; }
-
-/* Final result */
-.final-result { text-align: center; padding: 1.5rem; }
-
-.final-arabic {
-  font-size: 3.5rem;
+.result-arabic {
+  font-size: 2.2rem;
   direction: rtl;
   background: linear-gradient(135deg, #22c55e, #38bdf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
   opacity: 0;
-  transform: scale(0.5);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0.6);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1.2;
 }
 
-.final-arabic.visible { opacity: 1; transform: scale(1); }
-.final-label { color: #94a3b8; margin-top: 0.5rem; font-size: 0.95rem; }
+.result-arabic.visible { opacity: 1; transform: scale(1); }
 
-/* Candidate list */
-.candidate-list {
-  background: #0f172a;
-  border-radius: 12px;
-  padding: 0.8rem;
-  max-width: 350px;
-  margin: 0 auto;
-  border: 1px solid #334155;
+.result-sub { color: #475569; font-size: 0.6rem; margin-top: 2px; }
+
+.result-divider { border-top: 1px solid #334155; flex-shrink: 0; }
+
+.cand-list {
+  flex-shrink: 0;
 }
 
-.candidate-item {
+.cand-item {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.5rem 0.7rem;
-  border-radius: 8px;
-  transition: all 0.3s;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 5px;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(6px);
+  transition: all 0.25s;
+  font-size: 0.8rem;
 }
 
-.candidate-item.visible { opacity: 1; transform: translateY(0); }
-.candidate-item.history { background: #1a2e05; border: 1px solid #365314; }
+.cand-item.visible { opacity: 1; transform: translateY(0); }
+.cand-item.cand-top { background: #1a2e05; border: 1px solid #365314; }
 
-.candidate-item .rank { color: #64748b; font-size: 0.85rem; min-width: 24px; }
-.candidate-item .rank.star { color: #eab308; }
-.candidate-item .word { font-size: 1.3rem; direction: rtl; flex: 1; }
-.candidate-item .freq { font-size: 0.75rem; color: #64748b; }
+.cand-item .cr { color: #475569; font-size: 0.65rem; min-width: 16px; }
+.cand-item .cr.star { color: #eab308; }
+.cand-item .cw { font-size: 0.95rem; direction: rtl; flex: 1; }
+.cand-item .cf { font-size: 0.55rem; color: #475569; }
 
-.separator { border-top: 1px dashed #334155; margin: 0.3rem 0; opacity: 0; transition: opacity 0.3s; }
-.separator.visible { opacity: 1; }
+.cand-sep { border-top: 1px dashed #334155; margin: 2px 0; opacity: 0; transition: opacity 0.3s; }
+.cand-sep.visible { opacity: 1; }
 
-/* Empty state */
-.empty-state { text-align: center; padding: 3rem; color: #475569; }
-.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
-
-/* Responsive */
-@media (max-width: 640px) {
-  h1 { font-size: 1.6rem; }
-  .input-section input { font-size: 1.3rem; }
-  .char-card { min-width: 65px; padding: 0.5rem; }
-  .final-arabic { font-size: 2.5rem; }
-  .lookup-cards { flex-direction: column; align-items: center; }
-  .lookup-card { max-width: 100%; min-width: 0; width: 100%; }
+.freq-section {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.github-link { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #1e293b; }
-.github-link a { color: #818cf8; text-decoration: none; font-size: 0.95rem; }
-.github-link a:hover { text-decoration: underline; }
+.freq-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 5px;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.freq-row.visible { opacity: 1; transform: translateX(0); }
+.freq-row.fr-match { background: #052e16; border: 1px solid #166534; }
+.freq-row.fr-fall { opacity: 0.5; }
+
+.freq-row .fa { font-size: 0.9rem; direction: rtl; min-width: 60px; text-align: center; }
+.freq-row .fb-wrap { flex: 1; height: 5px; background: #0f172a; border-radius: 3px; overflow: hidden; }
+.freq-row .fb { height: 100%; border-radius: 3px; transition: width 0.8s ease-out; width: 0; }
+.freq-row.fr-match .fb { background: linear-gradient(90deg, #22c55e, #38bdf8); }
+.freq-row .fl { font-size: 0.55rem; color: #64748b; min-width: 50px; text-align: right; }
+
+.freq-header {
+  font-size: 0.55rem;
+  color: #475569;
+  text-align: center;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Laren</h1>
-  <p class="subtitle">See how Arabizi becomes Arabic — character by character</p>
-
-  <div class="input-section">
-    <input type="text" id="input" placeholder="Type Arabizi here... e.g. 7abibi" autocomplete="off" spellcheck="false">
+<div class="app">
+  <div class="top-bar">
+    <h1>Laren</h1>
+    <input type="text" id="input" placeholder="Type Arabizi... e.g. 7abibi" autocomplete="off" spellcheck="false">
+    <div class="pipe-summary" id="pipe"></div>
   </div>
 
-  <div id="steps" class="steps">
+  <div id="dash" class="dash">
     <div class="empty-state">
       <div class="icon">&#x2328;&#xFE0F;</div>
-      <p>Start typing to see the transliteration pipeline in action</p>
+      <p>Start typing to see the transliteration pipeline</p>
     </div>
   </div>
 
-  <div class="github-link">
-    <a href="https://github.com/mmaher88/laren">github.com/mmaher88/laren</a> — Install with <code>yay -S fcitx5-laren</code>
+  <div class="footer">
+    <a href="https://github.com/mmaher88/laren">github.com/mmaher88/laren</a> &mdash; Install with <code>yay -S fcitx5-laren</code>
   </div>
 </div>
 
@@ -518,7 +529,7 @@ const MAPPING_NAMES = {
   "\u0649":"alef-maqsura","\u2205":"skip"
 };
 
-// ── Dictionary (loaded from full 375k word file) ──
+// ── Dictionary ──
 let DICTIONARY = {};
 let dictLoaded = false;
 
@@ -574,10 +585,7 @@ function expandDFS(input, maxResults = 200) {
 let trieNodeCounter = 0;
 
 function createTrieNode(char, depth) {
-  return {
-    char, depth, children: {}, isWord: false, freq: 0, word: '',
-    id: 'tn' + (trieNodeCounter++), x: 0, y: 0
-  };
+  return { char, depth, children: {}, isWord: false, freq: 0, word: '', id: 'tn' + (trieNodeCounter++), x: 0, y: 0 };
 }
 
 function buildVizTrie(words) {
@@ -588,9 +596,7 @@ function buildVizTrie(words) {
     let node = root;
     for (let i = 0; i < word.length; i++) {
       const ch = word[i];
-      if (!node.children[ch]) {
-        node.children[ch] = createTrieNode(ch, i + 1);
-      }
+      if (!node.children[ch]) node.children[ch] = createTrieNode(ch, i + 1);
       node = node.children[ch];
     }
     node.isWord = true;
@@ -607,15 +613,9 @@ function trieLookup(root, word) {
     const ch = word[i];
     if (node.children[ch]) {
       node = node.children[ch];
-      steps.push({
-        nodeId: node.id, char: ch, prefix: word.slice(0, i + 1),
-        found: true, isWord: node.isWord, wordFreq: node.freq
-      });
+      steps.push({ nodeId: node.id, char: ch, prefix: word.slice(0, i + 1), found: true, isWord: node.isWord, wordFreq: node.freq });
     } else {
-      steps.push({
-        nodeId: null, char: ch, prefix: word.slice(0, i + 1),
-        found: false, isWord: false
-      });
+      steps.push({ nodeId: null, char: ch, prefix: word.slice(0, i + 1), found: false, isWord: false });
       break;
     }
   }
@@ -623,18 +623,15 @@ function trieLookup(root, word) {
 }
 
 function layoutTrie(root) {
-  const NODE_W = 52;
-  const ROW_H = 62;
-
+  const NODE_W = 48;
+  const ROW_H = 56;
   function subtreeWidth(node) {
     const kids = Object.values(node.children);
     if (kids.length === 0) return NODE_W;
     return Math.max(kids.reduce((s, c) => s + subtreeWidth(c), 0), NODE_W);
   }
-
   function position(node, cx, cy) {
-    node.x = cx;
-    node.y = cy;
+    node.x = cx; node.y = cy;
     const kids = Object.values(node.children);
     const totalW = kids.reduce((s, c) => s + subtreeWidth(c), 0);
     let x = cx - totalW / 2;
@@ -644,30 +641,20 @@ function layoutTrie(root) {
       x += w;
     }
   }
-
-  position(root, 0, 28);
-
+  position(root, 0, 24);
   let minX = Infinity, maxX = -Infinity, maxY = 0;
   function bounds(node) {
-    minX = Math.min(minX, node.x);
-    maxX = Math.max(maxX, node.x);
-    maxY = Math.max(maxY, node.y);
+    minX = Math.min(minX, node.x); maxX = Math.max(maxX, node.x); maxY = Math.max(maxY, node.y);
     for (const c of Object.values(node.children)) bounds(c);
   }
   bounds(root);
-
-  return { minX: minX - 35, maxX: maxX + 35, maxY: maxY + 35,
-           width: maxX - minX + 70, height: maxY + 63 };
+  return { minX: minX - 28, maxX: maxX + 28, maxY: maxY + 28, width: maxX - minX + 56, height: maxY + 52 };
 }
 
 function trieToSVG(root, bounds) {
-  const pad = 10;
-  const vx = bounds.minX - pad;
-  const vw = bounds.width + pad * 2;
-  const vh = bounds.height + pad;
-  let svg = `<svg class="trie-svg" viewBox="${vx} 0 ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg">`;
-
-  // Edges
+  const pad = 8;
+  const vx = bounds.minX - pad, vw = bounds.width + pad * 2, vh = bounds.height + pad;
+  let svg = `<svg class="trie-svg" viewBox="${vx} 0 ${vw} ${vh}" preserveAspectRatio="xMidYMid meet">`;
   function drawEdges(node) {
     for (const child of Object.values(node.children)) {
       svg += `<line class="trie-edge" id="edge-${child.id}" x1="${node.x}" y1="${node.y}" x2="${child.x}" y2="${child.y}"/>`;
@@ -675,450 +662,278 @@ function trieToSVG(root, bounds) {
     }
   }
   drawEdges(root);
-
-  // Nodes
   function drawNodes(node) {
     const cls = node.isWord ? 'word-node' : '';
     svg += `<g class="trie-node-g ${cls}" id="node-${node.id}">`;
-    if (node.isWord) {
-      svg += `<circle cx="${node.x}" cy="${node.y}" r="23" class="trie-word-ring"/>`;
-    }
-    svg += `<circle cx="${node.x}" cy="${node.y}" r="18" class="trie-circle"/>`;
-    const label = node.char || '\u25CF';
-    svg += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${label}</text>`;
-    svg += `</g>`;
+    if (node.isWord) svg += `<circle cx="${node.x}" cy="${node.y}" r="20" class="trie-word-ring"/>`;
+    svg += `<circle cx="${node.x}" cy="${node.y}" r="16" class="trie-circle"/>`;
+    svg += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${node.char || '\u25CF'}</text></g>`;
     for (const child of Object.values(node.children)) drawNodes(child);
   }
   drawNodes(root);
-
   svg += `</svg>`;
   return svg;
 }
 
 function selectTrieWords(dictMatches, expansions) {
   const words = new Map();
-
-  // Add dict matches
-  for (const m of dictMatches.slice(0, 5)) {
-    words.set(m.word, m.freq);
-  }
-
-  // Add related dictionary words (share 2-char prefix with matches/expansions)
+  for (const m of dictMatches.slice(0, 5)) words.set(m.word, m.freq);
   const prefixes = new Set();
-  for (const [w] of words) {
-    if (w.length >= 2) prefixes.add(w.slice(0, 2));
-    if (w.length >= 1) prefixes.add(w.slice(0, 1));
-  }
-  for (const e of expansions.slice(0, 10)) {
-    if (e.length >= 2) prefixes.add(e.slice(0, 2));
-    if (e.length >= 1) prefixes.add(e.slice(0, 1));
-  }
-
-  // Collect candidates matching prefixes, then pick top by frequency
-  const candidates = [];
+  for (const [w] of words) { if (w.length >= 2) prefixes.add(w.slice(0, 2)); if (w.length >= 1) prefixes.add(w.slice(0, 1)); }
+  for (const e of expansions.slice(0, 10)) { if (e.length >= 2) prefixes.add(e.slice(0, 2)); if (e.length >= 1) prefixes.add(e.slice(0, 1)); }
+  const cands = [];
   for (const dw in DICTIONARY) {
     if (words.has(dw) || dw.length > 7) continue;
-    for (const pfx of prefixes) {
-      if (dw.startsWith(pfx)) { candidates.push([dw, DICTIONARY[dw]]); break; }
-    }
-    if (candidates.length >= 200) break; // enough to pick from
+    for (const pfx of prefixes) { if (dw.startsWith(pfx)) { cands.push([dw, DICTIONARY[dw]]); break; } }
+    if (cands.length >= 200) break;
   }
-  candidates.sort((a, b) => b[1] - a[1]);
-  for (const [dw, df] of candidates) {
-    if (words.size >= 14) break;
-    words.set(dw, df);
-  }
-
+  cands.sort((a, b) => b[1] - a[1]);
+  for (const [dw, df] of cands) { if (words.size >= 14) break; words.set(dw, df); }
   return words;
 }
 
 function selectLookupCandidates(dictMatches, expansions, trieRoot) {
-  const candidates = [];
-  const seen = new Set();
-
-  // Add top 2 dict matches
+  const candidates = [], seen = new Set();
   for (const m of dictMatches.slice(0, 2)) {
     if (!seen.has(m.word)) { candidates.push({ word: m.word, inDict: true, freq: m.freq }); seen.add(m.word); }
   }
-
-  // Find best non-match: the one that traces deepest before dead-ending
-  let bestNonMatch = null, bestDepth = 0;
+  let bestNM = null, bestD = 0;
   for (const exp of expansions) {
     if (DICTIONARY[exp] || seen.has(exp) || exp.length === 0) continue;
     const { steps } = trieLookup(trieRoot, exp);
-    const depth = steps.filter(s => s.found).length;
-    if (depth > bestDepth || (depth === bestDepth && exp.length > (bestNonMatch || '').length)) {
-      bestDepth = depth;
-      bestNonMatch = exp;
-    }
-    if (depth >= 3) break; // good enough
+    const d = steps.filter(s => s.found).length;
+    if (d > bestD || (d === bestD && exp.length > (bestNM || '').length)) { bestD = d; bestNM = exp; }
+    if (d >= 3) break;
   }
-  if (bestNonMatch) {
-    candidates.push({ word: bestNonMatch, inDict: false, freq: 0 });
-  } else {
-    // Just pick first non-matching expansion
-    for (const exp of expansions) {
-      if (!DICTIONARY[exp] && !seen.has(exp) && exp.length > 0) {
-        candidates.push({ word: exp, inDict: false, freq: 0 });
-        break;
-      }
-    }
-  }
-
+  if (bestNM) candidates.push({ word: bestNM, inDict: false, freq: 0 });
+  else { for (const exp of expansions) { if (!DICTIONARY[exp] && !seen.has(exp) && exp.length > 0) { candidates.push({ word: exp, inDict: false, freq: 0 }); break; } } }
   return candidates;
 }
 
-// ── Load full dictionary ──
-(async function loadDictionary() {
-  const stepsEl = document.getElementById("steps");
-  stepsEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Loading 375,000 word dictionary...</p></div>';
+// ── Load dictionary ──
+(async function() {
+  const dashEl = document.getElementById("dash");
+  dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Loading dictionary...</p></div>';
   try {
     const resp = await fetch("dictionary.json");
     DICTIONARY = await resp.json();
     dictLoaded = true;
-    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline in action</p><p style="color:#334155;font-size:0.8rem;margin-top:0.5rem">' + Object.keys(DICTIONARY).length.toLocaleString() + ' words loaded</p></div>';
+    const n = Object.keys(DICTIONARY).length.toLocaleString();
+    dashEl.innerHTML = `<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p><p class="sub">${n} words loaded</p></div>`;
     document.getElementById("input").focus();
   } catch (e) {
-    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Could not load dictionary. Try refreshing.</p></div>';
+    dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Could not load dictionary. Try refreshing.</p></div>';
   }
 })();
 
 // ── Rendering ──
 const inputEl = document.getElementById("input");
-const stepsEl = document.getElementById("steps");
+const dashEl = document.getElementById("dash");
+const pipeEl = document.getElementById("pipe");
 let debounceTimer;
 
 inputEl.addEventListener("input", () => {
   if (!dictLoaded) return;
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => render(inputEl.value), 150);
+  debounceTimer = setTimeout(() => render(inputEl.value), 120);
 });
 
 function render(raw) {
   const input = raw.trim().toLowerCase();
   if (!input) {
-    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline in action</p></div>';
+    dashEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p></div>';
+    pipeEl.innerHTML = '';
     return;
   }
 
   const tokens = tokenize(input);
   if (tokens.length === 0) {
-    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2753;</div><p>No recognized Arabizi characters</p></div>';
+    dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u2753</div><p>No recognized Arabizi characters</p></div>';
+    pipeEl.innerHTML = '';
     return;
   }
 
   const expansions = expandDFS(input, 200);
-  const dictMatches = expansions
-    .filter(e => DICTIONARY[e])
-    .map(e => ({ word: e, freq: DICTIONARY[e] }))
-    .sort((a, b) => b.freq - a.freq);
-
+  const dictMatches = expansions.filter(e => DICTIONARY[e]).map(e => ({ word: e, freq: DICTIONARY[e] })).sort((a, b) => b.freq - a.freq);
   const seen = new Set();
   const uniqueMatches = [];
-  for (const m of dictMatches) {
-    if (!seen.has(m.word)) { seen.add(m.word); uniqueMatches.push(m); }
-  }
-
+  for (const m of dictMatches) { if (!seen.has(m.word)) { seen.add(m.word); uniqueMatches.push(m); } }
   const skeletal = [];
   const seenSkel = new Set(uniqueMatches.map(m => m.word));
-  for (const e of expansions) {
-    if (!seenSkel.has(e) && e.length > 0) { seenSkel.add(e); skeletal.push(e); if (skeletal.length >= 5) break; }
-  }
+  for (const e of expansions) { if (!seenSkel.has(e) && e.length > 0) { seenSkel.add(e); skeletal.push(e); if (skeletal.length >= 5) break; } }
 
   let branchCount = 1;
   for (const t of tokens) branchCount *= t.arabic.length;
 
-  // Build trie
   const trieWords = selectTrieWords(uniqueMatches, expansions);
   const trieRoot = buildVizTrie(trieWords);
-  const lookupCandidates = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
+  const lookupCands = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
 
-  let html = "";
-  html += buildPipelineStep(input, tokens.length, expansions.length, uniqueMatches.length);
-  html += buildMappingStep(tokens);
-  html += buildBranchStep(tokens, branchCount, expansions.length);
-  html += buildTrieStep(trieRoot, lookupCandidates, trieWords.size, uniqueMatches.length, expansions.length);
-  html += buildDictStep(uniqueMatches, skeletal, expansions.length);
-  html += buildResultStep(uniqueMatches, skeletal, input);
+  // Pipeline summary in top bar
+  pipeEl.innerHTML = `<span class="pv">${input}</span><span class="pa">\u2192</span><span class="pv">${tokens.length}</span><span class="pa">tokens \u2192</span><span class="pv">${expansions.length}</span><span class="pa">forms \u2192</span><span class="pv">${uniqueMatches.length}</span><span class="pa">matches \u2192 ranked</span>`;
 
-  stepsEl.innerHTML = html;
-  animateSteps();
-}
-
-function buildPipelineStep(input, tokenCount, expansionCount, matchCount) {
-  return `<div class="step" data-delay="0">
-    <div class="step-header"><span class="step-num">\u26A1</span> Pipeline</div>
-    <div class="pipeline">
-      <div class="pipe-node" data-delay="100"><b>${input}</b><br><small>input</small></div>
-      <span class="pipe-arrow" data-delay="200">\u2192</span>
-      <div class="pipe-node" data-delay="300">${tokenCount} tokens<br><small>parsed</small></div>
-      <span class="pipe-arrow" data-delay="400">\u2192</span>
-      <div class="pipe-node" data-delay="500">${expansionCount} forms<br><small>expanded</small></div>
-      <span class="pipe-arrow" data-delay="600">\u2192</span>
-      <div class="pipe-node" data-delay="700">${matchCount} words<br><small>in dictionary</small></div>
-      <span class="pipe-arrow" data-delay="800">\u2192</span>
-      <div class="pipe-node" data-delay="900">ranked<br><small>by frequency</small></div>
-    </div>
+  // Build dashboard
+  dashEl.innerHTML = `<div class="dash-grid">
+    <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
+    <div class="panel panel-trie" data-p="1">${buildTrie(trieRoot, lookupCands, trieWords.size)}</div>
+    <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
   </div>`;
+
+  animateDashboard();
 }
 
-function buildMappingStep(tokens) {
+function buildMappings(tokens, branchCount, actualCount) {
   let cards = "";
   tokens.forEach((t, i) => {
-    const options = t.arabic.map(ar => {
-      const name = MAPPING_NAMES[ar] || ar;
-      if (ar === "\u2205") return '<span class="arabic-option skip" title="short vowel, not written">skip</span>';
-      return `<span class="arabic-option" title="${name}">${ar}</span>`;
-    }).join("");
-    cards += `<div class="char-card" data-delay="${150 + i * 120}">
-      <div class="char-latin">${t.latin}</div>
-      <div class="char-arrow">\u2193</div>
-      <div class="char-arabic">${options}</div>
-      <div style="color:#64748b;font-size:0.7rem;margin-top:4px">${t.arabic.length} option${t.arabic.length>1?"s":""}</div>
-    </div>`;
+    const opts = t.arabic.map(ar => {
+      if (ar === "\u2205") return '<span class="ar-opt skip">skip</span>';
+      return `<span class="ar-opt">${ar}</span>`;
+    }).join(" ");
+    cards += `<div class="m-card" data-delay="${i * 40}"><div class="lat">${t.latin}</div><div class="ar-opts">${opts}</div><div class="cnt">${t.arabic.length}</div></div>`;
   });
-  return `<div class="step" data-delay="100">
-    <div class="step-header"><span class="step-num">1</span> What could each character mean?</div>
-    <div class="char-mappings">${cards}</div>
-  </div>`;
+
+  const eq = tokens.map(t => `<span class="bv">${t.arabic.length}</span>`).join('<span class="bm">\u00D7</span>');
+  const info = actualCount < branchCount ? `${actualCount} explored` : 'all explored';
+
+  return `<div class="panel-label"><span class="num">1</span>Character mappings</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="mapping-cards">${cards}</div>
+      <div class="branch-eq">${eq}<span class="bm">=</span><span class="bt">${branchCount.toLocaleString()}</span><span class="bi">(${info})</span></div>
+    </div>`;
 }
 
-function buildBranchStep(tokens, branchCount, actualCount) {
-  const parts = tokens.map(t =>
-    `<span style="color:#38bdf8">${t.arabic.length}</span>`
-  ).join('<span class="multiply">\u00D7</span>');
-  return `<div class="step" data-delay="400">
-    <div class="step-header"><span class="step-num">2</span> How many combinations?</div>
-    <div class="branch-math">
-      ${parts} = <span class="total">${branchCount.toLocaleString()} paths</span>
-    </div>
-    <div style="text-align:center;color:#94a3b8;font-size:0.85rem">
-      ${actualCount < branchCount
-        ? `Explored ${actualCount} (capped for speed)`
-        : `All ${actualCount} paths explored`}
-    </div>
-  </div>`;
-}
-
-function buildTrieStep(trieRoot, lookupCandidates, trieWordCount, matchCount, totalExpansions) {
+function buildTrie(trieRoot, lookupCands, trieWordCount) {
   const bounds = layoutTrie(trieRoot);
   const svg = trieToSVG(trieRoot, bounds);
 
-  // Build lookup cards
   let cards = "";
   let globalDelay = 0;
-  lookupCandidates.forEach((cand, ci) => {
+  lookupCands.forEach((cand, ci) => {
     const { steps, matched } = trieLookup(trieRoot, cand.word);
     const isFound = cand.inDict && matched;
-    const cardClass = isFound ? 'found-card' : 'not-found-card';
-
-    let traceHtml = "";
+    const cls = isFound ? 'lk-found' : 'lk-miss';
+    let trace = "";
     steps.forEach((step, si) => {
-      const delay = globalDelay + si * 200;
-      const cls = step.found ? 'ok' : 'fail';
-      const arrow = step.found ? '\u2190' : '\u2190 \u2717';
+      const d = globalDelay + si * 150;
+      const sc = step.found ? 'ok' : 'fail';
+      const arrow = step.found ? '\u2190' : '\u2190\u2717';
       let badge = '';
-      if (step.found && step.isWord) {
-        badge = `<span class="word-badge">\u2605 word (${step.wordFreq})</span>`;
-      }
-      traceHtml += `<div class="trace-step ${cls}" data-delay="${delay}" data-node-id="${step.nodeId || ''}" data-edge-id="${step.nodeId || ''}" data-is-last="${si === steps.length - 1}" data-candidate-found="${isFound}">
-        ${step.char} ${arrow} ${step.prefix} ${badge}
-      </div>`;
+      if (step.found && step.isWord) badge = `<span class="wb">\u2605${step.wordFreq}</span>`;
+      trace += `<div class="tr-step ${sc}" data-delay="${d}" data-node-id="${step.nodeId||''}" data-edge-id="${step.nodeId||''}" data-is-last="${si===steps.length-1}" data-candidate-found="${isFound}">${step.char} ${arrow} ${step.prefix} ${badge}</div>`;
     });
-
-    const resultDelay = globalDelay + steps.length * 200 + 100;
-    const resultClass = isFound ? 'is-found' : 'is-not-found';
-    const resultText = isFound
-      ? `\u2705 FOUND \u2014 freq: ${cand.freq}`
-      : '\u274C NOT IN DICTIONARY';
-
-    cards += `<div class="lookup-card ${cardClass}" data-delay="${ci * 200}">
-      <div class="lookup-word">${cand.word}</div>
-      <div class="lookup-trace">${traceHtml}</div>
-      <div class="lookup-result ${resultClass}" data-delay="${resultDelay}">${resultText}</div>
-    </div>`;
-
-    globalDelay += steps.length * 200 + 400;
+    const rd = globalDelay + steps.length * 150 + 80;
+    const rCls = isFound ? 'lk-ok' : 'lk-no';
+    const rTxt = isFound ? `\u2705 ${cand.freq}` : '\u274C';
+    cards += `<div class="lk-card ${cls}" data-delay="${ci*100}"><div class="lk-word">${cand.word}</div><div class="lk-trace">${trace}</div><div class="lk-result ${rCls}" data-delay="${rd}">${rTxt}</div></div>`;
+    globalDelay += steps.length * 150 + 250;
   });
 
-  return `<div class="step" data-delay="700">
-    <div class="step-header"><span class="step-num">3</span> Dictionary Trie Lookup</div>
-    <div class="trie-step-layout">
-      <div class="trie-explainer">
-        The dictionary stores <b>${Object.keys(DICTIONARY).length.toLocaleString()} words</b> in a <b>trie</b> (prefix tree).
-        Each node is an Arabic letter. Follow the branches to look up a word character by character.
-        <br>Showing ${trieWordCount} nearby words. Double ring = complete word.
-      </div>
-      <div class="trie-svg-container">${svg}</div>
+  return `<div class="trie-top">
+      <div class="panel-label"><span class="num">2</span>Trie lookup <span style="font-weight:400;text-transform:none">(${trieWordCount} nearby words)</span></div>
       <div class="trie-legend">
-        <span class="trie-legend-item"><span class="legend-circle default"></span> node</span>
-        <span class="trie-legend-item"><span class="legend-circle word"></span> complete word</span>
-        <span class="trie-legend-item"><span class="legend-circle found"></span> found path</span>
-        <span class="trie-legend-item"><span class="legend-circle dead"></span> dead end</span>
-      </div>
-      <div class="lookup-section">
-        <div class="lookup-section-title">Tracing ${lookupCandidates.length} candidates through the trie:</div>
-        <div class="lookup-cards">${cards}</div>
+        <span class="trie-legend-item"><span class="lg-circle lg-default"></span>node</span>
+        <span class="trie-legend-item"><span class="lg-circle lg-word"></span>word</span>
+        <span class="trie-legend-item"><span class="lg-circle lg-found"></span>found</span>
+        <span class="trie-legend-item"><span class="lg-circle lg-dead"></span>dead end</span>
       </div>
     </div>
-  </div>`;
+    <div class="trie-svg-area">${svg}</div>
+    <div class="trie-bottom">${cards}</div>`;
 }
 
-function buildDictStep(matches, skeletal, totalExpansions) {
-  let items = "";
-
-  matches.slice(0, 8).forEach((m, i) => {
-    const pct = (m.freq / 8000 * 100).toFixed(0);
-    items += `<div class="dict-word match" data-delay="${i * 150}">
-      <span class="status">\u2705</span>
-      <span class="arabic">${m.word}</span>
-      <div class="freq-bar-container"><div class="freq-bar" data-width="${pct}%"></div></div>
-      <span class="freq-label">freq: ${m.freq}</span>
-    </div>`;
-  });
-
-  skeletal.slice(0, 3).forEach((s, i) => {
-    items += `<div class="dict-word no-match" data-delay="${(matches.length + i) * 150}">
-      <span class="status">\uD83D\uDD24</span>
-      <span class="arabic">${s}</span>
-      <div class="freq-bar-container"><div class="freq-bar" data-width="0%"></div></div>
-      <span class="freq-label">fallback</span>
-    </div>`;
-  });
-
-  if (!matches.length && !skeletal.length) {
-    items = '<div style="text-align:center;color:#64748b;padding:1rem">No matches \u2014 type more characters</div>';
-  }
-
-  return `<div class="step" data-delay="1100">
-    <div class="step-header"><span class="step-num">4</span> Ranked Results</div>
-    <div style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.8rem;text-align:center">
-      ${matches.length} out of ${totalExpansions} forms found in dictionary \u2014 sorted by frequency
-    </div>
-    <div class="dict-results">${items}</div>
-  </div>`;
-}
-
-function buildResultStep(matches, skeletal, input) {
+function buildResults(matches, skeletal, totalExpansions) {
   const all = [
     ...matches.map(m => ({ word: m.word, freq: m.freq, type: "dict" })),
     ...skeletal.map(s => ({ word: s, freq: 0, type: "fallback" }))
   ];
-  if (!all.length) return "";
+  if (!all.length) return '<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#475569;font-size:0.8rem">Type more characters</div>';
 
   const winner = all[0];
-  let listItems = "";
-  all.slice(0, 9).forEach((item, i) => {
-    const rank = i === 0 ? '<span class="rank star">\u2605</span>' : `<span class="rank">${i}.</span>`;
-    const freqLabel = item.freq ? `freq: ${item.freq}` : "fallback";
-    listItems += `<div class="candidate-item${i===0?" history":""}" data-delay="${i * 100}">
-      ${rank}
-      <span class="word">${item.word}</span>
-      <span class="freq">${freqLabel}</span>
-    </div>`;
-    if (i === 0 && all.length > 1) {
-      listItems += `<div class="separator" data-delay="${(i+1) * 100}"></div>`;
-    }
+
+  // Candidates
+  let cands = "";
+  all.slice(0, 7).forEach((item, i) => {
+    const rank = i === 0 ? '<span class="cr star">\u2605</span>' : `<span class="cr">${i}.</span>`;
+    const fl = item.freq ? item.freq : "fallback";
+    cands += `<div class="cand-item${i===0?' cand-top':''}" data-delay="${i*50}">${rank}<span class="cw">${item.word}</span><span class="cf">${fl}</span></div>`;
+    if (i === 0 && all.length > 1) cands += `<div class="cand-sep" data-delay="${(i+1)*50}"></div>`;
   });
 
-  return `<div class="step" data-delay="1500">
-    <div class="step-header"><span class="step-num">5</span> Result</div>
-    <div class="final-result">
-      <div class="final-arabic" data-delay="200">${winner.word}</div>
-      <div class="final-label">Press Space to insert into any app</div>
+  // Freq bars
+  let freqs = "";
+  matches.slice(0, 5).forEach((m, i) => {
+    const pct = (m.freq / 8000 * 100).toFixed(0);
+    freqs += `<div class="freq-row fr-match" data-delay="${i*60}"><span class="fa">${m.word}</span><div class="fb-wrap"><div class="fb" data-width="${pct}%"></div></div><span class="fl">${m.freq}</span></div>`;
+  });
+  skeletal.slice(0, 2).forEach((s, i) => {
+    freqs += `<div class="freq-row fr-fall" data-delay="${(matches.length+i)*60}"><span class="fa">${s}</span><div class="fb-wrap"><div class="fb" data-width="0%"></div></div><span class="fl">fallback</span></div>`;
+  });
+
+  return `<div class="result-hero">
+      <div class="result-arabic" data-delay="100">${winner.word}</div>
+      <div class="result-sub">Press Space to insert</div>
     </div>
-    <div style="margin-top:1.2rem">
-      <div style="text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:0.5rem">Candidate list (what you'd see)</div>
-      <div class="candidate-list">${listItems}</div>
-    </div>
-  </div>`;
+    <div class="result-divider"></div>
+    <div class="panel-label"><span class="num">3</span>Candidates</div>
+    <div class="cand-list">${cands}</div>
+    <div class="result-divider"></div>
+    <div class="freq-header">${matches.length}/${totalExpansions} forms in dictionary</div>
+    <div class="freq-section">${freqs}</div>`;
 }
 
 // ── Animation ──
-function animateSteps() {
-  // Animate step containers
-  document.querySelectorAll(".step").forEach((el, i) => {
-    const delay = parseInt(el.dataset.delay || 0) + i * 200;
-    setTimeout(() => el.classList.add("visible"), delay);
+function animateDashboard() {
+  // Panels fade in
+  document.querySelectorAll(".panel").forEach((el, i) => {
+    setTimeout(() => el.classList.add("visible"), i * 60);
   });
 
-  // Animate elements inside steps
-  const animatable = ".char-card, .pipe-node, .pipe-arrow, .dict-word, .candidate-item, .separator, .final-arabic, .lookup-card";
-  document.querySelectorAll(animatable).forEach(el => {
-    const step = el.closest(".step");
-    const stepDelay = parseInt(step?.dataset.delay || 0);
-    const ownDelay = parseInt(el.dataset.delay || 0);
+  // Internal elements
+  const anim = ".m-card, .lk-card, .cand-item, .cand-sep, .result-arabic, .freq-row";
+  document.querySelectorAll(anim).forEach(el => {
+    const d = parseInt(el.dataset.delay || 0);
     setTimeout(() => {
       el.classList.add("visible");
-      const bar = el.querySelector?.(".freq-bar");
-      if (bar) setTimeout(() => { bar.style.width = bar.dataset.width; }, 100);
-    }, stepDelay + ownDelay + 300);
+      const bar = el.querySelector?.(".fb");
+      if (bar) setTimeout(() => { bar.style.width = bar.dataset.width; }, 80);
+    }, d + 150);
   });
 
-  // Animate trie lookup traces
   animateTrieLookups();
 }
 
 function animateTrieLookups() {
-  const trieStep = document.querySelector('.step[data-delay="700"]');
-  if (!trieStep) return;
-  const stepBase = 700 + 600; // step delay + step become-visible time
+  const triePanel = document.querySelector('.panel-trie');
+  if (!triePanel) return;
+  const baseDelay = 250;
 
-  // Collect all trace steps and results
-  const traceSteps = trieStep.querySelectorAll('.trace-step');
-  const results = trieStep.querySelectorAll('.lookup-result');
+  const traceSteps = triePanel.querySelectorAll('.tr-step');
+  const results = triePanel.querySelectorAll('.lk-result');
 
-  // Track which nodes/edges are part of "found" paths to color them green at the end
   const foundNodes = new Set();
-  const foundEdges = new Set();
-  const deadEndNodes = new Set();
-  const deadEndEdges = new Set();
-
-  // First pass: categorize all nodes
   traceSteps.forEach(el => {
     const nodeId = el.dataset.nodeId;
-    const edgeId = el.dataset.edgeId;
-    const isLast = el.dataset.isLast === 'true';
     const candFound = el.dataset.candidateFound === 'true';
-    const isFail = el.classList.contains('fail') || !el.dataset.nodeId;
-
-    if (isFail) {
-      // This is a dead end step - we don't have a real node for it
-    } else if (candFound) {
-      foundNodes.add(nodeId);
-      foundEdges.add(edgeId);
-    }
+    if (nodeId && candFound) foundNodes.add(nodeId);
   });
 
-  // Animate each trace step
   traceSteps.forEach(el => {
     const delay = parseInt(el.dataset.delay || 0);
     const nodeId = el.dataset.nodeId;
-    const edgeId = el.dataset.edgeId;
     const isLast = el.dataset.isLast === 'true';
     const candFound = el.dataset.candidateFound === 'true';
 
     setTimeout(() => {
       el.classList.add("visible");
-
       if (nodeId) {
         const nodeEl = document.getElementById(`node-${nodeId}`);
-        const edgeEl = document.getElementById(`edge-${edgeId}`);
-
-        // Remove any previous "current" marker
+        const edgeEl = document.getElementById(`edge-${nodeId}`);
         document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
-
-        if (nodeEl) {
-          nodeEl.classList.add('visiting');
-          if (!isLast) nodeEl.classList.add('current');
-        }
+        if (nodeEl) { nodeEl.classList.add('visiting'); if (!isLast) nodeEl.classList.add('current'); }
         if (edgeEl) edgeEl.classList.add('visiting');
-
-        // If this is the last step, apply final state
         if (isLast) {
           document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
           if (candFound) {
-            // Mark entire path as found
             foundNodes.forEach(id => {
               const n = document.getElementById(`node-${id}`);
               if (n) { n.classList.remove('visiting'); n.classList.add('found'); }
@@ -1128,28 +943,26 @@ function animateTrieLookups() {
           }
         }
       } else if (isLast && !candFound) {
-        // Dead end - stop pulse animation and mark path as dead-end
         document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
-        const card = el.closest('.lookup-card');
+        const card = el.closest('.lk-card');
         if (card) {
-          card.querySelectorAll('.trace-step.ok').forEach(okStep => {
+          card.querySelectorAll('.tr-step.ok').forEach(okStep => {
             const nId = okStep.dataset.nodeId;
             if (nId && !foundNodes.has(nId)) {
               const n = document.getElementById(`node-${nId}`);
-              if (n) { n.classList.remove('visiting', 'found'); n.classList.add('dead-end'); }
+              if (n) { n.classList.remove('visiting','found'); n.classList.add('dead-end'); }
               const e = document.getElementById(`edge-${nId}`);
-              if (e) { e.classList.remove('visiting', 'found'); e.classList.add('dead-end'); }
+              if (e) { e.classList.remove('visiting','found'); e.classList.add('dead-end'); }
             }
           });
         }
       }
-    }, stepBase + delay);
+    }, baseDelay + delay);
   });
 
-  // Animate results
   results.forEach(el => {
     const delay = parseInt(el.dataset.delay || 0);
-    setTimeout(() => el.classList.add("visible"), stepBase + delay);
+    setTimeout(() => el.classList.add("visible"), baseDelay + delay);
   });
 }
 </script>
