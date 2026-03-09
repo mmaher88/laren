@@ -41,3 +41,7 @@ install(FILES "${CMAKE_SOURCE_DIR}/resources/laren-im.conf"
 
 install(FILES "${CMAKE_SOURCE_DIR}/data/dictionary.tsv"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/laren")
+
+install(FILES "${CMAKE_SOURCE_DIR}/resources/default-profile"
+        RENAME profile
+        DESTINATION "${FCITX_INSTALL_PKGDATADIR}/default")
