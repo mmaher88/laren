@@ -34,12 +34,12 @@ osc meta prj "$PROJECT" -F - <<EOF
   <title>Laren - Arabizi to Arabic transliteration for Fcitx5</title>
   <description>Fcitx5 input method that transliterates Arabizi (Latin) to Arabic script.</description>
   <person userid="$OBS_USER" role="maintainer"/>
-  <repository name="Fedora_41">
-    <path project="Fedora:41" repository="standard"/>
-    <arch>x86_64</arch>
-  </repository>
   <repository name="Fedora_42">
     <path project="Fedora:42" repository="standard"/>
+    <arch>x86_64</arch>
+  </repository>
+  <repository name="Fedora_43">
+    <path project="Fedora:43" repository="standard"/>
     <arch>x86_64</arch>
   </repository>
   <repository name="xUbuntu_24.04">
