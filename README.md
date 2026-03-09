@@ -51,21 +51,21 @@ sudo zypper refresh && sudo zypper install fcitx5-laren
 **Ubuntu / Debian:**
 ```bash
 sudo apt install cmake g++ fcitx5-modules-dev libfcitx5core-dev
-cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc)
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
 sudo cmake --install build
 ```
 
 **Fedora:**
 ```bash
 sudo dnf install cmake gcc-c++ fcitx5-devel
-cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc)
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
 sudo cmake --install build
 ```
 
 **Arch:**
 ```bash
 sudo pacman -S cmake fcitx5
-cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc)
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && cmake --build build -j$(nproc)
 sudo cmake --install build
 ```
 
