@@ -42,11 +42,17 @@ sudo dnf install fcitx5-laren
 ### Ubuntu / Debian
 
 ```bash
-DISTRO="xUbuntu_$(lsb_release -rs)"  # or Debian_12
-curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg
-echo "deb [signed-by=/etc/apt/keyrings/laren.gpg] https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/ /" | sudo tee /etc/apt/sources.list.d/laren.list
-sudo apt update && sudo apt install fcitx5-laren
+DISTRO="xUbuntu_$(lsb_release -rs)" && \
+  sudo mkdir -p /etc/apt/keyrings && \
+  curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" \
+    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/laren.gpg] https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/ /" \
+    | sudo tee /etc/apt/sources.list.d/laren.list && \
+  sudo apt update && sudo apt install -y fcitx5-laren
 ```
+
+For Debian 12, replace the first line with `DISTRO="Debian_12"`.
+
 
 ### openSUSE Tumbleweed
 
