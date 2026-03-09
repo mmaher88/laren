@@ -57,14 +57,8 @@ h1 {
   letter-spacing: 0.15em;
 }
 
-.input-section input:focus {
-  border-color: #818cf8;
-}
-
-.input-section input::placeholder {
-  color: #475569;
-  letter-spacing: 0.05em;
-}
+.input-section input:focus { border-color: #818cf8; }
+.input-section input::placeholder { color: #475569; letter-spacing: 0.05em; }
 
 .steps {
   display: flex;
@@ -82,10 +76,7 @@ h1 {
   transition: opacity 0.5s, transform 0.5s;
 }
 
-.step.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.step.visible { opacity: 1; transform: translateY(0); }
 
 .step-header {
   display: flex;
@@ -111,12 +102,7 @@ h1 {
 }
 
 /* Character mappings */
-.char-mappings {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
+.char-mappings { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
 
 .char-card {
   background: #0f172a;
@@ -130,10 +116,7 @@ h1 {
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.char-card.visible {
-  opacity: 1;
-  transform: scale(1);
-}
+.char-card.visible { opacity: 1; transform: scale(1); }
 
 .char-latin {
   font-size: 1.4rem;
@@ -143,18 +126,9 @@ h1 {
   margin-bottom: 0.3rem;
 }
 
-.char-arrow {
-  color: #475569;
-  font-size: 0.8rem;
-  margin-bottom: 0.3rem;
-}
+.char-arrow { color: #475569; font-size: 0.8rem; margin-bottom: 0.3rem; }
 
-.char-arabic {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  justify-content: center;
-}
+.char-arabic { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
 
 .arabic-option {
   background: #1e293b;
@@ -166,165 +140,16 @@ h1 {
   transition: all 0.3s;
 }
 
-.arabic-option.skip {
-  color: #22c55e;
-  font-size: 0.75rem;
-  font-style: italic;
-  direction: ltr;
-}
-
-.arabic-option.highlight {
-  border-color: #22c55e;
-  background: #052e16;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
-}
+.arabic-option.skip { color: #22c55e; font-size: 0.75rem; font-style: italic; direction: ltr; }
+.arabic-option.highlight { border-color: #22c55e; background: #052e16; box-shadow: 0 0 8px rgba(34, 197, 94, 0.3); }
 
 /* Branching math */
-.branch-math {
-  text-align: center;
-  font-size: 1.3rem;
-  padding: 1rem;
-  font-family: 'Courier New', monospace;
-}
+.branch-math { text-align: center; font-size: 1.3rem; padding: 1rem; font-family: 'Courier New', monospace; }
+.branch-math .multiply { color: #818cf8; margin: 0 0.3rem; }
+.branch-math .total { color: #22c55e; font-weight: 700; font-size: 1.5rem; }
 
-.branch-math .multiply {
-  color: #818cf8;
-  margin: 0 0.3rem;
-}
-
-.branch-math .total {
-  color: #22c55e;
-  font-weight: 700;
-  font-size: 1.5rem;
-}
-
-/* Tree visualization */
-.tree-container {
-  overflow-x: auto;
-  padding: 1rem 0;
-}
-
-.tree-canvas {
-  position: relative;
-  min-height: 200px;
-  display: flex;
-  justify-content: center;
-}
-
-svg.tree-svg {
-  overflow: visible;
-}
-
-/* Dictionary results */
-.dict-results {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.dict-word {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  background: #0f172a;
-  border: 1px solid #334155;
-  opacity: 0;
-  transform: translateX(-20px);
-  transition: all 0.4s;
-}
-
-.dict-word.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.dict-word.match {
-  border-color: #22c55e;
-  background: #052e16;
-}
-
-.dict-word.no-match {
-  border-color: #334155;
-  opacity: 0.5;
-}
-
-.dict-word .arabic {
-  font-size: 1.5rem;
-  direction: rtl;
-  min-width: 100px;
-  text-align: center;
-}
-
-.dict-word .status {
-  font-size: 1.2rem;
-}
-
-.dict-word .freq-bar-container {
-  flex: 1;
-  height: 8px;
-  background: #1e293b;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.dict-word .freq-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 1s ease-out;
-  width: 0;
-}
-
-.dict-word.match .freq-bar {
-  background: linear-gradient(90deg, #22c55e, #38bdf8);
-}
-
-.dict-word .freq-label {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  min-width: 80px;
-  text-align: right;
-}
-
-/* Final result */
-.final-result {
-  text-align: center;
-  padding: 1.5rem;
-}
-
-.final-arabic {
-  font-size: 3.5rem;
-  direction: rtl;
-  background: linear-gradient(135deg, #22c55e, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-  opacity: 0;
-  transform: scale(0.5);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.final-arabic.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.final-label {
-  color: #94a3b8;
-  margin-top: 0.5rem;
-  font-size: 0.95rem;
-}
-
-/* Pipeline animation */
-.pipeline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  flex-wrap: wrap;
-  padding: 0.5rem 0;
-}
+/* Pipeline */
+.pipeline { display: flex; align-items: center; justify-content: center; gap: 0.3rem; flex-wrap: wrap; padding: 0.5rem 0; }
 
 .pipe-node {
   background: #0f172a;
@@ -339,29 +164,253 @@ svg.tree-svg {
   min-width: 90px;
 }
 
-.pipe-node.visible {
-  opacity: 1;
-  transform: scale(1);
-}
+.pipe-node.visible { opacity: 1; transform: scale(1); }
+.pipe-node.active { border-color: #818cf8; box-shadow: 0 0 12px rgba(129, 140, 248, 0.3); }
+.pipe-node.done { border-color: #22c55e; box-shadow: 0 0 12px rgba(34, 197, 94, 0.2); }
 
-.pipe-node.active {
-  border-color: #818cf8;
-  box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
-}
-
-.pipe-node.done {
-  border-color: #22c55e;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
-}
-
-.pipe-arrow {
-  color: #475569;
-  font-size: 1.2rem;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
+.pipe-arrow { color: #475569; font-size: 1.2rem; opacity: 0; transition: opacity 0.3s; }
 .pipe-arrow.visible { opacity: 1; }
+
+/* ── Trie Visualization ── */
+.trie-step-layout { display: flex; flex-direction: column; gap: 1rem; }
+
+.trie-explainer {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.trie-explainer b { color: #e2e8f0; }
+
+.trie-svg-container {
+  overflow-x: auto;
+  text-align: center;
+  padding: 1rem 0.5rem;
+  background: #0f172a;
+  border-radius: 12px;
+  border: 1px solid #334155;
+}
+
+.trie-svg { max-width: 100%; height: auto; }
+
+.trie-circle {
+  fill: #1e293b;
+  stroke: #475569;
+  stroke-width: 2;
+  transition: fill 0.4s, stroke 0.4s;
+}
+
+.trie-word-ring {
+  fill: none;
+  stroke: #854d0e;
+  stroke-width: 2;
+  opacity: 0.5;
+  transition: stroke 0.4s, opacity 0.4s;
+}
+
+.trie-text {
+  fill: #94a3b8;
+  font-size: 14px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  transition: fill 0.4s;
+  pointer-events: none;
+}
+
+.trie-edge {
+  stroke: #334155;
+  stroke-width: 1.5;
+  transition: stroke 0.4s, stroke-width 0.3s;
+}
+
+/* Trie animation states */
+.trie-node-g.visiting .trie-circle { fill: #1e1b4b; stroke: #818cf8; stroke-width: 2.5; }
+.trie-node-g.visiting .trie-text { fill: #c7d2fe; }
+.trie-node-g.visiting .trie-word-ring { stroke: #818cf8; opacity: 0.8; }
+
+.trie-node-g.found .trie-circle { fill: #052e16; stroke: #22c55e; stroke-width: 2.5; }
+.trie-node-g.found .trie-text { fill: #bbf7d0; }
+.trie-node-g.found .trie-word-ring { stroke: #22c55e; opacity: 0.9; }
+
+.trie-node-g.dead-end .trie-circle { fill: #450a0a; stroke: #ef4444; stroke-width: 2.5; }
+.trie-node-g.dead-end .trie-text { fill: #fecaca; }
+
+.trie-edge.visiting { stroke: #818cf8; stroke-width: 2.5; }
+.trie-edge.found { stroke: #22c55e; stroke-width: 2.5; }
+.trie-edge.dead-end { stroke: #ef4444; stroke-width: 2; stroke-dasharray: 5 3; }
+
+/* Pulse animation on current node */
+@keyframes trie-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.4)); }
+  50% { filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.8)); }
+}
+.trie-node-g.current { animation: trie-pulse 0.8s ease-in-out infinite; }
+
+.trie-legend {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.trie-legend-item { display: flex; align-items: center; gap: 0.3rem; }
+
+.legend-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.legend-circle.default { background: #1e293b; border-color: #475569; }
+.legend-circle.word { background: #1e293b; border-color: #475569; outline: 2px solid #854d0e; outline-offset: 1px; }
+.legend-circle.found { background: #052e16; border-color: #22c55e; }
+.legend-circle.dead { background: #450a0a; border-color: #ef4444; }
+
+/* Lookup cards */
+.lookup-section { margin-top: 1.2rem; }
+
+.lookup-section-title {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-bottom: 0.8rem;
+}
+
+.lookup-cards {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lookup-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  min-width: 180px;
+  max-width: 260px;
+  flex: 1;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: all 0.4s;
+}
+
+.lookup-card.visible { opacity: 1; transform: translateY(0); }
+.lookup-card.found-card { border-color: #166534; }
+.lookup-card.not-found-card { border-color: #7f1d1d; }
+
+.lookup-word {
+  font-size: 1.3rem;
+  direction: rtl;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.lookup-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.trace-step {
+  font-size: 0.78rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  direction: rtl;
+}
+
+.trace-step.visible { opacity: 1; transform: translateX(0); }
+.trace-step.ok { color: #86efac; }
+.trace-step.fail { color: #fca5a5; }
+
+.trace-step .word-badge {
+  background: #422006;
+  color: #fbbf24;
+  font-size: 0.65rem;
+  padding: 0 0.4rem;
+  border-radius: 3px;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+.lookup-result {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.lookup-result.visible { opacity: 1; }
+
+.lookup-result.is-found { color: #22c55e; background: #052e16; }
+.lookup-result.is-not-found { color: #ef4444; background: #450a0a; }
+
+/* Dictionary results */
+.dict-results { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.dict-word {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.4s;
+}
+
+.dict-word.visible { opacity: 1; transform: translateX(0); }
+.dict-word.match { border-color: #22c55e; background: #052e16; }
+.dict-word.no-match { border-color: #334155; opacity: 0.5; }
+
+.dict-word .arabic { font-size: 1.5rem; direction: rtl; min-width: 100px; text-align: center; }
+.dict-word .status { font-size: 1.2rem; }
+
+.dict-word .freq-bar-container { flex: 1; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+.dict-word .freq-bar { height: 100%; border-radius: 4px; transition: width 1s ease-out; width: 0; }
+.dict-word.match .freq-bar { background: linear-gradient(90deg, #22c55e, #38bdf8); }
+
+.dict-word .freq-label { font-size: 0.8rem; color: #94a3b8; min-width: 80px; text-align: right; }
+
+/* Final result */
+.final-result { text-align: center; padding: 1.5rem; }
+
+.final-arabic {
+  font-size: 3.5rem;
+  direction: rtl;
+  background: linear-gradient(135deg, #22c55e, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.final-arabic.visible { opacity: 1; transform: scale(1); }
+.final-label { color: #94a3b8; margin-top: 0.5rem; font-size: 0.95rem; }
 
 /* Candidate list */
 .candidate-list {
@@ -384,55 +433,20 @@ svg.tree-svg {
   transform: translateY(10px);
 }
 
-.candidate-item.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.candidate-item.visible { opacity: 1; transform: translateY(0); }
+.candidate-item.history { background: #1a2e05; border: 1px solid #365314; }
 
-.candidate-item.history {
-  background: #1a2e05;
-  border: 1px solid #365314;
-}
-
-.candidate-item .rank {
-  color: #64748b;
-  font-size: 0.85rem;
-  min-width: 24px;
-}
-
+.candidate-item .rank { color: #64748b; font-size: 0.85rem; min-width: 24px; }
 .candidate-item .rank.star { color: #eab308; }
+.candidate-item .word { font-size: 1.3rem; direction: rtl; flex: 1; }
+.candidate-item .freq { font-size: 0.75rem; color: #64748b; }
 
-.candidate-item .word {
-  font-size: 1.3rem;
-  direction: rtl;
-  flex: 1;
-}
-
-.candidate-item .freq {
-  font-size: 0.75rem;
-  color: #64748b;
-}
-
-.separator {
-  border-top: 1px dashed #334155;
-  margin: 0.3rem 0;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
+.separator { border-top: 1px dashed #334155; margin: 0.3rem 0; opacity: 0; transition: opacity 0.3s; }
 .separator.visible { opacity: 1; }
 
 /* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #475569;
-}
-
-.empty-state .icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
+.empty-state { text-align: center; padding: 3rem; color: #475569; }
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
 
 /* Responsive */
 @media (max-width: 640px) {
@@ -440,21 +454,12 @@ svg.tree-svg {
   .input-section input { font-size: 1.3rem; }
   .char-card { min-width: 65px; padding: 0.5rem; }
   .final-arabic { font-size: 2.5rem; }
+  .lookup-cards { flex-direction: column; align-items: center; }
+  .lookup-card { max-width: 100%; min-width: 0; width: 100%; }
 }
 
-.github-link {
-  text-align: center;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #1e293b;
-}
-
-.github-link a {
-  color: #818cf8;
-  text-decoration: none;
-  font-size: 0.95rem;
-}
-
+.github-link { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #1e293b; }
+.github-link a { color: #818cf8; text-decoration: none; font-size: 0.95rem; }
 .github-link a:hover { text-decoration: underline; }
 </style>
 </head>
@@ -469,7 +474,7 @@ svg.tree-svg {
 
   <div id="steps" class="steps">
     <div class="empty-state">
-      <div class="icon">⌨️</div>
+      <div class="icon">&#x2328;&#xFE0F;</div>
       <p>Start typing to see the transliteration pipeline in action</p>
     </div>
   </div>
@@ -482,88 +487,81 @@ svg.tree-svg {
 <script>
 // ── Arabizi mapping rules (mirrors rule_engine.cpp) ──
 const MAPPINGS = {
-  // Digraphs
-  "sh": ["ش"],
-  "kh": ["خ"],
-  "gh": ["غ"],
-  "th": ["ث", "ذ"],
-  "dh": ["ذ", "ض"],
-  "aa": ["ا", "آ"],
-  "ee": ["ي"],
-  "oo": ["و"],
-  "ou": ["و"],
-  // Doubled consonants
-  "bb": ["ب"], "tt": ["ت","ط"], "dd": ["د","ض"], "rr": ["ر"],
-  "ss": ["س","ص"], "ff": ["ف"], "kk": ["ك"], "ll": ["ل"],
-  "mm": ["م"], "nn": ["ن"], "yy": ["ي"], "ww": ["و"],
-  "zz": ["ز"], "gg": ["ج"], "hh": ["ه"],
-  // Numbers
-  "2": ["ء","أ","إ","ق"], "3": ["ع"], "5": ["خ"],
-  "6": ["ط"], "7": ["ح"], "8": ["ق"], "9": ["ص"],
-  // Single letters
-  "a": ["∅","ا","أ","ى","ه","ة"], "b": ["ب"], "t": ["ت","ط"],
-  "g": ["ج"], "j": ["ج"], "d": ["د","ض"], "r": ["ر"],
-  "z": ["ز","ظ","ذ"], "s": ["س","ص"], "f": ["ف"],
-  "q": ["ق"], "k": ["ق","ك"], "l": ["ل"], "m": ["م"],
-  "n": ["ن"], "h": ["ه","ح"], "w": ["و"], "y": ["ي"],
-  "i": ["∅","ي","ا","أ","إ"], "u": ["∅","و","أ"],
-  "o": ["∅","و","أ"], "e": ["∅","ي","ا","أ","إ"],
-  "p": ["ب"], "v": ["ف"], "x": ["خ"], "c": ["ك"],
+  "sh": ["\u0634"], "kh": ["\u062E"], "gh": ["\u063A"],
+  "th": ["\u062B", "\u0630"], "dh": ["\u0630", "\u0636"],
+  "aa": ["\u0627", "\u0622"], "ee": ["\u064A"], "oo": ["\u0648"], "ou": ["\u0648"],
+  "bb": ["\u0628"], "tt": ["\u062A","\u0637"], "dd": ["\u062F","\u0636"], "rr": ["\u0631"],
+  "ss": ["\u0633","\u0635"], "ff": ["\u0641"], "kk": ["\u0643"], "ll": ["\u0644"],
+  "mm": ["\u0645"], "nn": ["\u0646"], "yy": ["\u064A"], "ww": ["\u0648"],
+  "zz": ["\u0632"], "gg": ["\u062C"], "hh": ["\u0647"],
+  "2": ["\u0621","\u0623","\u0625","\u0642"], "3": ["\u0639"], "5": ["\u062E"],
+  "6": ["\u0637"], "7": ["\u062D"], "8": ["\u0642"], "9": ["\u0635"],
+  "a": ["\u2205","\u0627","\u0623","\u0649","\u0647","\u0629"],
+  "b": ["\u0628"], "t": ["\u062A","\u0637"],
+  "g": ["\u062C"], "j": ["\u062C"], "d": ["\u062F","\u0636"], "r": ["\u0631"],
+  "z": ["\u0632","\u0638","\u0630"], "s": ["\u0633","\u0635"], "f": ["\u0641"],
+  "q": ["\u0642"], "k": ["\u0642","\u0643"], "l": ["\u0644"], "m": ["\u0645"],
+  "n": ["\u0646"], "h": ["\u0647","\u062D"], "w": ["\u0648"], "y": ["\u064A"],
+  "i": ["\u2205","\u064A","\u0627","\u0623","\u0625"],
+  "u": ["\u2205","\u0648","\u0623"], "o": ["\u2205","\u0648","\u0623"],
+  "e": ["\u2205","\u064A","\u0627","\u0623","\u0625"],
+  "p": ["\u0628"], "v": ["\u0641"], "x": ["\u062E"], "c": ["\u0643"],
 };
 
 const MAPPING_NAMES = {
-  "ء":"hamza","أ":"alef-hamza","إ":"alef-hamza-below","آ":"alef-madda",
-  "ا":"alef","ب":"ba","ت":"ta","ث":"tha","ج":"jeem","ح":"haa",
-  "خ":"kha","د":"dal","ذ":"dhal","ر":"ra","ز":"zayn","س":"seen",
-  "ش":"sheen","ص":"sad","ض":"dad","ط":"taa","ظ":"dhaa","ع":"ain",
-  "غ":"ghain","ف":"fa","ق":"qaf","ك":"kaf","ل":"lam","م":"meem",
-  "ن":"noon","ه":"ha","و":"waw","ي":"ya","ة":"ta-marbuta",
-  "ى":"alef-maqsura","∅":"skip"
+  "\u0621":"hamza","\u0623":"alef-hamza","\u0625":"alef-hamza-below","\u0622":"alef-madda",
+  "\u0627":"alef","\u0628":"ba","\u062A":"ta","\u062B":"tha","\u062C":"jeem","\u062D":"haa",
+  "\u062E":"kha","\u062F":"dal","\u0630":"dhal","\u0631":"ra","\u0632":"zayn","\u0633":"seen",
+  "\u0634":"sheen","\u0635":"sad","\u0636":"dad","\u0637":"taa","\u0638":"dhaa","\u0639":"ain",
+  "\u063A":"ghain","\u0641":"fa","\u0642":"qaf","\u0643":"kaf","\u0644":"lam","\u0645":"meem",
+  "\u0646":"noon","\u0647":"ha","\u0648":"waw","\u064A":"ya","\u0629":"ta-marbuta",
+  "\u0649":"alef-maqsura","\u2205":"skip"
 };
 
-// ── Mini dictionary (common words for the demo) ──
+// ── Mini dictionary ──
 const DICTIONARY = {
-  "حبيبي":5600,"حبيبى":4100,"حبيبه":3800,"حبيبة":3900,
-  "حبيب":5800,"حب":6100,"سلام":5230,"سلم":4800,"سالم":4200,
-  "عرب":5100,"عراب":3200,"عربي":5000,"عربية":4900,
-  "كتاب":5500,"كتب":5300,"مكتبة":4600,
-  "الحمدلله":6200,"الله":6800,"حمد":4500,
-  "يلا":4800,"يالا":3500,
-  "كويس":4200,"كويسة":3800,
-  "شكرا":5400,"مصر":5600,"قمر":4300,"عين":5000,
-  "بنت":4900,"ولد":4800,"بيت":5200,"باب":5100,
-  "كلام":5000,"كلمة":4800,"كلمه":4600,
-  "ليه":4500,"ليش":4200,"كده":4000,"كدا":3800,
-  "دين":4600,"عيد":5000,"نور":4700,"حياة":5100,"حياه":4900,
-  "اسد":4200,"أسد":4400,"بطل":4300,
-  "شرموطه":2800,"شرموطة":2900,
-  "منيكه":2200,"منيكة":2300,
-  "لبوه":2600,"لبوة":2700,
-  "في":7540,"من":7500,"على":7180,"أن":7030,
-  "هذا":6670,"لا":6800,"ما":6700,"يا":6500,
-  "مع":6200,"هو":6400,"هي":6300,
-  "فين":4200,"هنا":5000,"كمان":4000,
-  "أحا":2500,"خره":2400,"خرا":2600,
-  "حلو":4600,"حلوه":4400,"حلوة":4500,"جميل":5000,"جميلة":4800,
-  "صباح":4800,"مساء":4600,"خير":5200,
-  "صباحالخير":3500,"مساءالخير":3200,
-  "شغل":4400,"فلوس":4100,"ناس":5000,
-  "واحد":5100,"اتنين":4200,"تلاته":3800,
-  "صحيح":4600,"غلط":4200,"تمام":4800,
-  "عايز":4400,"عايزه":4200,"عاوز":4100,
-  "مش":5200,"مفيش":4000,"بردو":3800,
+  "\u062D\u0628\u064A\u0628\u064A":5600,"\u062D\u0628\u064A\u0628\u0649":4100,
+  "\u062D\u0628\u064A\u0628\u0647":3800,"\u062D\u0628\u064A\u0628\u0629":3900,
+  "\u062D\u0628\u064A\u0628":5800,"\u062D\u0628":6100,
+  "\u0633\u0644\u0627\u0645":5230,"\u0633\u0644\u0645":4800,"\u0633\u0627\u0644\u0645":4200,
+  "\u0639\u0631\u0628":5100,"\u0639\u0631\u0627\u0628":3200,"\u0639\u0631\u0628\u064A":5000,"\u0639\u0631\u0628\u064A\u0629":4900,
+  "\u0643\u062A\u0627\u0628":5500,"\u0643\u062A\u0628":5300,"\u0645\u0643\u062A\u0628\u0629":4600,
+  "\u0627\u0644\u062D\u0645\u062F\u0644\u0644\u0647":6200,"\u0627\u0644\u0644\u0647":6800,"\u062D\u0645\u062F":4500,
+  "\u064A\u0644\u0627":4800,"\u064A\u0627\u0644\u0627":3500,
+  "\u0643\u0648\u064A\u0633":4200,"\u0643\u0648\u064A\u0633\u0629":3800,
+  "\u0634\u0643\u0631\u0627":5400,"\u0645\u0635\u0631":5600,"\u0642\u0645\u0631":4300,"\u0639\u064A\u0646":5000,
+  "\u0628\u0646\u062A":4900,"\u0648\u0644\u062F":4800,"\u0628\u064A\u062A":5200,"\u0628\u0627\u0628":5100,
+  "\u0643\u0644\u0627\u0645":5000,"\u0643\u0644\u0645\u0629":4800,"\u0643\u0644\u0645\u0647":4600,
+  "\u0644\u064A\u0647":4500,"\u0644\u064A\u0634":4200,"\u0643\u062F\u0647":4000,"\u0643\u062F\u0627":3800,
+  "\u062F\u064A\u0646":4600,"\u0639\u064A\u062F":5000,"\u0646\u0648\u0631":4700,
+  "\u062D\u064A\u0627\u0629":5100,"\u062D\u064A\u0627\u0647":4900,
+  "\u0627\u0633\u062F":4200,"\u0623\u0633\u062F":4400,"\u0628\u0637\u0644":4300,
+  "\u0634\u0631\u0645\u0648\u0637\u0647":2800,"\u0634\u0631\u0645\u0648\u0637\u0629":2900,
+  "\u0645\u0646\u064A\u0643\u0647":2200,"\u0645\u0646\u064A\u0643\u0629":2300,
+  "\u0644\u0628\u0648\u0647":2600,"\u0644\u0628\u0648\u0629":2700,
+  "\u0641\u064A":7540,"\u0645\u0646":7500,"\u0639\u0644\u0649":7180,"\u0623\u0646":7030,
+  "\u0647\u0630\u0627":6670,"\u0644\u0627":6800,"\u0645\u0627":6700,"\u064A\u0627":6500,
+  "\u0645\u0639":6200,"\u0647\u0648":6400,"\u0647\u064A":6300,
+  "\u0641\u064A\u0646":4200,"\u0647\u0646\u0627":5000,"\u0643\u0645\u0627\u0646":4000,
+  "\u0623\u062D\u0627":2500,"\u062E\u0631\u0647":2400,"\u062E\u0631\u0627":2600,
+  "\u062D\u0644\u0648":4600,"\u062D\u0644\u0648\u0647":4400,"\u062D\u0644\u0648\u0629":4500,
+  "\u062C\u0645\u064A\u0644":5000,"\u062C\u0645\u064A\u0644\u0629":4800,
+  "\u0635\u0628\u0627\u062D":4800,"\u0645\u0633\u0627\u0621":4600,"\u062E\u064A\u0631":5200,
+  "\u0635\u0628\u0627\u062D\u0627\u0644\u062E\u064A\u0631":3500,"\u0645\u0633\u0627\u0621\u0627\u0644\u062E\u064A\u0631":3200,
+  "\u0634\u063A\u0644":4400,"\u0641\u0644\u0648\u0633":4100,"\u0646\u0627\u0633":5000,
+  "\u0648\u0627\u062D\u062F":5100,"\u0627\u062A\u0646\u064A\u0646":4200,"\u062A\u0644\u0627\u062B\u0647":3800,
+  "\u0635\u062D\u064A\u062D":4600,"\u063A\u0644\u0637":4200,"\u062A\u0645\u0627\u0645":4800,
+  "\u0639\u0627\u064A\u0632":4400,"\u0639\u0627\u064A\u0632\u0647":4200,"\u0639\u0627\u0648\u0632":4100,
+  "\u0645\u0634":5200,"\u0645\u0641\u064A\u0634":4000,"\u0628\u0631\u062F\u0648":3800,
 };
 
-// ── DFS expansion (mirrors transliterator logic) ──
+// ── Tokenize & DFS ──
 function getMatchesAt(input, pos) {
   const results = [];
   const remaining = input.slice(pos).toLowerCase();
-  // Try longest first
   for (const len of [2, 1]) {
     const substr = remaining.slice(0, len);
-    if (MAPPINGS[substr]) {
-      results.push({ latin: substr, arabic: MAPPINGS[substr], len });
-    }
+    if (MAPPINGS[substr]) results.push({ latin: substr, arabic: MAPPINGS[substr], len });
   }
   return results;
 }
@@ -590,28 +588,216 @@ function tokenize(input) {
 
 function expandDFS(input, maxResults = 200) {
   const results = [];
-  const tokens = [];
   function dfs(pos, current) {
     if (results.length >= maxResults) return;
-    if (pos >= input.length) {
-      results.push(current.join(""));
-      return;
-    }
+    if (pos >= input.length) { results.push(current.join("")); return; }
     const matches = getMatchesAt(input, pos);
     for (const match of matches) {
       for (const ar of match.arabic) {
-        if (ar === "∅") {
-          dfs(pos + match.len, current);
-        } else {
-          current.push(ar);
-          dfs(pos + match.len, current);
-          current.pop();
-        }
+        if (ar === "\u2205") { dfs(pos + match.len, current); }
+        else { current.push(ar); dfs(pos + match.len, current); current.pop(); }
       }
     }
   }
   dfs(0, []);
   return results;
+}
+
+// ── Trie Visualization Engine ──
+let trieNodeCounter = 0;
+
+function createTrieNode(char, depth) {
+  return {
+    char, depth, children: {}, isWord: false, freq: 0, word: '',
+    id: 'tn' + (trieNodeCounter++), x: 0, y: 0
+  };
+}
+
+function buildVizTrie(words) {
+  trieNodeCounter = 0;
+  const root = createTrieNode('', 0);
+  root.id = 'troot';
+  for (const [word, freq] of words) {
+    let node = root;
+    for (let i = 0; i < word.length; i++) {
+      const ch = word[i];
+      if (!node.children[ch]) {
+        node.children[ch] = createTrieNode(ch, i + 1);
+      }
+      node = node.children[ch];
+    }
+    node.isWord = true;
+    node.freq = freq;
+    node.word = word;
+  }
+  return root;
+}
+
+function trieLookup(root, word) {
+  const steps = [];
+  let node = root;
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i];
+    if (node.children[ch]) {
+      node = node.children[ch];
+      steps.push({
+        nodeId: node.id, char: ch, prefix: word.slice(0, i + 1),
+        found: true, isWord: node.isWord, wordFreq: node.freq
+      });
+    } else {
+      steps.push({
+        nodeId: null, char: ch, prefix: word.slice(0, i + 1),
+        found: false, isWord: false
+      });
+      break;
+    }
+  }
+  return { steps, matched: steps.length === word.length && steps.length > 0 && steps[steps.length - 1].found };
+}
+
+function layoutTrie(root) {
+  const NODE_W = 52;
+  const ROW_H = 62;
+
+  function subtreeWidth(node) {
+    const kids = Object.values(node.children);
+    if (kids.length === 0) return NODE_W;
+    return Math.max(kids.reduce((s, c) => s + subtreeWidth(c), 0), NODE_W);
+  }
+
+  function position(node, cx, cy) {
+    node.x = cx;
+    node.y = cy;
+    const kids = Object.values(node.children);
+    const totalW = kids.reduce((s, c) => s + subtreeWidth(c), 0);
+    let x = cx - totalW / 2;
+    for (const child of kids) {
+      const w = subtreeWidth(child);
+      position(child, x + w / 2, cy + ROW_H);
+      x += w;
+    }
+  }
+
+  position(root, 0, 28);
+
+  let minX = Infinity, maxX = -Infinity, maxY = 0;
+  function bounds(node) {
+    minX = Math.min(minX, node.x);
+    maxX = Math.max(maxX, node.x);
+    maxY = Math.max(maxY, node.y);
+    for (const c of Object.values(node.children)) bounds(c);
+  }
+  bounds(root);
+
+  return { minX: minX - 35, maxX: maxX + 35, maxY: maxY + 35,
+           width: maxX - minX + 70, height: maxY + 63 };
+}
+
+function trieToSVG(root, bounds) {
+  const pad = 10;
+  const vx = bounds.minX - pad;
+  const vw = bounds.width + pad * 2;
+  const vh = bounds.height + pad;
+  let svg = `<svg class="trie-svg" viewBox="${vx} 0 ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Edges
+  function drawEdges(node) {
+    for (const child of Object.values(node.children)) {
+      svg += `<line class="trie-edge" id="edge-${child.id}" x1="${node.x}" y1="${node.y}" x2="${child.x}" y2="${child.y}"/>`;
+      drawEdges(child);
+    }
+  }
+  drawEdges(root);
+
+  // Nodes
+  function drawNodes(node) {
+    const cls = node.isWord ? 'word-node' : '';
+    svg += `<g class="trie-node-g ${cls}" id="node-${node.id}">`;
+    if (node.isWord) {
+      svg += `<circle cx="${node.x}" cy="${node.y}" r="23" class="trie-word-ring"/>`;
+    }
+    svg += `<circle cx="${node.x}" cy="${node.y}" r="18" class="trie-circle"/>`;
+    const label = node.char || '\u25CF';
+    svg += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${label}</text>`;
+    svg += `</g>`;
+    for (const child of Object.values(node.children)) drawNodes(child);
+  }
+  drawNodes(root);
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function selectTrieWords(dictMatches, expansions) {
+  const words = new Map();
+
+  // Add dict matches
+  for (const m of dictMatches.slice(0, 5)) {
+    words.set(m.word, m.freq);
+  }
+
+  // Add related dictionary words (share 2-char prefix)
+  const prefixes = new Set();
+  for (const [w] of words) {
+    if (w.length >= 2) prefixes.add(w.slice(0, 2));
+    if (w.length >= 1) prefixes.add(w.slice(0, 1));
+  }
+  // Also add prefixes from first few expansions
+  for (const e of expansions.slice(0, 10)) {
+    if (e.length >= 2) prefixes.add(e.slice(0, 2));
+    if (e.length >= 1) prefixes.add(e.slice(0, 1));
+  }
+
+  const entries = Object.entries(DICTIONARY).sort((a, b) => b[1] - a[1]);
+  for (const [dw, df] of entries) {
+    if (words.size >= 14) break;
+    if (!words.has(dw)) {
+      for (const pfx of prefixes) {
+        if (dw.startsWith(pfx) && dw.length <= 7) {
+          words.set(dw, df);
+          break;
+        }
+      }
+    }
+  }
+
+  return words;
+}
+
+function selectLookupCandidates(dictMatches, expansions, trieRoot) {
+  const candidates = [];
+  const seen = new Set();
+
+  // Add top 2 dict matches
+  for (const m of dictMatches.slice(0, 2)) {
+    if (!seen.has(m.word)) { candidates.push({ word: m.word, inDict: true, freq: m.freq }); seen.add(m.word); }
+  }
+
+  // Find best non-match: the one that traces deepest before dead-ending
+  let bestNonMatch = null, bestDepth = 0;
+  for (const exp of expansions) {
+    if (DICTIONARY[exp] || seen.has(exp) || exp.length === 0) continue;
+    const { steps } = trieLookup(trieRoot, exp);
+    const depth = steps.filter(s => s.found).length;
+    if (depth > bestDepth || (depth === bestDepth && exp.length > (bestNonMatch || '').length)) {
+      bestDepth = depth;
+      bestNonMatch = exp;
+    }
+    if (depth >= 3) break; // good enough
+  }
+  if (bestNonMatch) {
+    candidates.push({ word: bestNonMatch, inDict: false, freq: 0 });
+  } else {
+    // Just pick first non-matching expansion
+    for (const exp of expansions) {
+      if (!DICTIONARY[exp] && !seen.has(exp) && exp.length > 0) {
+        candidates.push({ word: exp, inDict: false, freq: 0 });
+        break;
+      }
+    }
+  }
+
+  return candidates;
 }
 
 // ── Rendering ──
@@ -624,78 +810,71 @@ inputEl.addEventListener("input", () => {
   debounceTimer = setTimeout(() => render(inputEl.value), 150);
 });
 
-// Auto-focus
 inputEl.focus();
 
 function render(raw) {
   const input = raw.trim().toLowerCase();
   if (!input) {
-    stepsEl.innerHTML = `<div class="empty-state"><div class="icon">⌨️</div><p>Start typing to see the transliteration pipeline in action</p></div>`;
+    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline in action</p></div>';
     return;
   }
 
   const tokens = tokenize(input);
+  if (tokens.length === 0) {
+    stepsEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2753;</div><p>No recognized Arabizi characters</p></div>';
+    return;
+  }
+
   const expansions = expandDFS(input, 200);
   const dictMatches = expansions
     .filter(e => DICTIONARY[e])
     .map(e => ({ word: e, freq: DICTIONARY[e] }))
     .sort((a, b) => b.freq - a.freq);
-  // Deduplicate
+
   const seen = new Set();
   const uniqueMatches = [];
   for (const m of dictMatches) {
     if (!seen.has(m.word)) { seen.add(m.word); uniqueMatches.push(m); }
   }
-  // Top skeletal forms (non-dict)
+
   const skeletal = [];
   const seenSkel = new Set(uniqueMatches.map(m => m.word));
   for (const e of expansions) {
-    if (!seenSkel.has(e) && e.length > 0) {
-      seenSkel.add(e);
-      skeletal.push(e);
-      if (skeletal.length >= 5) break;
-    }
+    if (!seenSkel.has(e) && e.length > 0) { seenSkel.add(e); skeletal.push(e); if (skeletal.length >= 5) break; }
   }
 
-  // Branch count
   let branchCount = 1;
   for (const t of tokens) branchCount *= t.arabic.length;
 
+  // Build trie
+  const trieWords = selectTrieWords(uniqueMatches, expansions);
+  const trieRoot = buildVizTrie(trieWords);
+  const lookupCandidates = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
+
   let html = "";
-
-  // ── Step 1: Pipeline overview ──
   html += buildPipelineStep(input, tokens.length, expansions.length, uniqueMatches.length);
-
-  // ── Step 2: Character mappings ──
   html += buildMappingStep(tokens);
-
-  // ── Step 3: Branching math ──
   html += buildBranchStep(tokens, branchCount, expansions.length);
-
-  // ── Step 4: Dictionary lookup ──
+  html += buildTrieStep(trieRoot, lookupCandidates, trieWords.size, uniqueMatches.length, expansions.length);
   html += buildDictStep(uniqueMatches, skeletal, expansions.length);
-
-  // ── Step 5: Final result ──
   html += buildResultStep(uniqueMatches, skeletal, input);
 
   stepsEl.innerHTML = html;
-
-  // Animate in sequence
   animateSteps();
 }
 
 function buildPipelineStep(input, tokenCount, expansionCount, matchCount) {
   return `<div class="step" data-delay="0">
-    <div class="step-header"><span class="step-num">⚡</span> Pipeline</div>
+    <div class="step-header"><span class="step-num">\u26A1</span> Pipeline</div>
     <div class="pipeline">
       <div class="pipe-node" data-delay="100"><b>${input}</b><br><small>input</small></div>
-      <span class="pipe-arrow" data-delay="200">→</span>
+      <span class="pipe-arrow" data-delay="200">\u2192</span>
       <div class="pipe-node" data-delay="300">${tokenCount} tokens<br><small>parsed</small></div>
-      <span class="pipe-arrow" data-delay="400">→</span>
+      <span class="pipe-arrow" data-delay="400">\u2192</span>
       <div class="pipe-node" data-delay="500">${expansionCount} forms<br><small>expanded</small></div>
-      <span class="pipe-arrow" data-delay="600">→</span>
+      <span class="pipe-arrow" data-delay="600">\u2192</span>
       <div class="pipe-node" data-delay="700">${matchCount} words<br><small>in dictionary</small></div>
-      <span class="pipe-arrow" data-delay="800">→</span>
+      <span class="pipe-arrow" data-delay="800">\u2192</span>
       <div class="pipe-node" data-delay="900">ranked<br><small>by frequency</small></div>
     </div>
   </div>`;
@@ -706,12 +885,12 @@ function buildMappingStep(tokens) {
   tokens.forEach((t, i) => {
     const options = t.arabic.map(ar => {
       const name = MAPPING_NAMES[ar] || ar;
-      if (ar === "∅") return `<span class="arabic-option skip" title="short vowel, not written">skip</span>`;
+      if (ar === "\u2205") return '<span class="arabic-option skip" title="short vowel, not written">skip</span>';
       return `<span class="arabic-option" title="${name}">${ar}</span>`;
     }).join("");
     cards += `<div class="char-card" data-delay="${150 + i * 120}">
       <div class="char-latin">${t.latin}</div>
-      <div class="char-arrow">↓</div>
+      <div class="char-arrow">\u2193</div>
       <div class="char-arabic">${options}</div>
       <div style="color:#64748b;font-size:0.7rem;margin-top:4px">${t.arabic.length} option${t.arabic.length>1?"s":""}</div>
     </div>`;
@@ -725,7 +904,7 @@ function buildMappingStep(tokens) {
 function buildBranchStep(tokens, branchCount, actualCount) {
   const parts = tokens.map(t =>
     `<span style="color:#38bdf8">${t.arabic.length}</span>`
-  ).join(`<span class="multiply">×</span>`);
+  ).join('<span class="multiply">\u00D7</span>');
   return `<div class="step" data-delay="400">
     <div class="step-header"><span class="step-num">2</span> How many combinations?</div>
     <div class="branch-math">
@@ -739,14 +918,77 @@ function buildBranchStep(tokens, branchCount, actualCount) {
   </div>`;
 }
 
+function buildTrieStep(trieRoot, lookupCandidates, trieWordCount, matchCount, totalExpansions) {
+  const bounds = layoutTrie(trieRoot);
+  const svg = trieToSVG(trieRoot, bounds);
+
+  // Build lookup cards
+  let cards = "";
+  let globalDelay = 0;
+  lookupCandidates.forEach((cand, ci) => {
+    const { steps, matched } = trieLookup(trieRoot, cand.word);
+    const isFound = cand.inDict && matched;
+    const cardClass = isFound ? 'found-card' : 'not-found-card';
+
+    let traceHtml = "";
+    steps.forEach((step, si) => {
+      const delay = globalDelay + si * 200;
+      const cls = step.found ? 'ok' : 'fail';
+      const arrow = step.found ? '\u2190' : '\u2190 \u2717';
+      let badge = '';
+      if (step.found && step.isWord) {
+        badge = `<span class="word-badge">\u2605 word (${step.wordFreq})</span>`;
+      }
+      traceHtml += `<div class="trace-step ${cls}" data-delay="${delay}" data-node-id="${step.nodeId || ''}" data-edge-id="${step.nodeId || ''}" data-is-last="${si === steps.length - 1}" data-candidate-found="${isFound}">
+        ${step.char} ${arrow} ${step.prefix} ${badge}
+      </div>`;
+    });
+
+    const resultDelay = globalDelay + steps.length * 200 + 100;
+    const resultClass = isFound ? 'is-found' : 'is-not-found';
+    const resultText = isFound
+      ? `\u2705 FOUND \u2014 freq: ${cand.freq}`
+      : '\u274C NOT IN DICTIONARY';
+
+    cards += `<div class="lookup-card ${cardClass}" data-delay="${ci * 200}">
+      <div class="lookup-word">${cand.word}</div>
+      <div class="lookup-trace">${traceHtml}</div>
+      <div class="lookup-result ${resultClass}" data-delay="${resultDelay}">${resultText}</div>
+    </div>`;
+
+    globalDelay += steps.length * 200 + 400;
+  });
+
+  return `<div class="step" data-delay="700">
+    <div class="step-header"><span class="step-num">3</span> Dictionary Trie Lookup</div>
+    <div class="trie-step-layout">
+      <div class="trie-explainer">
+        The dictionary stores <b>${Object.keys(DICTIONARY).length.toLocaleString()} words</b> in a <b>trie</b> (prefix tree).
+        Each node is an Arabic letter. Follow the branches to look up a word character by character.
+        <br>Showing ${trieWordCount} nearby words. Double ring = complete word.
+      </div>
+      <div class="trie-svg-container">${svg}</div>
+      <div class="trie-legend">
+        <span class="trie-legend-item"><span class="legend-circle default"></span> node</span>
+        <span class="trie-legend-item"><span class="legend-circle word"></span> complete word</span>
+        <span class="trie-legend-item"><span class="legend-circle found"></span> found path</span>
+        <span class="trie-legend-item"><span class="legend-circle dead"></span> dead end</span>
+      </div>
+      <div class="lookup-section">
+        <div class="lookup-section-title">Tracing ${lookupCandidates.length} candidates through the trie:</div>
+        <div class="lookup-cards">${cards}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function buildDictStep(matches, skeletal, totalExpansions) {
   let items = "";
-  const maxFreq = matches.length > 0 ? matches[0].freq : 1;
 
   matches.slice(0, 8).forEach((m, i) => {
     const pct = (m.freq / 8000 * 100).toFixed(0);
     items += `<div class="dict-word match" data-delay="${i * 150}">
-      <span class="status">✅</span>
+      <span class="status">\u2705</span>
       <span class="arabic">${m.word}</span>
       <div class="freq-bar-container"><div class="freq-bar" data-width="${pct}%"></div></div>
       <span class="freq-label">freq: ${m.freq}</span>
@@ -755,7 +997,7 @@ function buildDictStep(matches, skeletal, totalExpansions) {
 
   skeletal.slice(0, 3).forEach((s, i) => {
     items += `<div class="dict-word no-match" data-delay="${(matches.length + i) * 150}">
-      <span class="status">🔤</span>
+      <span class="status">\uD83D\uDD24</span>
       <span class="arabic">${s}</span>
       <div class="freq-bar-container"><div class="freq-bar" data-width="0%"></div></div>
       <span class="freq-label">fallback</span>
@@ -763,13 +1005,13 @@ function buildDictStep(matches, skeletal, totalExpansions) {
   });
 
   if (!matches.length && !skeletal.length) {
-    items = `<div style="text-align:center;color:#64748b;padding:1rem">No matches — type more characters</div>`;
+    items = '<div style="text-align:center;color:#64748b;padding:1rem">No matches \u2014 type more characters</div>';
   }
 
-  return `<div class="step" data-delay="700">
-    <div class="step-header"><span class="step-num">3</span> Dictionary filter — which are real Arabic words?</div>
+  return `<div class="step" data-delay="1100">
+    <div class="step-header"><span class="step-num">4</span> Ranked Results</div>
     <div style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.8rem;text-align:center">
-      ${matches.length} out of ${totalExpansions} forms found in the 375k word dictionary
+      ${matches.length} out of ${totalExpansions} forms found in dictionary \u2014 sorted by frequency
     </div>
     <div class="dict-results">${items}</div>
   </div>`;
@@ -785,7 +1027,7 @@ function buildResultStep(matches, skeletal, input) {
   const winner = all[0];
   let listItems = "";
   all.slice(0, 9).forEach((item, i) => {
-    const rank = i === 0 ? `<span class="rank star">★</span>` : `<span class="rank">${i}.</span>`;
+    const rank = i === 0 ? '<span class="rank star">\u2605</span>' : `<span class="rank">${i}.</span>`;
     const freqLabel = item.freq ? `freq: ${item.freq}` : "fallback";
     listItems += `<div class="candidate-item${i===0?" history":""}" data-delay="${i * 100}">
       ${rank}
@@ -797,8 +1039,8 @@ function buildResultStep(matches, skeletal, input) {
     }
   });
 
-  return `<div class="step" data-delay="1100">
-    <div class="step-header"><span class="step-num">4</span> Result</div>
+  return `<div class="step" data-delay="1500">
+    <div class="step-header"><span class="step-num">5</span> Result</div>
     <div class="final-result">
       <div class="final-arabic" data-delay="200">${winner.word}</div>
       <div class="final-label">Press Space to insert into any app</div>
@@ -810,27 +1052,122 @@ function buildResultStep(matches, skeletal, input) {
   </div>`;
 }
 
+// ── Animation ──
 function animateSteps() {
-  // Steps
+  // Animate step containers
   document.querySelectorAll(".step").forEach((el, i) => {
     const delay = parseInt(el.dataset.delay || 0) + i * 200;
     setTimeout(() => el.classList.add("visible"), delay);
   });
 
-  // Elements inside steps
-  const animatable = ".char-card, .pipe-node, .pipe-arrow, .dict-word, .candidate-item, .separator, .final-arabic";
+  // Animate elements inside steps
+  const animatable = ".char-card, .pipe-node, .pipe-arrow, .dict-word, .candidate-item, .separator, .final-arabic, .lookup-card";
   document.querySelectorAll(animatable).forEach(el => {
     const step = el.closest(".step");
     const stepDelay = parseInt(step?.dataset.delay || 0);
     const ownDelay = parseInt(el.dataset.delay || 0);
     setTimeout(() => {
       el.classList.add("visible");
-      // Animate freq bars
       const bar = el.querySelector?.(".freq-bar");
-      if (bar) {
-        setTimeout(() => { bar.style.width = bar.dataset.width; }, 100);
-      }
+      if (bar) setTimeout(() => { bar.style.width = bar.dataset.width; }, 100);
     }, stepDelay + ownDelay + 300);
+  });
+
+  // Animate trie lookup traces
+  animateTrieLookups();
+}
+
+function animateTrieLookups() {
+  const trieStep = document.querySelector('.step[data-delay="700"]');
+  if (!trieStep) return;
+  const stepBase = 700 + 600; // step delay + step become-visible time
+
+  // Collect all trace steps and results
+  const traceSteps = trieStep.querySelectorAll('.trace-step');
+  const results = trieStep.querySelectorAll('.lookup-result');
+
+  // Track which nodes/edges are part of "found" paths to color them green at the end
+  const foundNodes = new Set();
+  const foundEdges = new Set();
+  const deadEndNodes = new Set();
+  const deadEndEdges = new Set();
+
+  // First pass: categorize all nodes
+  traceSteps.forEach(el => {
+    const nodeId = el.dataset.nodeId;
+    const edgeId = el.dataset.edgeId;
+    const isLast = el.dataset.isLast === 'true';
+    const candFound = el.dataset.candidateFound === 'true';
+    const isFail = el.classList.contains('fail') || !el.dataset.nodeId;
+
+    if (isFail) {
+      // This is a dead end step - we don't have a real node for it
+    } else if (candFound) {
+      foundNodes.add(nodeId);
+      foundEdges.add(edgeId);
+    }
+  });
+
+  // Animate each trace step
+  traceSteps.forEach(el => {
+    const delay = parseInt(el.dataset.delay || 0);
+    const nodeId = el.dataset.nodeId;
+    const edgeId = el.dataset.edgeId;
+    const isLast = el.dataset.isLast === 'true';
+    const candFound = el.dataset.candidateFound === 'true';
+
+    setTimeout(() => {
+      el.classList.add("visible");
+
+      if (nodeId) {
+        const nodeEl = document.getElementById(`node-${nodeId}`);
+        const edgeEl = document.getElementById(`edge-${edgeId}`);
+
+        // Remove any previous "current" marker
+        document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
+
+        if (nodeEl) {
+          nodeEl.classList.add('visiting');
+          if (!isLast) nodeEl.classList.add('current');
+        }
+        if (edgeEl) edgeEl.classList.add('visiting');
+
+        // If this is the last step, apply final state
+        if (isLast) {
+          document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
+          if (candFound) {
+            // Mark entire path as found
+            foundNodes.forEach(id => {
+              const n = document.getElementById(`node-${id}`);
+              if (n) { n.classList.remove('visiting'); n.classList.add('found'); }
+              const e = document.getElementById(`edge-${id}`);
+              if (e) { e.classList.remove('visiting'); e.classList.add('found'); }
+            });
+          }
+        }
+      } else if (isLast && !candFound) {
+        // Dead end - mark the last visited nodes
+        // Find the previous trace steps in this card to mark them as dead-end
+        const card = el.closest('.lookup-card');
+        if (card) {
+          card.querySelectorAll('.trace-step.ok').forEach(okStep => {
+            const nId = okStep.dataset.nodeId;
+            if (nId && !foundNodes.has(nId)) {
+              const n = document.getElementById(`node-${nId}`);
+              if (n) { n.classList.remove('visiting', 'found'); n.classList.add('dead-end'); }
+              const e = document.getElementById(`edge-${nId}`);
+              if (e) { e.classList.remove('visiting', 'found'); e.classList.add('dead-end'); }
+            }
+          });
+        }
+      }
+    }, stepBase + delay);
+  });
+
+  // Animate results
+  results.forEach(el => {
+    const delay = parseInt(el.dataset.delay || 0);
+    setTimeout(() => el.classList.add("visible"), stepBase + delay);
   });
 }
 </script>
