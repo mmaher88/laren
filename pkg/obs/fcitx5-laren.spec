@@ -50,3 +50,9 @@ echo ""
 %{_datadir}/laren/dictionary.tsv
 %{_datadir}/fcitx5/default/profile
 %{_datadir}/icons/hicolor/scalable/apps/fcitx-laren.svg
+%{_datadir}/icons/hicolor/16x16/apps/fcitx-laren.png
+%{_datadir}/icons/hicolor/22x22/apps/fcitx-laren.png
+%{_datadir}/icons/hicolor/24x24/apps/fcitx-laren.png
+%{_datadir}/icons/hicolor/32x32/apps/fcitx-laren.png
+%{_datadir}/icons/hicolor/48x48/apps/fcitx-laren.png
+%{_datadir}/icons/hicolor/128x128/apps/fcitx-laren.png

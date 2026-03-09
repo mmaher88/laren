@@ -48,3 +48,8 @@ install(FILES "${CMAKE_SOURCE_DIR}/resources/default-profile"
 
 install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/fcitx-laren.svg"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps")
+
+foreach(SIZE 16 22 24 32 48 128)
+    install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/${SIZE}x${SIZE}/fcitx-laren.png"
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${SIZE}x${SIZE}/apps")
+endforeach()
