@@ -43,90 +43,103 @@ namespace ar {
     constexpr char32_t ALEF_HAMZA_ABOVE = U'\u0623'; // أ
     constexpr char32_t ALEF_HAMZA_BELOW = U'\u0625'; // إ
     constexpr char32_t ALEF_MAQSURA    = U'\u0649'; // ى
+    constexpr char32_t WAW_HAMZA       = U'\u0624'; // ؤ
+    constexpr char32_t YA_HAMZA        = U'\u0626'; // ئ
 } // namespace ar
 
 RuleEngine::RuleEngine() {
+    // Helper: single-char options
+    auto C = [](std::initializer_list<char32_t> chars) -> std::vector<std::u32string> {
+        std::vector<std::u32string> v;
+        for (char32_t c : chars) {
+            if (c == 0) v.push_back({}); // SKIP = empty string
+            else v.push_back({c});
+        }
+        return v;
+    };
+
     // Define mappings. Order doesn't matter here — we sort longest-first.
     // Multi-character tokens (longest first in matching)
     mappings_ = {
         // 3-char tokens
-        {"3'",  {ar::GHAIN}},
-        {"7'",  {ar::KHA}},
-        {"6'",  {ar::DHAA}},
-        {"9'",  {ar::DAD}},
-        {"d'",  {ar::DHAL}},
-        {"t'",  {ar::THA}},
-        {"s'",  {ar::SHEEN}},
+        {"3'",  C({ar::GHAIN})},
+        {"7'",  C({ar::KHA})},
+        {"6'",  C({ar::DHAA})},
+        {"9'",  C({ar::DAD})},
+        {"d'",  C({ar::DHAL})},
+        {"t'",  C({ar::THA})},
+        {"s'",  C({ar::SHEEN})},
 
         // Digraphs
-        {"sh",  {ar::SHEEN}},
-        {"kh",  {ar::KHA}},
-        {"gh",  {ar::GHAIN}},
-        {"th",  {ar::THA, ar::DHAL}},
-        {"dh",  {ar::DHAL, ar::DAD}},
-        {"aa",  {ar::ALEF, ar::ALEF_MADDA}},
-        {"oo",  {ar::WAW}},
-        {"ee",  {ar::YA}},
-        {"ou",  {ar::WAW}},
-        {"3h",  {ar::GHAIN}},
+        {"sh",  C({ar::SHEEN})},
+        {"kh",  C({ar::KHA})},
+        {"gh",  C({ar::GHAIN})},
+        {"th",  C({ar::THA, ar::DHAL})},
+        {"dh",  C({ar::DHAL, ar::DAD})},
+        {"aa",  C({ar::ALEF, ar::ALEF_MADDA})},
+        {"oo",  C({ar::WAW})},
+        {"ee",  C({ar::YA})},
+        {"ou",  C({ar::WAW})},
+        {"3h",  C({ar::GHAIN})},
 
         // Doubled consonants — Arabizi often doubles letters for emphasis
         // but Arabic uses a single letter (with optional shadda diacritical)
-        {"bb",  {ar::BA}},
-        {"tt",  {ar::TA, ar::TAA}},
-        {"dd",  {ar::DAL, ar::DAD}},
-        {"rr",  {ar::RA}},
-        {"ss",  {ar::SEEN, ar::SAD}},
-        {"ff",  {ar::FA}},
-        {"kk",  {ar::KAF}},
-        {"ll",  {ar::LAM}},
-        {"mm",  {ar::MEEM}},
-        {"nn",  {ar::NOON}},
-        {"yy",  {ar::YA}},
-        {"ww",  {ar::WAW}},
-        {"zz",  {ar::ZAYN}},
-        {"gg",  {ar::JEEM}},
-        {"hh",  {ar::HA}},
+        {"bb",  C({ar::BA})},
+        {"tt",  C({ar::TA, ar::TAA})},
+        {"dd",  C({ar::DAL, ar::DAD})},
+        {"rr",  C({ar::RA})},
+        {"ss",  C({ar::SEEN, ar::SAD})},
+        {"ff",  C({ar::FA})},
+        {"kk",  C({ar::KAF})},
+        {"ll",  C({ar::LAM})},
+        {"mm",  C({ar::MEEM})},
+        {"nn",  C({ar::NOON})},
+        {"yy",  C({ar::YA})},
+        {"ww",  C({ar::WAW})},
+        {"zz",  C({ar::ZAYN})},
+        {"gg",  C({ar::JEEM})},
+        {"hh",  C({ar::HA})},
 
         // Single numbers
-        {"2",   {ar::HAMZA, ar::ALEF_HAMZA_ABOVE, ar::ALEF_HAMZA_BELOW, ar::QAF}},
-        {"3",   {ar::AIN}},
-        {"5",   {ar::KHA}},
-        {"6",   {ar::TAA}},
-        {"7",   {ar::HAA}},
-        {"8",   {ar::QAF}},
-        {"9",   {ar::SAD}},
+        {"2",   C({ar::HAMZA, ar::ALEF_HAMZA_ABOVE, ar::ALEF_HAMZA_BELOW, ar::WAW_HAMZA, ar::YA_HAMZA, ar::QAF})},
+        {"3",   C({ar::AIN})},
+        {"5",   C({ar::KHA})},
+        {"6",   C({ar::TAA})},
+        {"7",   C({ar::HAA})},
+        {"8",   C({ar::QAF})},
+        {"9",   C({ar::SAD})},
 
         // Single letters — primary mapping first, alternates after
         // Vowels include SKIP (0) to represent short vowels that aren't
         // written in Arabic script. SKIP is tried first since short vowels
         // are more common than explicit alef/waw/ya in medial position.
-        {"a",   {ar::SKIP, ar::ALEF, ar::ALEF_HAMZA_ABOVE, ar::ALEF_MAQSURA, ar::HA, ar::TA_MARBUTA}},
-        {"b",   {ar::BA}},
-        {"t",   {ar::TA, ar::TAA}},
-        {"g",   {ar::JEEM}},
-        {"j",   {ar::JEEM}},
-        {"d",   {ar::DAL, ar::DAD}},
-        {"r",   {ar::RA}},
-        {"z",   {ar::ZAYN, ar::DHAA, ar::DHAL}},
-        {"s",   {ar::SEEN, ar::SAD}},
-        {"f",   {ar::FA}},
-        {"q",   {ar::QAF}},
-        {"k",   {ar::QAF, ar::KAF}},
-        {"l",   {ar::LAM}},
-        {"m",   {ar::MEEM}},
-        {"n",   {ar::NOON}},
-        {"h",   {ar::HA, ar::HAA}},
-        {"w",   {ar::WAW}},
-        {"y",   {ar::YA}},
-        {"i",   {ar::SKIP, ar::YA, ar::ALEF, ar::ALEF_HAMZA_ABOVE, ar::ALEF_HAMZA_BELOW}},
-        {"u",   {ar::SKIP, ar::WAW, ar::ALEF_HAMZA_ABOVE}},
-        {"o",   {ar::SKIP, ar::WAW, ar::ALEF_HAMZA_ABOVE}},
-        {"e",   {ar::SKIP, ar::YA, ar::ALEF, ar::ALEF_HAMZA_ABOVE, ar::ALEF_HAMZA_BELOW}},
-        {"p",   {ar::BA}},
-        {"v",   {ar::FA}},
-        {"x",   {ar::KHA}},
-        {"c",   {ar::KAF}},
+        {"a",   C({ar::SKIP, ar::ALEF, ar::ALEF_HAMZA_ABOVE, ar::ALEF_MAQSURA, ar::HA, ar::TA_MARBUTA})},
+        {"b",   C({ar::BA})},
+        {"t",   C({ar::TA, ar::TAA})},
+        {"g",   C({ar::JEEM})},
+        {"j",   C({ar::JEEM})},
+        {"d",   C({ar::DAL, ar::DAD})},
+        {"r",   C({ar::RA})},
+        {"z",   C({ar::ZAYN, ar::DHAA, ar::DHAL})},
+        {"s",   C({ar::SEEN, ar::SAD})},
+        {"f",   C({ar::FA})},
+        {"q",   C({ar::QAF})},
+        {"k",   C({ar::QAF, ar::KAF})},
+        {"l",   C({ar::LAM})},
+        {"m",   C({ar::MEEM})},
+        {"n",   C({ar::NOON})},
+        {"h",   C({ar::HA, ar::HAA})},
+        {"w",   C({ar::WAW})},
+        {"y",   C({ar::YA})},
+        {"i",   C({ar::SKIP, ar::YA, ar::ALEF, ar::ALEF_HAMZA_ABOVE, ar::ALEF_HAMZA_BELOW})},
+        {"u",   C({ar::SKIP, ar::WAW, ar::ALEF_HAMZA_ABOVE})},
+        {"o",   C({ar::SKIP, ar::WAW, ar::ALEF_HAMZA_ABOVE})},
+        {"e",   {{}, {ar::YA}, {ar::ALEF}, {ar::ALEF_HAMZA_ABOVE}, {ar::ALEF_HAMZA_BELOW},
+                 {ar::ALEF_HAMZA_BELOW, ar::YA}}},  // last: إي for long "ee" at word start
+        {"p",   C({ar::BA})},
+        {"v",   C({ar::FA})},
+        {"x",   C({ar::KHA})},
+        {"c",   C({ar::KAF})},
     };
 
     // Sort longest latin string first for greedy matching
@@ -177,14 +190,14 @@ void RuleEngine::expand_dfs(std::string_view input, size_t pos,
         if (match) {
             matched = true;
             // Try each possible Arabic expansion
-            for (char32_t ar_char : entry.arabic) {
-                if (ar_char == 0) {
+            for (const auto& ar_option : entry.arabic) {
+                if (ar_option.empty()) {
                     // SKIP: vowel is short, don't append anything
                     expand_dfs(input, pos + len, current, results, max_results);
                 } else {
-                    current.push_back(ar_char);
+                    current.append(ar_option);
                     expand_dfs(input, pos + len, current, results, max_results);
-                    current.pop_back();
+                    current.resize(current.size() - ar_option.size());
                 }
 
                 if (results.size() >= max_results) return;

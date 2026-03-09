@@ -26,7 +26,7 @@ public:
 private:
     struct MappingEntry {
         std::string latin;
-        std::vector<char32_t> arabic;
+        std::vector<std::u32string> arabic;  // each option can be multi-char
     };
 
     // Sorted longest-first for greedy matching
