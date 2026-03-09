@@ -698,7 +698,7 @@ function selectTrieWords(dictMatches, expansions) {
   for (const e of expansions.slice(0, 15)) { if (e.length >= 2) prefixes.add(e.slice(0, 2)); if (e.length >= 1) prefixes.add(e.slice(0, 1)); }
   const cands = [];
   for (const dw in DICTIONARY) {
-    if (words.has(dw) || dw.length > 9) continue;
+    if (words.has(dw) || dw.length > 20) continue;
     for (const pfx of prefixes) { if (dw.startsWith(pfx)) { cands.push([dw, DICTIONARY[dw]]); break; } }
     if (cands.length >= 400) break;
   }
