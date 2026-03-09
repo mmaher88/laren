@@ -42,7 +42,8 @@ sudo dnf install fcitx5-laren
 ### Ubuntu / Debian
 
 ```bash
-DISTRO="xUbuntu_$(lsb_release -rs)" && \
+sudo apt install -y curl gpg && \
+  DISTRO="xUbuntu_$(lsb_release -rs)" && \
   sudo mkdir -p /etc/apt/keyrings && \
   curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" \
     | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg && \
