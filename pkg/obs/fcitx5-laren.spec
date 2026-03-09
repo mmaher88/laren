@@ -29,6 +29,17 @@ similar to Microsoft Maren.
 %cmake_install
 
 %post
+# Copy tray icon into Breeze theme (KDE tray doesn't reliably fall back to hicolor)
+_src=%{_datadir}/icons/hicolor/scalable/apps/fcitx-laren.svg
+if [ -f "$_src" ]; then
+    for _theme in %{_datadir}/icons/breeze %{_datadir}/icons/breeze-dark; do
+        if [ -d "$_theme/status/22" ]; then
+            cp "$_src" "$_theme/status/22/fcitx-laren.svg" 2>/dev/null
+            cp "$_src" "$_theme/status/24/fcitx-laren.svg" 2>/dev/null
+            gtk-update-icon-cache -f -q "$_theme" 2>/dev/null || true
+        fi
+    done
+fi
 echo ""
 echo "  Laren installed successfully!"
 echo ""
