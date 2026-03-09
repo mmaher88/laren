@@ -1,3 +1,9 @@
+fcitx5-laren (0.2.2-1) unstable; urgency=medium
+
+  * Release 0.2.2.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Mon, 09 Mar 2026 15:10:59 -0400
+
 fcitx5-laren (0.2.1-2) unstable; urgency=medium
 
   * Fix tray icon on KDE: copy into Breeze theme on install.
