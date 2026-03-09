@@ -48,3 +48,4 @@ echo ""
 %dir %{_datadir}/laren
 %{_datadir}/laren/dictionary.tsv
 %{_datadir}/fcitx5/default/profile
+%{_datadir}/icons/hicolor/scalable/apps/fcitx-laren.svg

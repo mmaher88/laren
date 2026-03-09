@@ -45,3 +45,6 @@ install(FILES "${CMAKE_SOURCE_DIR}/data/dictionary.tsv"
 install(FILES "${CMAKE_SOURCE_DIR}/resources/default-profile"
         RENAME profile
         DESTINATION "${FCITX_INSTALL_PKGDATADIR}/default")
+
+install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/fcitx-laren.svg"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps")
