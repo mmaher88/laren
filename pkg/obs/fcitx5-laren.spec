@@ -49,6 +49,21 @@ echo ""
 %dir %{_datadir}/laren
 %{_datadir}/laren/dictionary.tsv
 %{_datadir}/fcitx5/default/profile
+%dir %{_datadir}/icons/hicolor
+%dir %{_datadir}/icons/hicolor/scalable
+%dir %{_datadir}/icons/hicolor/scalable/apps
+%dir %{_datadir}/icons/hicolor/16x16
+%dir %{_datadir}/icons/hicolor/16x16/apps
+%dir %{_datadir}/icons/hicolor/22x22
+%dir %{_datadir}/icons/hicolor/22x22/apps
+%dir %{_datadir}/icons/hicolor/24x24
+%dir %{_datadir}/icons/hicolor/24x24/apps
+%dir %{_datadir}/icons/hicolor/32x32
+%dir %{_datadir}/icons/hicolor/32x32/apps
+%dir %{_datadir}/icons/hicolor/48x48
+%dir %{_datadir}/icons/hicolor/48x48/apps
+%dir %{_datadir}/icons/hicolor/128x128
+%dir %{_datadir}/icons/hicolor/128x128/apps
 %{_datadir}/icons/hicolor/scalable/apps/fcitx-laren.svg
 %{_datadir}/icons/hicolor/16x16/apps/fcitx-laren.png
 %{_datadir}/icons/hicolor/22x22/apps/fcitx-laren.png
