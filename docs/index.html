@@ -320,11 +320,11 @@ body {
   border-radius: 6px;
   padding: 4px 6px;
   min-width: 0;
-  opacity: 0;
-  transition: opacity 0.3s;
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
 
-.lk-card.visible { opacity: 1; }
+.lk-card.lk-active { border-color: #818cf8; }
 .lk-card.lk-found { border-color: #166534; }
 .lk-card.lk-miss { border-color: #7f1d1d; }
 
@@ -423,7 +423,10 @@ body {
   transform: translateY(6px);
   transition: all 0.25s;
   font-size: 0.8rem;
+  cursor: pointer;
 }
+
+.cand-item.cand-hover { background: #1e293b; }
 
 .cand-item.visible { opacity: 1; transform: translateY(0); }
 .cand-item.cand-top { background: #1a2e05; border: 1px solid #365314; }
@@ -585,24 +588,35 @@ function expandDFS(input, maxResults = 200) {
 let trieNodeCounter = 0;
 
 function createTrieNode(char, depth) {
-  return { char, depth, children: {}, isWord: false, freq: 0, word: '', id: 'tn' + (trieNodeCounter++), x: 0, y: 0 };
+  return { char, depth, children: {}, isWord: false, freq: 0, word: '', id: 'tn' + (trieNodeCounter++), x: 0, y: 0, parent: null };
 }
+
+let currentNodeMap = {};
+let currentTrieRoot = null;
 
 function buildVizTrie(words) {
   trieNodeCounter = 0;
+  currentNodeMap = {};
   const root = createTrieNode('', 0);
   root.id = 'troot';
+  currentNodeMap['troot'] = root;
   for (const [word, freq] of words) {
     let node = root;
     for (let i = 0; i < word.length; i++) {
       const ch = word[i];
-      if (!node.children[ch]) node.children[ch] = createTrieNode(ch, i + 1);
+      if (!node.children[ch]) {
+        const child = createTrieNode(ch, i + 1);
+        child.parent = node;
+        node.children[ch] = child;
+        currentNodeMap[child.id] = child;
+      }
       node = node.children[ch];
     }
     node.isWord = true;
     node.freq = freq;
     node.word = word;
   }
+  currentTrieRoot = root;
   return root;
 }
 
@@ -807,25 +821,21 @@ function buildTrie(trieRoot, lookupCands, trieWordCount) {
   const svg = trieToSVG(trieRoot, bounds);
 
   let cards = "";
-  let globalDelay = 0;
   lookupCands.forEach((cand, ci) => {
     const { steps, matched } = trieLookup(trieRoot, cand.word);
     const isFound = cand.inDict && matched;
     const cls = isFound ? 'lk-found' : 'lk-miss';
     let trace = "";
     steps.forEach((step, si) => {
-      const d = globalDelay + si * 150;
       const sc = step.found ? 'ok' : 'fail';
       const arrow = step.found ? '\u2190' : '\u2190\u2717';
       let badge = '';
       if (step.found && step.isWord) badge = `<span class="wb">\u2605${step.wordFreq}</span>`;
-      trace += `<div class="tr-step ${sc}" data-delay="${d}" data-node-id="${step.nodeId||''}" data-edge-id="${step.nodeId||''}" data-is-last="${si===steps.length-1}" data-candidate-found="${isFound}">${step.char} ${arrow} ${step.prefix} ${badge}</div>`;
+      trace += `<div class="tr-step ${sc} visible">${step.char} ${arrow} ${step.prefix} ${badge}</div>`;
     });
-    const rd = globalDelay + steps.length * 150 + 80;
     const rCls = isFound ? 'lk-ok' : 'lk-no';
     const rTxt = isFound ? `\u2705 ${cand.freq}` : '\u274C';
-    cards += `<div class="lk-card ${cls}" data-delay="${ci*100}"><div class="lk-word">${cand.word}</div><div class="lk-trace">${trace}</div><div class="lk-result ${rCls}" data-delay="${rd}">${rTxt}</div></div>`;
-    globalDelay += steps.length * 150 + 250;
+    cards += `<div class="lk-card ${cls}" data-word="${cand.word}" data-found="${isFound}"><div class="lk-word">${cand.word}</div><div class="lk-trace">${trace}</div><div class="lk-result ${rCls} visible">${rTxt}</div></div>`;
   });
 
   return `<div class="trie-top">
@@ -855,7 +865,7 @@ function buildResults(matches, skeletal, totalExpansions) {
   all.slice(0, 7).forEach((item, i) => {
     const rank = i === 0 ? '<span class="cr star">\u2605</span>' : `<span class="cr">${i}.</span>`;
     const fl = item.freq ? item.freq : "fallback";
-    cands += `<div class="cand-item${i===0?' cand-top':''}" data-delay="${i*50}">${rank}<span class="cw">${item.word}</span><span class="cf">${fl}</span></div>`;
+    cands += `<div class="cand-item${i===0?' cand-top':''}" data-delay="${i*50}" data-word="${item.word}">${rank}<span class="cw">${item.word}</span><span class="cf">${fl}</span></div>`;
     if (i === 0 && all.length > 1) cands += `<div class="cand-sep" data-delay="${(i+1)*50}"></div>`;
   });
 
@@ -883,13 +893,11 @@ function buildResults(matches, skeletal, totalExpansions) {
 
 // ── Animation ──
 function animateDashboard() {
-  // Panels fade in
   document.querySelectorAll(".panel").forEach((el, i) => {
     setTimeout(() => el.classList.add("visible"), i * 60);
   });
 
-  // Internal elements
-  const anim = ".m-card, .lk-card, .cand-item, .cand-sep, .result-arabic, .freq-row";
+  const anim = ".m-card, .cand-item, .cand-sep, .result-arabic, .freq-row";
   document.querySelectorAll(anim).forEach(el => {
     const d = parseInt(el.dataset.delay || 0);
     setTimeout(() => {
@@ -899,70 +907,78 @@ function animateDashboard() {
     }, d + 150);
   });
 
-  animateTrieLookups();
+  setupTrieInteraction();
 }
 
-function animateTrieLookups() {
-  const triePanel = document.querySelector('.panel-trie');
-  if (!triePanel) return;
-  const baseDelay = 250;
+// ── Trie Path Highlighting ──
+let activeWord = null;
 
-  const traceSteps = triePanel.querySelectorAll('.tr-step');
-  const results = triePanel.querySelectorAll('.lk-result');
+function clearTrieHighlights() {
+  document.querySelectorAll('.trie-node-g').forEach(n => {
+    n.classList.remove('visiting', 'found', 'dead-end', 'current');
+  });
+  document.querySelectorAll('.trie-edge').forEach(e => {
+    e.classList.remove('visiting', 'found', 'dead-end');
+  });
+}
 
-  const foundNodes = new Set();
-  traceSteps.forEach(el => {
-    const nodeId = el.dataset.nodeId;
-    const candFound = el.dataset.candidateFound === 'true';
-    if (nodeId && candFound) foundNodes.add(nodeId);
+function showWordPath(word) {
+  clearTrieHighlights();
+  if (!word || !currentTrieRoot) return;
+
+  const { steps, matched } = trieLookup(currentTrieRoot, word);
+  const isFound = !!DICTIONARY[word] && matched;
+  const okSteps = steps.filter(s => s.found);
+  if (okSteps.length === 0) return;
+
+  const rootEl = document.getElementById('node-troot');
+  if (rootEl) rootEl.classList.add(isFound ? 'found' : 'visiting');
+
+  okSteps.forEach((step, i) => {
+    const n = document.getElementById(`node-${step.nodeId}`);
+    const e = document.getElementById(`edge-${step.nodeId}`);
+    if (isFound) {
+      if (n) n.classList.add('found');
+      if (e) e.classList.add('found');
+    } else if (i === okSteps.length - 1) {
+      if (n) n.classList.add('dead-end');
+      if (e) e.classList.add('dead-end');
+    } else {
+      if (n) n.classList.add('visiting');
+      if (e) e.classList.add('visiting');
+    }
+  });
+}
+
+function setActiveCandidate(word) {
+  // Update highlights on candidate items and lookup cards
+  document.querySelectorAll('.cand-item').forEach(el => {
+    el.classList.toggle('cand-hover', el.dataset.word === word);
+  });
+  document.querySelectorAll('.lk-card').forEach(el => {
+    el.classList.toggle('lk-active', el.dataset.word === word);
+  });
+  showWordPath(word);
+}
+
+function setupTrieInteraction() {
+  // Default word = first candidate
+  const firstCand = document.querySelector('.cand-item[data-word]');
+  activeWord = firstCand?.dataset.word || null;
+
+  // Show default path after panels fade in
+  setTimeout(() => setActiveCandidate(activeWord), 200);
+
+  // Candidate list hover (right panel)
+  document.querySelectorAll('.cand-item[data-word]').forEach(el => {
+    el.addEventListener('mouseenter', () => setActiveCandidate(el.dataset.word));
+    el.addEventListener('mouseleave', () => setActiveCandidate(activeWord));
   });
 
-  traceSteps.forEach(el => {
-    const delay = parseInt(el.dataset.delay || 0);
-    const nodeId = el.dataset.nodeId;
-    const isLast = el.dataset.isLast === 'true';
-    const candFound = el.dataset.candidateFound === 'true';
-
-    setTimeout(() => {
-      el.classList.add("visible");
-      if (nodeId) {
-        const nodeEl = document.getElementById(`node-${nodeId}`);
-        const edgeEl = document.getElementById(`edge-${nodeId}`);
-        document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
-        if (nodeEl) { nodeEl.classList.add('visiting'); if (!isLast) nodeEl.classList.add('current'); }
-        if (edgeEl) edgeEl.classList.add('visiting');
-        if (isLast) {
-          document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
-          if (candFound) {
-            foundNodes.forEach(id => {
-              const n = document.getElementById(`node-${id}`);
-              if (n) { n.classList.remove('visiting'); n.classList.add('found'); }
-              const e = document.getElementById(`edge-${id}`);
-              if (e) { e.classList.remove('visiting'); e.classList.add('found'); }
-            });
-          }
-        }
-      } else if (isLast && !candFound) {
-        document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
-        const card = el.closest('.lk-card');
-        if (card) {
-          card.querySelectorAll('.tr-step.ok').forEach(okStep => {
-            const nId = okStep.dataset.nodeId;
-            if (nId && !foundNodes.has(nId)) {
-              const n = document.getElementById(`node-${nId}`);
-              if (n) { n.classList.remove('visiting','found'); n.classList.add('dead-end'); }
-              const e = document.getElementById(`edge-${nId}`);
-              if (e) { e.classList.remove('visiting','found'); e.classList.add('dead-end'); }
-            }
-          });
-        }
-      }
-    }, baseDelay + delay);
-  });
-
-  results.forEach(el => {
-    const delay = parseInt(el.dataset.delay || 0);
-    setTimeout(() => el.classList.add("visible"), baseDelay + delay);
+  // Bottom lookup card hover
+  document.querySelectorAll('.lk-card[data-word]').forEach(card => {
+    card.addEventListener('mouseenter', () => setActiveCandidate(card.dataset.word));
+    card.addEventListener('mouseleave', () => setActiveCandidate(activeWord));
   });
 }
 </script>
