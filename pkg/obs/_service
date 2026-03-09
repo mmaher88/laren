@@ -1,0 +1,21 @@
+<services>
+  <service name="obs_scm">
+    <param name="url">https://github.com/mmaher88/laren.git</param>
+    <param name="scm">git</param>
+    <param name="revision">v0.1.0</param>
+    <param name="versionformat">@PARENT_TAG@</param>
+    <param name="versionrewrite-pattern">v(.*)</param>
+    <param name="versionrewrite-replacement">\1</param>
+    <param name="filename">laren</param>
+    <param name="exclude">.git</param>
+    <param name="exclude">.github</param>
+    <param name="exclude">build</param>
+    <param name="exclude">docs</param>
+  </service>
+  <service name="set_version" mode="buildtime"/>
+  <service name="tar" mode="buildtime"/>
+  <service name="recompress" mode="buildtime">
+    <param name="file">*.tar</param>
+    <param name="compression">xz</param>
+  </service>
+</services>

@@ -1,0 +1,10 @@
+rebuild_on_push:
+  steps:
+    - trigger_services:
+        project: home:mmaher88:laren
+        package: fcitx5-laren
+  filters:
+    event: push
+    branches:
+      only:
+        - main

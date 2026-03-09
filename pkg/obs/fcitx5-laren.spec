@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Arabizi to Arabic transliteration engine for Fcitx5
 License:        GPL-3.0-or-later
 URL:            https://github.com/mmaher88/laren
-Source0:        %{url}/archive/v%{version}/laren-%{version}.tar.gz
+Source0:        laren-%{version}.tar.xz
 
 BuildRequires:  cmake >= 3.21
 BuildRequires:  gcc-c++
