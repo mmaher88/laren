@@ -26,16 +26,16 @@ info "Installing build dependencies"
 case "$DISTRO" in
     ubuntu|debian|pop|linuxmint)
         sudo apt-get update -qq
-        sudo apt-get install -y cmake g++ git fcitx5 fcitx5-modules-dev libfcitx5core-dev fcitx5-configtool im-config
+        sudo apt-get install -y cmake g++ git fcitx5 fcitx5-modules-dev libfcitx5core-dev fcitx5-configtool fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 im-config
         ;;
     fedora)
-        sudo dnf install -y cmake gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
+        sudo dnf install -y cmake gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool fcitx5-gtk fcitx5-qt
         ;;
     opensuse*|suse*)
-        sudo zypper install -y cmake gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
+        sudo zypper install -y cmake gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool fcitx5-gtk fcitx5-qt
         ;;
-    arch|endeavouros|manjaro)
-        sudo pacman -S --needed --noconfirm cmake git fcitx5 fcitx5-configtool
+    arch|endeavouros|manjaro|cachyos)
+        sudo pacman -S --needed --noconfirm cmake git fcitx5 fcitx5-configtool fcitx5-gtk fcitx5-qt
         ;;
     *)
         warn "Unknown distro '$DISTRO'. Install these manually: cmake, g++, git, fcitx5, fcitx5-devel"
