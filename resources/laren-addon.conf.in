@@ -1,0 +1,9 @@
+[Addon]
+Name=Laren
+Name[ar]=لارن
+Category=InputMethod
+Version=0.1.0
+Library=laren
+Type=SharedLibrary
+OnDemand=True
+Configurable=True

@@ -1,0 +1,19 @@
+Source: fcitx5-laren
+Section: utils
+Priority: optional
+Maintainer: Mina <mina@example.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.21),
+               g++ (>= 10),
+               fcitx5-modules-dev,
+               libfcitx5core-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/TODO/laren
+
+Package: fcitx5-laren
+Architecture: any
+Depends: fcitx5, ${shlibs:Depends}, ${misc:Depends}
+Description: Arabizi to Arabic transliteration engine for Fcitx5
+ Laren is an Arabizi-to-Arabic transliteration input method for Fcitx5.
+ Type in Latin characters (Arabizi) and get Arabic script suggestions,
+ similar to Microsoft Maren.
