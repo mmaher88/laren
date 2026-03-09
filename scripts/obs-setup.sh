@@ -82,7 +82,7 @@ osc checkout "$PROJECT/$PACKAGE"
 cd "$PROJECT/$PACKAGE"
 
 echo "==> Uploading packaging files"
-for f in _service fcitx5-laren.spec fcitx5-laren.dsc debian.control debian.rules debian.changelog; do
+for f in _service fcitx5-laren.spec fcitx5-laren.dsc debian.control debian.rules debian.changelog debian.postinst; do
     cp "$OBS_DIR/$f" .
     osc add "$f" 2>/dev/null || true
 done

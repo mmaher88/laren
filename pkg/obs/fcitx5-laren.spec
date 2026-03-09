@@ -27,6 +27,20 @@ similar to Microsoft Maren.
 %install
 %cmake_install
 
+%post
+echo ""
+echo "  Laren installed successfully!"
+echo ""
+echo "  To activate:"
+echo "    1. Set Fcitx5 as your input method (if not already):"
+echo "       - Fedora/openSUSE: usually set by default"
+echo "       - Ubuntu/Debian:   im-config -n fcitx5"
+echo "    2. Log out and back in"
+echo "    3. Press Ctrl+Space to switch to Laren"
+echo ""
+echo "  To configure: fcitx5-configtool"
+echo ""
+
 %files
 %{_libdir}/fcitx5/laren.so
 %{_datadir}/fcitx5/addon/laren.conf
