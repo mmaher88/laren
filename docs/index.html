@@ -1128,8 +1128,8 @@ function animateTrieLookups() {
           }
         }
       } else if (isLast && !candFound) {
-        // Dead end - mark the last visited nodes
-        // Find the previous trace steps in this card to mark them as dead-end
+        // Dead end - stop pulse animation and mark path as dead-end
+        document.querySelectorAll('.trie-node-g.current').forEach(n => n.classList.remove('current'));
         const card = el.closest('.lookup-card');
         if (card) {
           card.querySelectorAll('.trace-step.ok').forEach(okStep => {
