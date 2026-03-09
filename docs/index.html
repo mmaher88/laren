@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laren — Interactive Transliteration Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 0.3rem;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+  font-size: 1.05rem;
+}
+
+.input-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.input-section input {
+  font-size: 1.8rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #f1f5f9;
+  text-align: center;
+  width: min(100%, 500px);
+  outline: none;
+  transition: border-color 0.3s;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.15em;
+}
+
+.input-section input:focus {
+  border-color: #818cf8;
+}
+
+.input-section input::placeholder {
+  color: #475569;
+  letter-spacing: 0.05em;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #334155;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.step.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.step-num {
+  background: linear-gradient(135deg, #818cf8, #38bdf8);
+  color: #0f172a;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* Character mappings */
+.char-mappings {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.char-card {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 0.8rem;
+  min-width: 80px;
+  text-align: center;
+  border: 1px solid #334155;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.char-card.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.char-latin {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #38bdf8;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 0.3rem;
+}
+
+.char-arrow {
+  color: #475569;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.char-arabic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.arabic-option {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 1.1rem;
+  direction: rtl;
+  transition: all 0.3s;
+}
+
+.arabic-option.skip {
+  color: #22c55e;
+  font-size: 0.75rem;
+  font-style: italic;
+  direction: ltr;
+}
+
+.arabic-option.highlight {
+  border-color: #22c55e;
+  background: #052e16;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+/* Branching math */
+.branch-math {
+  text-align: center;
+  font-size: 1.3rem;
+  padding: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.branch-math .multiply {
+  color: #818cf8;
+  margin: 0 0.3rem;
+}
+
+.branch-math .total {
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+/* Tree visualization */
+.tree-container {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.tree-canvas {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  justify-content: center;
+}
+
+svg.tree-svg {
+  overflow: visible;
+}
+
+/* Dictionary results */
+.dict-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dict-word {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.4s;
+}
+
+.dict-word.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.dict-word.match {
+  border-color: #22c55e;
+  background: #052e16;
+}
+
+.dict-word.no-match {
+  border-color: #334155;
+  opacity: 0.5;
+}
+
+.dict-word .arabic {
+  font-size: 1.5rem;
+  direction: rtl;
+  min-width: 100px;
+  text-align: center;
+}
+
+.dict-word .status {
+  font-size: 1.2rem;
+}
+
+.dict-word .freq-bar-container {
+  flex: 1;
+  height: 8px;
+  background: #1e293b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dict-word .freq-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease-out;
+  width: 0;
+}
+
+.dict-word.match .freq-bar {
+  background: linear-gradient(90deg, #22c55e, #38bdf8);
+}
+
+.dict-word .freq-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Final result */
+.final-result {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.final-arabic {
+  font-size: 3.5rem;
+  direction: rtl;
+  background: linear-gradient(135deg, #22c55e, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.final-arabic.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.final-label {
+  color: #94a3b8;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Pipeline animation */
+.pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.pipe-node {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.4s;
+  min-width: 90px;
+}
+
+.pipe-node.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.pipe-node.active {
+  border-color: #818cf8;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
+}
+
+.pipe-node.done {
+  border-color: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+.pipe-arrow {
+  color: #475569;
+  font-size: 1.2rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.pipe-arrow.visible { opacity: 1; }
+
+/* Candidate list */
+.candidate-list {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 0.8rem;
+  max-width: 350px;
+  margin: 0 auto;
+  border: 1px solid #334155;
+}
+
+.candidate-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.candidate-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.candidate-item.history {
+  background: #1a2e05;
+  border: 1px solid #365314;
+}
+
+.candidate-item .rank {
+  color: #64748b;
+  font-size: 0.85rem;
+  min-width: 24px;
+}
+
+.candidate-item .rank.star { color: #eab308; }
+
+.candidate-item .word {
+  font-size: 1.3rem;
+  direction: rtl;
+  flex: 1;
+}
+
+.candidate-item .freq {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.separator {
+  border-top: 1px dashed #334155;
+  margin: 0.3rem 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.separator.visible { opacity: 1; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #475569;
+}
+
+.empty-state .icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  h1 { font-size: 1.6rem; }
+  .input-section input { font-size: 1.3rem; }
+  .char-card { min-width: 65px; padding: 0.5rem; }
+  .final-arabic { font-size: 2.5rem; }
+}
+
+.github-link {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1e293b;
+}
+
+.github-link a {
+  color: #818cf8;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.github-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Laren</h1>
+  <p class="subtitle">See how Arabizi becomes Arabic — character by character</p>
+
+  <div class="input-section">
+    <input type="text" id="input" placeholder="Type Arabizi here... e.g. 7abibi" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div id="steps" class="steps">
+    <div class="empty-state">
+      <div class="icon">⌨️</div>
+      <p>Start typing to see the transliteration pipeline in action</p>
+    </div>
+  </div>
+
+  <div class="github-link">
+    <a href="https://github.com/mmaher88/laren">github.com/mmaher88/laren</a> — Install with <code>yay -S fcitx5-laren</code>
+  </div>
+</div>
+
+<script>
+// ── Arabizi mapping rules (mirrors rule_engine.cpp) ──
+const MAPPINGS = {
+  // Digraphs
+  "sh": ["ش"],
+  "kh": ["خ"],
+  "gh": ["غ"],
+  "th": ["ث", "ذ"],
+  "dh": ["ذ", "ض"],
+  "aa": ["ا", "آ"],
+  "ee": ["ي"],
+  "oo": ["و"],
+  "ou": ["و"],
+  // Doubled consonants
+  "bb": ["ب"], "tt": ["ت","ط"], "dd": ["د","ض"], "rr": ["ر"],
+  "ss": ["س","ص"], "ff": ["ف"], "kk": ["ك"], "ll": ["ل"],
+  "mm": ["م"], "nn": ["ن"], "yy": ["ي"], "ww": ["و"],
+  "zz": ["ز"], "gg": ["ج"], "hh": ["ه"],
+  // Numbers
+  "2": ["ء","أ","إ","ق"], "3": ["ع"], "5": ["خ"],
+  "6": ["ط"], "7": ["ح"], "8": ["ق"], "9": ["ص"],
+  // Single letters
+  "a": ["∅","ا","أ","ى","ه","ة"], "b": ["ب"], "t": ["ت","ط"],
+  "g": ["ج"], "j": ["ج"], "d": ["د","ض"], "r": ["ر"],
+  "z": ["ز","ظ","ذ"], "s": ["س","ص"], "f": ["ف"],
+  "q": ["ق"], "k": ["ق","ك"], "l": ["ل"], "m": ["م"],
+  "n": ["ن"], "h": ["ه","ح"], "w": ["و"], "y": ["ي"],
+  "i": ["∅","ي","ا","أ","إ"], "u": ["∅","و","أ"],
+  "o": ["∅","و","أ"], "e": ["∅","ي","ا","أ","إ"],
+  "p": ["ب"], "v": ["ف"], "x": ["خ"], "c": ["ك"],
+};
+
+const MAPPING_NAMES = {
+  "ء":"hamza","أ":"alef-hamza","إ":"alef-hamza-below","آ":"alef-madda",
+  "ا":"alef","ب":"ba","ت":"ta","ث":"tha","ج":"jeem","ح":"haa",
+  "خ":"kha","د":"dal","ذ":"dhal","ر":"ra","ز":"zayn","س":"seen",
+  "ش":"sheen","ص":"sad","ض":"dad","ط":"taa","ظ":"dhaa","ع":"ain",
+  "غ":"ghain","ف":"fa","ق":"qaf","ك":"kaf","ل":"lam","م":"meem",
+  "ن":"noon","ه":"ha","و":"waw","ي":"ya","ة":"ta-marbuta",
+  "ى":"alef-maqsura","∅":"skip"
+};
+
+// ── Mini dictionary (common words for the demo) ──
+const DICTIONARY = {
+  "حبيبي":5600,"حبيبى":4100,"حبيبه":3800,"حبيبة":3900,
+  "حبيب":5800,"حب":6100,"سلام":5230,"سلم":4800,"سالم":4200,
+  "عرب":5100,"عراب":3200,"عربي":5000,"عربية":4900,
+  "كتاب":5500,"كتب":5300,"مكتبة":4600,
+  "الحمدلله":6200,"الله":6800,"حمد":4500,
+  "يلا":4800,"يالا":3500,
+  "كويس":4200,"كويسة":3800,
+  "شكرا":5400,"مصر":5600,"قمر":4300,"عين":5000,
+  "بنت":4900,"ولد":4800,"بيت":5200,"باب":5100,
+  "كلام":5000,"كلمة":4800,"كلمه":4600,
+  "ليه":4500,"ليش":4200,"كده":4000,"كدا":3800,
+  "دين":4600,"عيد":5000,"نور":4700,"حياة":5100,"حياه":4900,
+  "اسد":4200,"أسد":4400,"بطل":4300,
+  "شرموطه":2800,"شرموطة":2900,
+  "منيكه":2200,"منيكة":2300,
+  "لبوه":2600,"لبوة":2700,
+  "في":7540,"من":7500,"على":7180,"أن":7030,
+  "هذا":6670,"لا":6800,"ما":6700,"يا":6500,
+  "مع":6200,"هو":6400,"هي":6300,
+  "فين":4200,"هنا":5000,"كمان":4000,
+  "أحا":2500,"خره":2400,"خرا":2600,
+  "حلو":4600,"حلوه":4400,"حلوة":4500,"جميل":5000,"جميلة":4800,
+  "صباح":4800,"مساء":4600,"خير":5200,
+  "صباحالخير":3500,"مساءالخير":3200,
+  "شغل":4400,"فلوس":4100,"ناس":5000,
+  "واحد":5100,"اتنين":4200,"تلاته":3800,
+  "صحيح":4600,"غلط":4200,"تمام":4800,
+  "عايز":4400,"عايزه":4200,"عاوز":4100,
+  "مش":5200,"مفيش":4000,"بردو":3800,
+};
+
+// ── DFS expansion (mirrors transliterator logic) ──
+function getMatchesAt(input, pos) {
+  const results = [];
+  const remaining = input.slice(pos).toLowerCase();
+  // Try longest first
+  for (const len of [2, 1]) {
+    const substr = remaining.slice(0, len);
+    if (MAPPINGS[substr]) {
+      results.push({ latin: substr, arabic: MAPPINGS[substr], len });
+    }
+  }
+  return results;
+}
+
+function tokenize(input) {
+  const tokens = [];
+  let pos = 0;
+  const lower = input.toLowerCase();
+  while (pos < lower.length) {
+    let found = false;
+    for (const len of [2, 1]) {
+      const substr = lower.slice(pos, pos + len);
+      if (MAPPINGS[substr]) {
+        tokens.push({ latin: substr, arabic: MAPPINGS[substr], pos, len });
+        pos += len;
+        found = true;
+        break;
+      }
+    }
+    if (!found) pos++;
+  }
+  return tokens;
+}
+
+function expandDFS(input, maxResults = 200) {
+  const results = [];
+  const tokens = [];
+  function dfs(pos, current) {
+    if (results.length >= maxResults) return;
+    if (pos >= input.length) {
+      results.push(current.join(""));
+      return;
+    }
+    const matches = getMatchesAt(input, pos);
+    for (const match of matches) {
+      for (const ar of match.arabic) {
+        if (ar === "∅") {
+          dfs(pos + match.len, current);
+        } else {
+          current.push(ar);
+          dfs(pos + match.len, current);
+          current.pop();
+        }
+      }
+    }
+  }
+  dfs(0, []);
+  return results;
+}
+
+// ── Rendering ──
+const inputEl = document.getElementById("input");
+const stepsEl = document.getElementById("steps");
+let debounceTimer;
+
+inputEl.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => render(inputEl.value), 150);
+});
+
+// Auto-focus
+inputEl.focus();
+
+function render(raw) {
+  const input = raw.trim().toLowerCase();
+  if (!input) {
+    stepsEl.innerHTML = `<div class="empty-state"><div class="icon">⌨️</div><p>Start typing to see the transliteration pipeline in action</p></div>`;
+    return;
+  }
+
+  const tokens = tokenize(input);
+  const expansions = expandDFS(input, 200);
+  const dictMatches = expansions
+    .filter(e => DICTIONARY[e])
+    .map(e => ({ word: e, freq: DICTIONARY[e] }))
+    .sort((a, b) => b.freq - a.freq);
+  // Deduplicate
+  const seen = new Set();
+  const uniqueMatches = [];
+  for (const m of dictMatches) {
+    if (!seen.has(m.word)) { seen.add(m.word); uniqueMatches.push(m); }
+  }
+  // Top skeletal forms (non-dict)
+  const skeletal = [];
+  const seenSkel = new Set(uniqueMatches.map(m => m.word));
+  for (const e of expansions) {
+    if (!seenSkel.has(e) && e.length > 0) {
+      seenSkel.add(e);
+      skeletal.push(e);
+      if (skeletal.length >= 5) break;
+    }
+  }
+
+  // Branch count
+  let branchCount = 1;
+  for (const t of tokens) branchCount *= t.arabic.length;
+
+  let html = "";
+
+  // ── Step 1: Pipeline overview ──
+  html += buildPipelineStep(input, tokens.length, expansions.length, uniqueMatches.length);
+
+  // ── Step 2: Character mappings ──
+  html += buildMappingStep(tokens);
+
+  // ── Step 3: Branching math ──
+  html += buildBranchStep(tokens, branchCount, expansions.length);
+
+  // ── Step 4: Dictionary lookup ──
+  html += buildDictStep(uniqueMatches, skeletal, expansions.length);
+
+  // ── Step 5: Final result ──
+  html += buildResultStep(uniqueMatches, skeletal, input);
+
+  stepsEl.innerHTML = html;
+
+  // Animate in sequence
+  animateSteps();
+}
+
+function buildPipelineStep(input, tokenCount, expansionCount, matchCount) {
+  return `<div class="step" data-delay="0">
+    <div class="step-header"><span class="step-num">⚡</span> Pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-node" data-delay="100"><b>${input}</b><br><small>input</small></div>
+      <span class="pipe-arrow" data-delay="200">→</span>
+      <div class="pipe-node" data-delay="300">${tokenCount} tokens<br><small>parsed</small></div>
+      <span class="pipe-arrow" data-delay="400">→</span>
+      <div class="pipe-node" data-delay="500">${expansionCount} forms<br><small>expanded</small></div>
+      <span class="pipe-arrow" data-delay="600">→</span>
+      <div class="pipe-node" data-delay="700">${matchCount} words<br><small>in dictionary</small></div>
+      <span class="pipe-arrow" data-delay="800">→</span>
+      <div class="pipe-node" data-delay="900">ranked<br><small>by frequency</small></div>
+    </div>
+  </div>`;
+}
+
+function buildMappingStep(tokens) {
+  let cards = "";
+  tokens.forEach((t, i) => {
+    const options = t.arabic.map(ar => {
+      const name = MAPPING_NAMES[ar] || ar;
+      if (ar === "∅") return `<span class="arabic-option skip" title="short vowel, not written">skip</span>`;
+      return `<span class="arabic-option" title="${name}">${ar}</span>`;
+    }).join("");
+    cards += `<div class="char-card" data-delay="${150 + i * 120}">
+      <div class="char-latin">${t.latin}</div>
+      <div class="char-arrow">↓</div>
+      <div class="char-arabic">${options}</div>
+      <div style="color:#64748b;font-size:0.7rem;margin-top:4px">${t.arabic.length} option${t.arabic.length>1?"s":""}</div>
+    </div>`;
+  });
+  return `<div class="step" data-delay="100">
+    <div class="step-header"><span class="step-num">1</span> What could each character mean?</div>
+    <div class="char-mappings">${cards}</div>
+  </div>`;
+}
+
+function buildBranchStep(tokens, branchCount, actualCount) {
+  const parts = tokens.map(t =>
+    `<span style="color:#38bdf8">${t.arabic.length}</span>`
+  ).join(`<span class="multiply">×</span>`);
+  return `<div class="step" data-delay="400">
+    <div class="step-header"><span class="step-num">2</span> How many combinations?</div>
+    <div class="branch-math">
+      ${parts} = <span class="total">${branchCount.toLocaleString()} paths</span>
+    </div>
+    <div style="text-align:center;color:#94a3b8;font-size:0.85rem">
+      ${actualCount < branchCount
+        ? `Explored ${actualCount} (capped for speed)`
+        : `All ${actualCount} paths explored`}
+    </div>
+  </div>`;
+}
+
+function buildDictStep(matches, skeletal, totalExpansions) {
+  let items = "";
+  const maxFreq = matches.length > 0 ? matches[0].freq : 1;
+
+  matches.slice(0, 8).forEach((m, i) => {
+    const pct = (m.freq / 8000 * 100).toFixed(0);
+    items += `<div class="dict-word match" data-delay="${i * 150}">
+      <span class="status">✅</span>
+      <span class="arabic">${m.word}</span>
+      <div class="freq-bar-container"><div class="freq-bar" data-width="${pct}%"></div></div>
+      <span class="freq-label">freq: ${m.freq}</span>
+    </div>`;
+  });
+
+  skeletal.slice(0, 3).forEach((s, i) => {
+    items += `<div class="dict-word no-match" data-delay="${(matches.length + i) * 150}">
+      <span class="status">🔤</span>
+      <span class="arabic">${s}</span>
+      <div class="freq-bar-container"><div class="freq-bar" data-width="0%"></div></div>
+      <span class="freq-label">fallback</span>
+    </div>`;
+  });
+
+  if (!matches.length && !skeletal.length) {
+    items = `<div style="text-align:center;color:#64748b;padding:1rem">No matches — type more characters</div>`;
+  }
+
+  return `<div class="step" data-delay="700">
+    <div class="step-header"><span class="step-num">3</span> Dictionary filter — which are real Arabic words?</div>
+    <div style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.8rem;text-align:center">
+      ${matches.length} out of ${totalExpansions} forms found in the 375k word dictionary
+    </div>
+    <div class="dict-results">${items}</div>
+  </div>`;
+}
+
+function buildResultStep(matches, skeletal, input) {
+  const all = [
+    ...matches.map(m => ({ word: m.word, freq: m.freq, type: "dict" })),
+    ...skeletal.map(s => ({ word: s, freq: 0, type: "fallback" }))
+  ];
+  if (!all.length) return "";
+
+  const winner = all[0];
+  let listItems = "";
+  all.slice(0, 9).forEach((item, i) => {
+    const rank = i === 0 ? `<span class="rank star">★</span>` : `<span class="rank">${i}.</span>`;
+    const freqLabel = item.freq ? `freq: ${item.freq}` : "fallback";
+    listItems += `<div class="candidate-item${i===0?" history":""}" data-delay="${i * 100}">
+      ${rank}
+      <span class="word">${item.word}</span>
+      <span class="freq">${freqLabel}</span>
+    </div>`;
+    if (i === 0 && all.length > 1) {
+      listItems += `<div class="separator" data-delay="${(i+1) * 100}"></div>`;
+    }
+  });
+
+  return `<div class="step" data-delay="1100">
+    <div class="step-header"><span class="step-num">4</span> Result</div>
+    <div class="final-result">
+      <div class="final-arabic" data-delay="200">${winner.word}</div>
+      <div class="final-label">Press Space to insert into any app</div>
+    </div>
+    <div style="margin-top:1.2rem">
+      <div style="text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:0.5rem">Candidate list (what you'd see)</div>
+      <div class="candidate-list">${listItems}</div>
+    </div>
+  </div>`;
+}
+
+function animateSteps() {
+  // Steps
+  document.querySelectorAll(".step").forEach((el, i) => {
+    const delay = parseInt(el.dataset.delay || 0) + i * 200;
+    setTimeout(() => el.classList.add("visible"), delay);
+  });
+
+  // Elements inside steps
+  const animatable = ".char-card, .pipe-node, .pipe-arrow, .dict-word, .candidate-item, .separator, .final-arabic";
+  document.querySelectorAll(animatable).forEach(el => {
+    const step = el.closest(".step");
+    const stepDelay = parseInt(step?.dataset.delay || 0);
+    const ownDelay = parseInt(el.dataset.delay || 0);
+    setTimeout(() => {
+      el.classList.add("visible");
+      // Animate freq bars
+      const bar = el.querySelector?.(".freq-bar");
+      if (bar) {
+        setTimeout(() => { bar.style.width = bar.dataset.width; }, 100);
+      }
+    }, stepDelay + ownDelay + 300);
+  });
+}
+</script>
+</body>
+</html>
