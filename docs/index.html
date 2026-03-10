@@ -332,8 +332,9 @@ body {
   border: 1px solid #1e293b;
   position: relative;
   overflow: hidden;
-  cursor: grab;
 }
+
+.trie-svg-area.pannable { cursor: grab; }
 
 .trie-svg-area.panning { cursor: grabbing; }
 
@@ -1042,6 +1043,9 @@ function collapseAll() {
 
 let highlightIds = new Set();
 
+// AbortController to cleanly remove area-level listeners between renders
+let trieAbort = null;
+
 function renderFullTrie(skipLayout) {
   const svgArea = document.getElementById('trie-svg-area');
   if (!svgArea || !fullTrie) return;
@@ -1068,16 +1072,17 @@ function renderFullTrie(skipLayout) {
     statsEl.textContent = `${totalWords.toLocaleString()} words \u00B7 ${trieNodeCount.toLocaleString()} nodes`;
   }
 
-  setupFullTrieEvents();
-}
+  // Abort previous listeners before attaching new ones
+  if (trieAbort) trieAbort.abort();
+  trieAbort = new AbortController();
+  const sig = { signal: trieAbort.signal };
 
-function setupFullTrieEvents() {
-  const area = document.getElementById('trie-svg-area');
-  if (!area) return;
-  const svg = area.querySelector('svg');
-  if (!svg) return;
+  const area = svgArea;
+  const svgEl = area.querySelector('svg');
+  if (!svgEl) return;
 
-  svg.addEventListener('click', (e) => {
+  // Click to expand/collapse (on SVG, replaced each render — no stacking)
+  svgEl.addEventListener('click', (e) => {
     const g = e.target.closest('.trie-node-g');
     if (!g) return;
     const id = g.dataset.id;
@@ -1088,8 +1093,9 @@ function setupFullTrieEvents() {
     renderFullTrie(true);
   });
 
+  // Tooltip
   const tooltip = document.getElementById('trie-tooltip');
-  svg.addEventListener('mouseover', (e) => {
+  svgEl.addEventListener('mouseover', (e) => {
     const g = e.target.closest('.trie-node-g');
     if (!g || !tooltip) return;
     const node = trieNodes[g.dataset.id];
@@ -1103,52 +1109,56 @@ function setupFullTrieEvents() {
     tooltip.querySelector('.tt-info').textContent = info;
     tooltip.classList.add('show');
     const rect = area.getBoundingClientRect();
-    const svgRect = svg.getBoundingClientRect();
+    const svgRect = svgEl.getBoundingClientRect();
     const sx = (node.x - vb.x) / vb.w * svgRect.width;
     const sy = (node.y - vb.y) / vb.h * svgRect.height;
     tooltip.style.left = Math.min(sx + 20, rect.width - 160) + 'px';
     tooltip.style.top = Math.max(sy - 10, 0) + 'px';
   });
 
-  svg.addEventListener('mouseout', (e) => {
+  svgEl.addEventListener('mouseout', (e) => {
     if (!e.target.closest('.trie-node-g') && tooltip) tooltip.classList.remove('show');
   });
 
+  // Zoom — on area, abortable to prevent stacking
   area.addEventListener('wheel', (e) => {
     e.preventDefault();
+    const s = area.querySelector('svg');
+    if (!s) return;
     const factor = e.deltaY > 0 ? 1.15 : 1 / 1.15;
-    const rect = svg.getBoundingClientRect();
+    const rect = s.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / rect.width;
     const my = (e.clientY - rect.top) / rect.height;
     const px = vb.x + mx * vb.w;
     const py = vb.y + my * vb.h;
     zoomBy(factor, px, py);
-    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  }, { passive: false });
+    s.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  }, { passive: false, ...sig });
 
+  // Pan — mousedown on area, mousemove/mouseup on window, all abortable
   area.addEventListener('mousedown', (e) => {
     if (e.target.closest('.trie-node-g')) return;
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, vbx: vb.x, vby: vb.y };
     area.classList.add('panning');
-  });
+  }, sig);
 
   window.addEventListener('mousemove', (e) => {
     if (!isPanning) return;
-    const rect = area.querySelector('svg')?.getBoundingClientRect();
-    if (!rect) return;
-    const dx = (e.clientX - panStart.x) / rect.width * vb.w;
-    const dy = (e.clientY - panStart.y) / rect.height * vb.h;
+    const r = area.querySelector('svg')?.getBoundingClientRect();
+    if (!r) return;
+    const dx = (e.clientX - panStart.x) / r.width * vb.w;
+    const dy = (e.clientY - panStart.y) / r.height * vb.h;
     vb.x = panStart.vbx - dx;
     vb.y = panStart.vby - dy;
     const s = area.querySelector('svg');
     if (s) s.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  });
+  }, sig);
 
   window.addEventListener('mouseup', () => {
     isPanning = false;
-    area?.classList?.remove('panning');
-  });
+    area.classList.remove('panning');
+  }, sig);
 }
 
 // ══════════════════════════════════════════
@@ -1353,7 +1363,7 @@ function buildFullTriePanel() {
         <button onclick="collapseAll()" title="Collapse all">\u25B2</button>
       </div>
     </div>
-    <div class="trie-svg-area" id="trie-svg-area"></div>
+    <div class="trie-svg-area pannable" id="trie-svg-area"></div>
     <div class="trie-tooltip" id="trie-tooltip">
       <div class="tt-char"></div>
       <div class="tt-info"></div>
