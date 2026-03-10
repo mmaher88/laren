@@ -18,6 +18,7 @@ add_library(laren_core STATIC
     core/rule_engine.cpp
     core/ranker.cpp
     core/emoji_map.cpp
+    core/word_history.cpp
 )
 target_link_libraries(laren_core PUBLIC laren_dict)
 

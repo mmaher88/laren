@@ -6,6 +6,8 @@
 #include <fcitx/candidatelist.h>
 #include <fcitx-utils/key.h>
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 static void debugLog(const std::string& msg) {
     std::ofstream f("/tmp/laren-debug.log", std::ios::app);
@@ -18,16 +20,14 @@ namespace laren::engine {
 class LarenCandidateWord : public fcitx::CandidateWord {
 public:
     LarenCandidateWord(LarenState* state, const std::string& text,
-                       size_t index, bool is_raw = false, bool is_history = false)
-        : state_(state), index_(index), is_raw_(is_raw), is_history_(is_history) {
+                       size_t index, bool is_raw = false)
+        : state_(state), index_(index), is_raw_(is_raw) {
         setText(fcitx::Text(text));
     }
 
     void select(fcitx::InputContext* /*ic*/) const override {
         if (is_raw_) {
             state_->commitRaw();
-        } else if (is_history_) {
-            state_->commitHistory();
         } else {
             state_->commitCandidate(index_);
         }
@@ -37,7 +37,6 @@ private:
     LarenState* state_;
     size_t index_;
     bool is_raw_;
-    bool is_history_;
 };
 
 // Candidate that commits an emoji
@@ -56,15 +55,6 @@ public:
 private:
     LarenState* state_;
     size_t index_;
-};
-
-// Non-selectable separator
-class LarenSeparator : public fcitx::CandidateWord {
-public:
-    LarenSeparator() {
-        setText(fcitx::Text("──────────"));
-    }
-    void select(fcitx::InputContext* /*ic*/) const override {}
 };
 
 // Candidate list with continuous numbering across pages
@@ -280,25 +270,19 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
 
     debugLog("key sym=0x" + std::to_string(key.sym()) + " buffer=" + buffer_);
 
-    // Total visible items in the list
     int total_items = totalListItems();
 
-    // Arrow Down: move selection down (skip separator, auto-advance page)
+    // Arrow Down: move selection down
     if (key.sym() == FcitxKey_Down) {
-        do {
-            cursor_ = (cursor_ + 1) % total_items;
-        } while (isSeparatorIndex(cursor_));
+        cursor_ = (cursor_ + 1) % total_items;
         updateUI();
-        // Auto-advance page if cursor moved past current page
         syncPageToCursor();
         return true;
     }
 
-    // Arrow Up: move selection up (skip separator, auto-advance page)
+    // Arrow Up: move selection up
     if (key.sym() == FcitxKey_Up) {
-        do {
-            cursor_ = (cursor_ - 1 + total_items) % total_items;
-        } while (isSeparatorIndex(cursor_));
+        cursor_ = (cursor_ - 1 + total_items) % total_items;
         updateUI();
         syncPageToCursor();
         return true;
@@ -371,31 +355,52 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
 
 void LarenState::updateCandidates() {
     cached_candidates_ = engine_->transliterator().transliterate(buffer_);
-    history_candidate_ = engine_->getHistory(buffer_);
-    has_history_ = history_candidate_.has_value();
-    debugLog("updateCandidates: buffer=" + buffer_ + " has_history=" + std::to_string(has_history_) +
-             " candidates=" + std::to_string(cached_candidates_.size()));
 
-    // Remove history candidate from regular list to avoid duplicate
-    if (has_history_) {
-        auto it = std::remove_if(cached_candidates_.begin(), cached_candidates_.end(),
-            [this](const core::Candidate& c) {
-                return c.arabic == *history_candidate_;
-            });
-        cached_candidates_.erase(it, cached_candidates_.end());
+    // Apply history boost
+    auto history = engine_->history().get(buffer_);
+    if (!history.empty()) {
+        uint64_t max_counter = history[0].counter; // most recent
+
+        for (const auto& entry : history) {
+            // Calculate boost: recency + usage frequency
+            double recency = 1.0 / (1.0 + static_cast<double>(max_counter - entry.counter));
+            double boost = 200.0 * recency + 50.0 * std::log(1.0 + entry.use_count);
+
+            // Find matching candidate and boost its score
+            bool found = false;
+            for (auto& cand : cached_candidates_) {
+                if (cand.arabic == entry.arabic) {
+                    cand.score += boost;
+                    found = true;
+                    break;
+                }
+            }
+
+            // If not in candidate list, insert as synthetic candidate
+            if (!found) {
+                core::Candidate synth;
+                synth.arabic = entry.arabic;
+                synth.score = boost;
+                synth.frequency = 0;
+                synth.exact_match = false;
+                cached_candidates_.push_back(synth);
+            }
+        }
+
+        // Re-sort by score
+        std::sort(cached_candidates_.begin(), cached_candidates_.end(),
+                  [](const core::Candidate& a, const core::Candidate& b) {
+                      return a.score > b.score;
+                  });
     }
+
+    debugLog("updateCandidates: buffer=" + buffer_ +
+             " history=" + std::to_string(history.size()) +
+             " candidates=" + std::to_string(cached_candidates_.size()));
 }
 
 int LarenState::totalListItems() const {
-    int count = static_cast<int>(cached_candidates_.size()) + 1; // +1 for raw
-    if (has_history_) {
-        count += 2; // history item + separator
-    }
-    return count;
-}
-
-bool LarenState::isSeparatorIndex(int idx) const {
-    return has_history_ && idx == 1; // separator is always at index 1 when history exists
+    return static_cast<int>(cached_candidates_.size()) + 1; // +1 for raw
 }
 
 void LarenState::updateUI() {
@@ -425,16 +430,7 @@ void LarenState::updateUI() {
     candidateList->setPageSize(9);
     candidateList->setLayoutHint(fcitx::CandidateLayoutHint::Vertical);
 
-    // History candidate first (if any)
-    if (has_history_) {
-        auto utf8 = util::utf32_to_utf8(*history_candidate_);
-        candidateList->append<LarenCandidateWord>(this, utf8, 0, false, true);
-
-        // Separator
-        candidateList->append<LarenSeparator>();
-    }
-
-    // Regular Arabic candidates
+    // Arabic candidates (already sorted with history boost applied)
     for (size_t i = 0; i < cached_candidates_.size(); ++i) {
         auto utf8 = util::utf32_to_utf8(cached_candidates_[i].arabic);
         candidateList->append<LarenCandidateWord>(this, utf8, i);
@@ -461,8 +457,7 @@ void LarenState::syncPageToCursor() {
     auto* pageable = cl->toPageable();
     if (!pageable) return;
 
-    // Figure out which page the cursor should be on
-    int page_size = cl->size(); // items on current page
+    int page_size = cl->size();
     if (page_size <= 0) return;
 
     int target_page = cursor_ / page_size;
@@ -481,55 +476,22 @@ void LarenState::syncPageToCursor() {
 }
 
 void LarenState::commitSelected() {
-    debugLog("commitSelected: cursor=" + std::to_string(cursor_) + " has_history=" + std::to_string(has_history_));
-    if (isSeparatorIndex(cursor_)) {
-        return; // can't select separator
-    }
+    debugLog("commitSelected: cursor=" + std::to_string(cursor_));
 
-    if (has_history_ && cursor_ == 0) {
-        commitHistory();
-        return;
-    }
-
-    // Map cursor position to candidate index
-    int offset = has_history_ ? 2 : 0; // skip history + separator
-    int adjusted = cursor_ - offset;
     int raw_index = static_cast<int>(cached_candidates_.size());
 
-    debugLog("commitSelected: offset=" + std::to_string(offset) + " adjusted=" + std::to_string(adjusted) + " raw_index=" + std::to_string(raw_index));
-
-    if (adjusted >= raw_index || cached_candidates_.empty()) {
+    if (cursor_ >= raw_index || cached_candidates_.empty()) {
         commitRaw();
-    } else if (adjusted >= 0) {
-        commitCandidate(static_cast<size_t>(adjusted));
+    } else if (cursor_ >= 0) {
+        commitCandidate(static_cast<size_t>(cursor_));
     }
 }
 
 void LarenState::commitByDisplayIndex(size_t display_idx) {
-    // Map 1-9 key press (display_idx 0-8) to actual list item
-    int list_idx = static_cast<int>(display_idx);
-
-    if (has_history_) {
-        if (list_idx == 0) {
-            commitHistory();
-            return;
-        }
-        if (list_idx == 1) {
-            return; // separator
-        }
-        // Adjust for history + separator
-        size_t candidate_idx = list_idx - 2;
-        if (candidate_idx < cached_candidates_.size()) {
-            commitCandidate(candidate_idx);
-        } else if (candidate_idx == cached_candidates_.size()) {
-            commitRaw();
-        }
-    } else {
-        if (display_idx < cached_candidates_.size()) {
-            commitCandidate(display_idx);
-        } else if (display_idx == cached_candidates_.size()) {
-            commitRaw();
-        }
+    if (display_idx < cached_candidates_.size()) {
+        commitCandidate(display_idx);
+    } else if (display_idx == cached_candidates_.size()) {
+        commitRaw();
     }
 }
 
@@ -538,18 +500,10 @@ void LarenState::commitCandidate(size_t index) {
         auto& arabic = cached_candidates_[index].arabic;
         auto utf8 = util::utf32_to_utf8(arabic);
         debugLog("commitCandidate: index=" + std::to_string(index) + " text=" + utf8 + " buffer=" + buffer_);
-        engine_->setHistory(buffer_, arabic);
+        engine_->history().record(buffer_, arabic);
         commitText(utf8);
     } else {
         debugLog("commitCandidate: index=" + std::to_string(index) + " OUT OF RANGE (size=" + std::to_string(cached_candidates_.size()) + ")");
-    }
-}
-
-void LarenState::commitHistory() {
-    if (history_candidate_) {
-        auto utf8 = util::utf32_to_utf8(*history_candidate_);
-        // No need to update history — it's already the preferred choice
-        commitText(utf8);
     }
 }
 
@@ -614,8 +568,6 @@ void LarenState::commitText(const std::string& text) {
     ic_->commitString(text + " ");
     buffer_.clear();
     cached_candidates_.clear();
-    history_candidate_.reset();
-    has_history_ = false;
     cursor_ = 0;
     auto& panel = ic_->inputPanel();
     panel.reset();
@@ -626,8 +578,6 @@ void LarenState::commitText(const std::string& text) {
 void LarenState::reset() {
     buffer_.clear();
     cached_candidates_.clear();
-    history_candidate_.reset();
-    has_history_ = false;
     emoji_mode_ = false;
     emoji_candidates_.clear();
     cursor_ = 0;

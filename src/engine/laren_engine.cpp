@@ -111,6 +111,7 @@ void LarenEngine::deactivate(const fcitx::InputMethodEntry& /*entry*/,
     auto* ic = event.inputContext();
     auto* state = ic->propertyFor(&factory_);
     state->reset();
+    saveHistory();
 }
 
 void LarenEngine::reset(const fcitx::InputMethodEntry& /*entry*/,
@@ -154,47 +155,13 @@ void LarenEngine::loadHistory() {
     const char* home = std::getenv("HOME");
     if (!home) return;
     history_path_ = std::string(home) + "/.local/share/laren/history.tsv";
-
-    std::ifstream f(history_path_);
-    if (!f.is_open()) return;
-
-    std::string line;
-    while (std::getline(f, line)) {
-        auto tab = line.find('\t');
-        if (tab == std::string::npos) continue;
-        std::string latin = line.substr(0, tab);
-        std::string arabic_utf8 = line.substr(tab + 1);
-        history_[latin] = util::utf8_to_utf32(arabic_utf8);
-    }
-    debugLog("History loaded, entries=" + std::to_string(history_.size()));
+    history_.load(history_path_);
+    debugLog("History loaded, keys=" + std::to_string(history_.size()));
 }
 
 void LarenEngine::saveHistory() {
-    if (history_path_.empty()) return;
-
-    // Ensure directory exists
-    std::filesystem::create_directories(
-        std::filesystem::path(history_path_).parent_path());
-
-    std::ofstream f(history_path_);
-    if (!f.is_open()) return;
-
-    for (const auto& [latin, arabic] : history_) {
-        f << latin << '\t' << util::utf32_to_utf8(arabic) << '\n';
-    }
-}
-
-std::optional<std::u32string> LarenEngine::getHistory(const std::string& input) const {
-    auto it = history_.find(input);
-    if (it != history_.end()) {
-        return it->second;
-    }
-    return std::nullopt;
-}
-
-void LarenEngine::setHistory(const std::string& input, const std::u32string& arabic) {
-    history_[input] = arabic;
-    saveHistory();
+    if (history_path_.empty() || !history_.dirty()) return;
+    history_.save(history_path_);
 }
 
 } // namespace laren::engine

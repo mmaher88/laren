@@ -9,10 +9,10 @@
 #include "engine/laren_state.h"
 #include "core/transliterator.h"
 #include "core/emoji_map.h"
+#include "core/word_history.h"
 #include "dict/dictionary.h"
 
 #include <memory>
-#include <unordered_map>
 #include <string>
 
 namespace laren::engine {
@@ -39,9 +39,9 @@ public:
 
     auto* stateFactory() { return &factory_; }
 
-    // History: remembers user's preferred candidate for each input
-    std::optional<std::u32string> getHistory(const std::string& input) const;
-    void setHistory(const std::string& input, const std::u32string& arabic);
+    // History: remembers user's recently used candidates
+    core::WordHistory& history() { return history_; }
+    const core::WordHistory& history() const { return history_; }
 
 private:
     fcitx::Instance* instance_;
@@ -55,7 +55,7 @@ private:
     void loadHistory();
     void saveHistory();
 
-    std::unordered_map<std::string, std::u32string> history_;
+    core::WordHistory history_;
     std::string history_path_;
 };
 

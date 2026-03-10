@@ -5,7 +5,6 @@
 #include <fcitx/candidatelist.h>
 #include "core/candidate.h"
 #include "core/emoji_map.h"
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,7 +22,6 @@ public:
     // Public for LarenCandidateWord access
     void commitCandidate(size_t index);
     void commitRaw();
-    void commitHistory();
     void commitEmoji(size_t index);
 
 private:
@@ -31,8 +29,6 @@ private:
     fcitx::InputContext* ic_;
     std::string buffer_;
     std::vector<laren::core::Candidate> cached_candidates_;
-    std::optional<std::u32string> history_candidate_;
-    bool has_history_ = false;
     int cursor_ = 0;  // Currently highlighted candidate index
 
     // Emoji mode
@@ -46,7 +42,6 @@ private:
     void commitByDisplayIndex(size_t display_idx);
     void commitText(const std::string& text);
     int totalListItems() const;
-    bool isSeparatorIndex(int idx) const;
     void syncPageToCursor();
 };
 
