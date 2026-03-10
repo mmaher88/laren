@@ -1,5 +1,5 @@
 Name:           fcitx5-laren
-Version:        0.2.4
+Version:        0.2.5
 Release:        1%{?dist}
 Summary:        Arabizi to Arabic transliteration engine for Fcitx5
 License:        GPL-3.0-or-later
