@@ -661,7 +661,7 @@ function tokenize(input) {
   return tokens;
 }
 
-function expandDFS(input, maxResults = 200) {
+function expandDFS(input, maxResults = 2000) {
   const results = [];
   function dfs(pos, current) {
     if (results.length >= maxResults) return;
@@ -1231,7 +1231,7 @@ function render(raw) {
     return;
   }
 
-  const expansions = expandDFS(input, 200);
+  const expansions = expandDFS(input, 2000);
   const dictMatches = expansions.filter(e => DICTIONARY[e]).map(e => ({ word: e, freq: DICTIONARY[e] })).sort((a, b) => b.freq - a.freq);
   const seen = new Set();
   const uniqueMatches = [];
