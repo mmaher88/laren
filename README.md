@@ -67,13 +67,17 @@ sudo zypper refresh && sudo zypper install fcitx5-laren
 After installing, switch input method with **Ctrl+Space** and start typing in Arabizi.
 Press `Space` or `Enter` to commit the top candidate, or a number key to pick one.
 
+**Arabic punctuation:** `?` automatically outputs `؟`.
+
+**Emoji shortcodes:** Type `:` to enter emoji mode, then a shortcode (e.g., `:smile:` → 😊, `:heart:` → ❤️). 2300+ GitHub/Discord-style shortcodes supported.
+
 To configure: run `fcitx5-configtool`.
 
 ## Arabizi mappings
 
 | Input | Arabic | Input | Arabic |
 |-------|--------|-------|--------|
-| `2`   | ء / ق  | `sh`  | ش      |
+| `2`   | ء / ؤ / ئ / ق | `sh` | ش   |
 | `3`   | ع      | `kh`  | خ      |
 | `5`   | خ      | `gh`  | غ      |
 | `7`   | ح      | `th`  | ث / ذ  |

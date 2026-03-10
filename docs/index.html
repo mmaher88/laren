@@ -501,15 +501,24 @@ body {
 <script>
 // ── Arabizi mapping rules (mirrors rule_engine.cpp) ──
 const MAPPINGS = {
+  // Prime variants (3-char tokens)
+  "3'": ["\u063A"], "7'": ["\u062E"], "6'": ["\u0638"], "9'": ["\u0636"],
+  "d'": ["\u0630"], "t'": ["\u062B"], "s'": ["\u0634"],
+  // Digraphs
   "sh": ["\u0634"], "kh": ["\u062E"], "gh": ["\u063A"],
   "th": ["\u062B", "\u0630"], "dh": ["\u0630", "\u0636"],
   "aa": ["\u0627", "\u0622"], "ee": ["\u064A"], "oo": ["\u0648"], "ou": ["\u0648"],
+  "3h": ["\u063A"],
+  // Doubled consonants
   "bb": ["\u0628"], "tt": ["\u062A","\u0637"], "dd": ["\u062F","\u0636"], "rr": ["\u0631"],
   "ss": ["\u0633","\u0635"], "ff": ["\u0641"], "kk": ["\u0643"], "ll": ["\u0644"],
   "mm": ["\u0645"], "nn": ["\u0646"], "yy": ["\u064A"], "ww": ["\u0648"],
   "zz": ["\u0632"], "gg": ["\u062C"], "hh": ["\u0647"],
-  "2": ["\u0621","\u0623","\u0625","\u0642"], "3": ["\u0639"], "5": ["\u062E"],
+  // Numbers — 2 now includes waw-hamza (ؤ) and ya-hamza (ئ)
+  "2": ["\u0621","\u0623","\u0625","\u0624","\u0626","\u0642"],
+  "3": ["\u0639"], "5": ["\u062E"],
   "6": ["\u0637"], "7": ["\u062D"], "8": ["\u0642"], "9": ["\u0635"],
+  // Single letters
   "a": ["\u2205","\u0627","\u0623","\u0649","\u0647","\u0629"],
   "b": ["\u0628"], "t": ["\u062A","\u0637"],
   "g": ["\u062C"], "j": ["\u062C"], "d": ["\u062F","\u0636"], "r": ["\u0631"],
@@ -518,18 +527,20 @@ const MAPPINGS = {
   "n": ["\u0646"], "h": ["\u0647","\u062D"], "w": ["\u0648"], "y": ["\u064A"],
   "i": ["\u2205","\u064A","\u0627","\u0623","\u0625"],
   "u": ["\u2205","\u0648","\u0623"], "o": ["\u2205","\u0648","\u0623"],
-  "e": ["\u2205","\u064A","\u0627","\u0623","\u0625"],
+  // e: includes multi-char إي (alef-hamza-below + ya)
+  "e": ["\u2205","\u064A","\u0627","\u0623","\u0625","\u0625\u064A"],
   "p": ["\u0628"], "v": ["\u0641"], "x": ["\u062E"], "c": ["\u0643"],
 };
 
 const MAPPING_NAMES = {
   "\u0621":"hamza","\u0623":"alef-hamza","\u0625":"alef-hamza-below","\u0622":"alef-madda",
+  "\u0624":"waw-hamza","\u0626":"ya-hamza",
   "\u0627":"alef","\u0628":"ba","\u062A":"ta","\u062B":"tha","\u062C":"jeem","\u062D":"haa",
   "\u062E":"kha","\u062F":"dal","\u0630":"dhal","\u0631":"ra","\u0632":"zayn","\u0633":"seen",
   "\u0634":"sheen","\u0635":"sad","\u0636":"dad","\u0637":"taa","\u0638":"dhaa","\u0639":"ain",
   "\u063A":"ghain","\u0641":"fa","\u0642":"qaf","\u0643":"kaf","\u0644":"lam","\u0645":"meem",
   "\u0646":"noon","\u0647":"ha","\u0648":"waw","\u064A":"ya","\u0629":"ta-marbuta",
-  "\u0649":"alef-maqsura","\u2205":"skip"
+  "\u0649":"alef-maqsura","\u0625\u064A":"alef-hamza-below+ya","\u2205":"skip"
 };
 
 // ── Dictionary ──
@@ -540,7 +551,7 @@ let dictLoaded = false;
 function getMatchesAt(input, pos) {
   const results = [];
   const remaining = input.slice(pos).toLowerCase();
-  for (const len of [2, 1]) {
+  for (const len of [3, 2, 1]) {
     const substr = remaining.slice(0, len);
     if (MAPPINGS[substr]) results.push({ latin: substr, arabic: MAPPINGS[substr], len });
   }
@@ -553,7 +564,7 @@ function tokenize(input) {
   const lower = input.toLowerCase();
   while (pos < lower.length) {
     let found = false;
-    for (const len of [2, 1]) {
+    for (const len of [3, 2, 1]) {
       const substr = lower.slice(pos, pos + len);
       if (MAPPINGS[substr]) {
         tokens.push({ latin: substr, arabic: MAPPINGS[substr], pos, len });
@@ -576,7 +587,7 @@ function expandDFS(input, maxResults = 200) {
     for (const match of matches) {
       for (const ar of match.arabic) {
         if (ar === "\u2205") { dfs(pos + match.len, current); }
-        else { current.push(ar); dfs(pos + match.len, current); current.pop(); }
+        else { for (const ch of ar) current.push(ch); dfs(pos + match.len, current); for (let i = 0; i < ar.length; i++) current.pop(); }
       }
     }
   }
