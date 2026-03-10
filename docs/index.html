@@ -274,6 +274,35 @@ body {
   margin: 0 6px;
 }
 
+/* ── Mode Toggle ── */
+.mode-toggle {
+  display: flex;
+  background: #0f172a;
+  border-radius: 4px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 0 6px;
+}
+
+.mode-toggle button {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mode-toggle button:hover { color: #94a3b8; }
+.mode-toggle button.active {
+  background: linear-gradient(135deg, #818cf8, #38bdf8);
+  color: #0f172a;
+}
+
 .trie-legend {
   display: flex;
   gap: 8px;
@@ -293,6 +322,7 @@ body {
 .lg-circle.lg-word { background: #1e293b; border-color: #475569; outline: 1.5px solid #854d0e; outline-offset: 1px; }
 .lg-circle.lg-found { background: #052e16; border-color: #22c55e; }
 .lg-circle.lg-collapsed { background: #1e1b4b; border-color: #818cf8; }
+.lg-circle.lg-dead { background: #450a0a; border-color: #ef4444; }
 
 .trie-svg-area {
   flex: 1;
@@ -313,6 +343,7 @@ body {
   display: block;
 }
 
+/* ── Shared trie node styles ── */
 .trie-circle { fill: #1e293b; stroke: #475569; stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
 .trie-word-ring { fill: none; stroke: #854d0e; stroke-width: 2; opacity: 0.5; transition: stroke 0.3s, opacity 0.3s; }
 .trie-text { fill: #94a3b8; font-size: 14px; font-family: 'Segoe UI', system-ui, sans-serif; transition: fill 0.3s; pointer-events: none; }
@@ -322,21 +353,30 @@ body {
 .trie-node-g { cursor: pointer; }
 .trie-node-g:hover .trie-circle { stroke: #818cf8; stroke-width: 2.5; }
 
-/* Collapsed node with children */
+/* Full mode: collapsed node */
 .trie-node-g.collapsed .trie-circle { fill: #1e1b4b; stroke: #818cf8; }
 .trie-node-g.collapsed .trie-text { fill: #c7d2fe; }
 
-/* Search path highlights */
+/* Full mode: search path highlights */
 .trie-node-g.on-path .trie-circle { fill: #052e16; stroke: #22c55e; stroke-width: 2.5; }
 .trie-node-g.on-path .trie-text { fill: #bbf7d0; }
 .trie-node-g.on-path .trie-word-ring { stroke: #22c55e; opacity: 0.9; }
 .trie-edge.on-path { stroke: #22c55e; stroke-width: 2.5; }
 
+/* Simple mode: visiting/found/dead-end highlights */
+.trie-node-g.visiting .trie-circle { fill: #1e1b4b; stroke: #818cf8; stroke-width: 2.5; }
+.trie-node-g.visiting .trie-text { fill: #c7d2fe; }
+.trie-node-g.visiting .trie-word-ring { stroke: #818cf8; opacity: 0.8; }
+.trie-node-g.found .trie-circle { fill: #052e16; stroke: #22c55e; stroke-width: 2.5; }
+.trie-node-g.found .trie-text { fill: #bbf7d0; }
+.trie-node-g.found .trie-word-ring { stroke: #22c55e; opacity: 0.9; }
 .trie-node-g.dead-end .trie-circle { fill: #450a0a; stroke: #ef4444; stroke-width: 2.5; }
 .trie-node-g.dead-end .trie-text { fill: #fecaca; }
+.trie-edge.visiting { stroke: #818cf8; stroke-width: 2.5; }
+.trie-edge.found { stroke: #22c55e; stroke-width: 2.5; }
 .trie-edge.dead-end { stroke: #ef4444; stroke-width: 2; stroke-dasharray: 5 3; }
 
-/* Tooltip */
+/* Tooltip (full mode) */
 .trie-tooltip {
   position: absolute;
   background: #1e293b;
@@ -355,6 +395,77 @@ body {
 .trie-tooltip.show { display: block; }
 .trie-tooltip .tt-char { font-size: 1.1rem; font-weight: 700; }
 .trie-tooltip .tt-info { font-size: 0.6rem; color: #94a3b8; direction: ltr; margin-top: 2px; }
+
+/* ── Simple mode: lookup cards ── */
+.trie-bottom {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  max-height: 110px;
+  overflow: hidden;
+}
+
+.lk-card {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 4px 6px;
+  min-width: 0;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.lk-card.lk-active { border-color: #818cf8; }
+.lk-card.lk-found { border-color: #166534; }
+.lk-card.lk-miss { border-color: #7f1d1d; }
+
+.lk-word { font-size: 0.9rem; direction: rtl; text-align: center; font-weight: 600; margin-bottom: 2px; }
+
+.lk-trace { display: flex; flex-direction: column; gap: 1px; }
+
+.tr-step {
+  font-size: 0.58rem;
+  font-family: 'Courier New', monospace;
+  color: #64748b;
+  direction: rtl;
+  opacity: 0;
+  transition: opacity 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.3;
+}
+
+.tr-step.visible { opacity: 1; }
+.tr-step.ok { color: #86efac; }
+.tr-step.fail { color: #fca5a5; }
+
+.tr-step .wb {
+  background: #422006;
+  color: #fbbf24;
+  font-size: 0.5rem;
+  padding: 0 3px;
+  border-radius: 2px;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+.lk-result {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.lk-result.visible { opacity: 1; }
+.lk-result.lk-ok { color: #22c55e; background: #052e16; }
+.lk-result.lk-no { color: #ef4444; background: #450a0a; }
 
 /* ── Results Panel ── */
 .panel-results {
@@ -515,6 +626,9 @@ const MAPPINGS = {
 let DICTIONARY = {};
 let dictLoaded = false;
 
+// ── Trie mode: 'simple' or 'full' ──
+let trieMode = 'simple';
+
 // ── Tokenize & DFS ──
 function getMatchesAt(input, pos) {
   const results = [];
@@ -564,13 +678,204 @@ function expandDFS(input, maxResults = 200) {
 }
 
 // ══════════════════════════════════════════
+// ── Simple Trie Engine ──
+// ══════════════════════════════════════════
+let simpleTrieNodeCounter = 0;
+let simpleNodeMap = {};
+let simpleTrieRoot = null;
+
+function createSimpleTrieNode(char, depth) {
+  return { char, depth, children: {}, isWord: false, freq: 0, word: '', id: 'tn' + (simpleTrieNodeCounter++), x: 0, y: 0, parent: null };
+}
+
+function buildVizTrie(words) {
+  simpleTrieNodeCounter = 0;
+  simpleNodeMap = {};
+  const root = createSimpleTrieNode('', 0);
+  root.id = 'troot';
+  simpleNodeMap['troot'] = root;
+  for (const [word, freq] of words) {
+    let node = root;
+    for (let i = 0; i < word.length; i++) {
+      const ch = word[i];
+      if (!node.children[ch]) {
+        const child = createSimpleTrieNode(ch, i + 1);
+        child.parent = node;
+        node.children[ch] = child;
+        simpleNodeMap[child.id] = child;
+      }
+      node = node.children[ch];
+    }
+    node.isWord = true;
+    node.freq = freq;
+    node.word = word;
+  }
+  simpleTrieRoot = root;
+  return root;
+}
+
+function simpleTrieLookup(root, word) {
+  const steps = [];
+  let node = root;
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i];
+    if (node.children[ch]) {
+      node = node.children[ch];
+      steps.push({ nodeId: node.id, char: ch, prefix: word.slice(0, i + 1), found: true, isWord: node.isWord, wordFreq: node.freq });
+    } else {
+      steps.push({ nodeId: null, char: ch, prefix: word.slice(0, i + 1), found: false, isWord: false });
+      break;
+    }
+  }
+  return { steps, matched: steps.length === word.length && steps.length > 0 && steps[steps.length - 1].found };
+}
+
+function layoutSimpleTrie(root) {
+  const NODE_W = 48, ROW_H = 56;
+  function subtreeWidth(node) {
+    const kids = Object.values(node.children);
+    if (kids.length === 0) return NODE_W;
+    return Math.max(kids.reduce((s, c) => s + subtreeWidth(c), 0), NODE_W);
+  }
+  function position(node, cx, cy) {
+    node.x = cx; node.y = cy;
+    const kids = Object.values(node.children);
+    const totalW = kids.reduce((s, c) => s + subtreeWidth(c), 0);
+    let x = cx - totalW / 2;
+    for (const child of kids) {
+      const w = subtreeWidth(child);
+      position(child, x + w / 2, cy + ROW_H);
+      x += w;
+    }
+  }
+  position(root, 0, 24);
+  let minX = Infinity, maxX = -Infinity, maxY = 0;
+  function bounds(node) {
+    minX = Math.min(minX, node.x); maxX = Math.max(maxX, node.x); maxY = Math.max(maxY, node.y);
+    for (const c of Object.values(node.children)) bounds(c);
+  }
+  bounds(root);
+  return { minX: minX - 28, maxX: maxX + 28, maxY: maxY + 28, width: maxX - minX + 56, height: maxY + 52 };
+}
+
+function simpleTrieToSVG(root, bounds) {
+  const pad = 8;
+  const vx = bounds.minX - pad, vw = bounds.width + pad * 2, vh = bounds.height + pad;
+  let svg = `<svg class="trie-svg" viewBox="${vx} 0 ${vw} ${vh}" preserveAspectRatio="xMidYMid meet">`;
+  function drawEdges(node) {
+    for (const child of Object.values(node.children)) {
+      svg += `<line class="trie-edge" id="edge-${child.id}" x1="${node.x}" y1="${node.y}" x2="${child.x}" y2="${child.y}"/>`;
+      drawEdges(child);
+    }
+  }
+  drawEdges(root);
+  function drawNodes(node) {
+    const cls = node.isWord ? 'word-node' : '';
+    svg += `<g class="trie-node-g ${cls}" id="node-${node.id}">`;
+    if (node.isWord) svg += `<circle cx="${node.x}" cy="${node.y}" r="20" class="trie-word-ring"/>`;
+    svg += `<circle cx="${node.x}" cy="${node.y}" r="16" class="trie-circle"/>`;
+    svg += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${node.char || '\u25CF'}</text></g>`;
+    for (const child of Object.values(node.children)) drawNodes(child);
+  }
+  drawNodes(root);
+  svg += '</svg>';
+  return svg;
+}
+
+function selectTrieWords(dictMatches, expansions) {
+  const words = new Map();
+  for (const m of dictMatches.slice(0, 8)) words.set(m.word, m.freq);
+  const prefixes = new Set();
+  for (const [w] of words) { if (w.length >= 2) prefixes.add(w.slice(0, 2)); if (w.length >= 1) prefixes.add(w.slice(0, 1)); }
+  for (const e of expansions.slice(0, 15)) { if (e.length >= 2) prefixes.add(e.slice(0, 2)); if (e.length >= 1) prefixes.add(e.slice(0, 1)); }
+  const cands = [];
+  for (const dw in DICTIONARY) {
+    if (words.has(dw) || dw.length > 20) continue;
+    for (const pfx of prefixes) { if (dw.startsWith(pfx)) { cands.push([dw, DICTIONARY[dw]]); break; } }
+    if (cands.length >= 400) break;
+  }
+  cands.sort((a, b) => b[1] - a[1]);
+  for (const [dw, df] of cands) { if (words.size >= 24) break; words.set(dw, df); }
+  return words;
+}
+
+function selectLookupCandidates(dictMatches, expansions, trieRoot) {
+  const candidates = [], seen = new Set();
+  for (const m of dictMatches.slice(0, 2)) {
+    if (!seen.has(m.word)) { candidates.push({ word: m.word, inDict: true, freq: m.freq }); seen.add(m.word); }
+  }
+  let bestNM = null, bestD = 0;
+  for (const exp of expansions) {
+    if (DICTIONARY[exp] || seen.has(exp) || exp.length === 0) continue;
+    const { steps } = simpleTrieLookup(trieRoot, exp);
+    const d = steps.filter(s => s.found).length;
+    if (d > bestD || (d === bestD && exp.length > (bestNM || '').length)) { bestD = d; bestNM = exp; }
+    if (d >= 3) break;
+  }
+  if (bestNM) candidates.push({ word: bestNM, inDict: false, freq: 0 });
+  else { for (const exp of expansions) { if (!DICTIONARY[exp] && !seen.has(exp) && exp.length > 0) { candidates.push({ word: exp, inDict: false, freq: 0 }); break; } } }
+  return candidates;
+}
+
+// Simple trie path highlighting
+let simpleActiveWord = null;
+
+function clearSimpleTrieHighlights() {
+  document.querySelectorAll('.trie-node-g').forEach(n => n.classList.remove('visiting', 'found', 'dead-end', 'current'));
+  document.querySelectorAll('.trie-edge').forEach(e => e.classList.remove('visiting', 'found', 'dead-end'));
+}
+
+function showSimpleWordPath(word) {
+  clearSimpleTrieHighlights();
+  if (!word || !simpleTrieRoot) return;
+  const { steps, matched } = simpleTrieLookup(simpleTrieRoot, word);
+  const isFound = !!DICTIONARY[word] && matched;
+  const okSteps = steps.filter(s => s.found);
+  if (okSteps.length === 0) return;
+  const rootEl = document.getElementById('node-troot');
+  if (rootEl) rootEl.classList.add(isFound ? 'found' : 'visiting');
+  okSteps.forEach((step, i) => {
+    const n = document.getElementById(`node-${step.nodeId}`);
+    const e = document.getElementById(`edge-${step.nodeId}`);
+    if (isFound) {
+      if (n) n.classList.add('found');
+      if (e) e.classList.add('found');
+    } else if (i === okSteps.length - 1) {
+      if (n) n.classList.add('dead-end');
+      if (e) e.classList.add('dead-end');
+    } else {
+      if (n) n.classList.add('visiting');
+      if (e) e.classList.add('visiting');
+    }
+  });
+}
+
+function setSimpleActiveCandidate(word) {
+  document.querySelectorAll('.cand-item').forEach(el => el.classList.toggle('cand-hover', el.dataset.word === word));
+  document.querySelectorAll('.lk-card').forEach(el => el.classList.toggle('lk-active', el.dataset.word === word));
+  showSimpleWordPath(word);
+}
+
+function setupSimpleTrieInteraction() {
+  const firstCand = document.querySelector('.cand-item[data-word]');
+  simpleActiveWord = firstCand?.dataset.word || null;
+  setTimeout(() => setSimpleActiveCandidate(simpleActiveWord), 200);
+  document.querySelectorAll('.cand-item[data-word]').forEach(el => {
+    el.addEventListener('mouseenter', () => setSimpleActiveCandidate(el.dataset.word));
+    el.addEventListener('mouseleave', () => setSimpleActiveCandidate(simpleActiveWord));
+  });
+  document.querySelectorAll('.lk-card[data-word]').forEach(card => {
+    card.addEventListener('mouseenter', () => setSimpleActiveCandidate(card.dataset.word));
+    card.addEventListener('mouseleave', () => setSimpleActiveCandidate(simpleActiveWord));
+  });
+}
+
+// ══════════════════════════════════════════
 // ── Full Trie Engine ──
 // ══════════════════════════════════════════
 let fullTrie = null;
 let trieNodeCount = 0;
 let trieIdCounter = 0;
-
-// Flat node storage for ID-based lookup
 const trieNodes = {};
 
 function buildFullTrie() {
@@ -593,7 +898,6 @@ function buildFullTrie() {
     node.freq = DICTIONARY[word];
   }
 
-  // Count words per subtree
   function count(n) {
     let c = n.isWord ? 1 : 0;
     for (const ch of Object.values(n.children)) c += count(ch);
@@ -605,13 +909,12 @@ function buildFullTrie() {
   trieNodeCount = trieIdCounter + 1;
   fullTrie = root;
 
-  // Expand first level by default
   for (const child of Object.values(root.children)) {
     child.expanded = false;
   }
 }
 
-// ── Layout: only expanded nodes ──
+// Full trie layout
 const NODE_W = 52;
 const ROW_H = 62;
 
@@ -622,8 +925,7 @@ function visibleWidth(node) {
 }
 
 function layoutVisible(node, cx, cy) {
-  node.x = cx;
-  node.y = cy;
+  node.x = cx; node.y = cy;
   if (!node.expanded) return;
   const kids = Object.values(node.children);
   if (kids.length === 0) return;
@@ -649,7 +951,6 @@ function computeBounds(node) {
   return { minX, maxX, maxY };
 }
 
-// ── SVG Rendering ──
 function renderTrieSVG(root, highlightPaths) {
   const hp = highlightPaths || new Set();
   let edges = '', nodes = '';
@@ -662,7 +963,6 @@ function renderTrieSVG(root, highlightPaths) {
     if (isCollapsed) cls += ' collapsed';
     if (hp.has(node.id)) cls += ' on-path';
 
-    // Draw edges to children if expanded
     if (node.expanded) {
       for (const child of Object.values(node.children)) {
         let eCls = 'trie-edge';
@@ -671,25 +971,20 @@ function renderTrieSVG(root, highlightPaths) {
       }
     }
 
-    // Node group
     nodes += `<g class="${cls}" id="g-${node.id}" data-id="${node.id}">`;
     if (node.isWord) nodes += `<circle cx="${node.x}" cy="${node.y}" r="21" class="trie-word-ring"/>`;
     nodes += `<circle cx="${node.x}" cy="${node.y}" r="17" class="trie-circle"/>`;
     const label = node.ch || '\u25CF';
     nodes += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${label}</text>`;
 
-    // Word count badge for collapsed nodes
     if (isCollapsed) {
       const badge = node.wordCount >= 1000 ? (node.wordCount / 1000).toFixed(0) + 'k' : node.wordCount.toString();
       nodes += `<text x="${node.x + 14}" y="${node.y - 14}" text-anchor="middle" class="trie-badge">${badge}</text>`;
     }
     nodes += '</g>';
 
-    // Recurse into expanded children
     if (node.expanded) {
-      for (const child of Object.values(node.children)) {
-        drawNode(child, true);
-      }
+      for (const child of Object.values(node.children)) drawNode(child, true);
     }
   }
 
@@ -697,7 +992,7 @@ function renderTrieSVG(root, highlightPaths) {
   return edges + nodes;
 }
 
-// ── Zoom & Pan State ──
+// Zoom & Pan State
 let vb = { x: 0, y: 0, w: 800, h: 600 };
 let isPanning = false;
 let panStart = { x: 0, y: 0, vbx: 0, vby: 0 };
@@ -711,18 +1006,16 @@ function resetView() {
   vb.y = 0;
   vb.w = (b.maxX - b.minX) + pad * 2;
   vb.h = b.maxY + pad + 30;
-  renderTrie();
+  renderFullTrie();
 }
 
 function zoomBy(factor, cx, cy) {
-  // Zoom around center of view if no point given
   if (cx === undefined) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
   const nx = cx - (cx - vb.x) * factor;
   const ny = cy - (cy - vb.y) * factor;
   vb.x = nx; vb.y = ny; vb.w *= factor; vb.h *= factor;
 }
 
-// ── Expand a path in the trie for a given Arabic word ──
 function expandPath(word) {
   if (!fullTrie) return new Set();
   const ids = new Set(['r']);
@@ -736,7 +1029,6 @@ function expandPath(word) {
   return ids;
 }
 
-// ── Collapse all except root ──
 function collapseAll() {
   function collapse(n) {
     n.expanded = false;
@@ -748,18 +1040,15 @@ function collapseAll() {
   resetView();
 }
 
-// ── Current highlight paths ──
 let highlightIds = new Set();
 
-// ── Render the trie panel SVG ──
-function renderTrie(skipLayout) {
+function renderFullTrie(skipLayout) {
   const svgArea = document.getElementById('trie-svg-area');
   if (!svgArea || !fullTrie) return;
 
   if (!skipLayout) {
     layoutVisible(fullTrie, 0, 30);
     const b = computeBounds(fullTrie);
-    // Only reset view if viewbox would be tiny (first render)
     if (vb.w <= 1) {
       const pad = 40;
       vb.x = b.minX - pad;
@@ -773,24 +1062,21 @@ function renderTrie(skipLayout) {
   const svg = `<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet">${content}</svg>`;
   svgArea.innerHTML = svg;
 
-  // Update stats
   const statsEl = document.getElementById('trie-stats');
   if (statsEl) {
     const totalWords = fullTrie.wordCount;
     statsEl.textContent = `${totalWords.toLocaleString()} words \u00B7 ${trieNodeCount.toLocaleString()} nodes`;
   }
 
-  setupTrieEvents();
+  setupFullTrieEvents();
 }
 
-// ── Mouse events for zoom/pan and click ──
-function setupTrieEvents() {
+function setupFullTrieEvents() {
   const area = document.getElementById('trie-svg-area');
   if (!area) return;
   const svg = area.querySelector('svg');
   if (!svg) return;
 
-  // Click to expand/collapse
   svg.addEventListener('click', (e) => {
     const g = e.target.closest('.trie-node-g');
     if (!g) return;
@@ -798,12 +1084,10 @@ function setupTrieEvents() {
     const node = trieNodes[id];
     if (!node || Object.keys(node.children).length === 0) return;
     node.expanded = !node.expanded;
-    // Re-layout and render, keep current zoom
     layoutVisible(fullTrie, 0, 30);
-    renderTrie(true);
+    renderFullTrie(true);
   });
 
-  // Tooltip on hover
   const tooltip = document.getElementById('trie-tooltip');
   svg.addEventListener('mouseover', (e) => {
     const g = e.target.closest('.trie-node-g');
@@ -820,7 +1104,6 @@ function setupTrieEvents() {
     tooltip.classList.add('show');
     const rect = area.getBoundingClientRect();
     const svgRect = svg.getBoundingClientRect();
-    // Position tooltip near the node
     const sx = (node.x - vb.x) / vb.w * svgRect.width;
     const sy = (node.y - vb.y) / vb.h * svgRect.height;
     tooltip.style.left = Math.min(sx + 20, rect.width - 160) + 'px';
@@ -831,7 +1114,6 @@ function setupTrieEvents() {
     if (!e.target.closest('.trie-node-g') && tooltip) tooltip.classList.remove('show');
   });
 
-  // Zoom with mouse wheel
   area.addEventListener('wheel', (e) => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? 1.15 : 1 / 1.15;
@@ -844,9 +1126,8 @@ function setupTrieEvents() {
     svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
   }, { passive: false });
 
-  // Pan with mouse drag
   area.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.trie-node-g')) return; // don't pan when clicking nodes
+    if (e.target.closest('.trie-node-g')) return;
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, vbx: vb.x, vby: vb.y };
     area.classList.add('panning');
@@ -882,7 +1163,6 @@ function setupTrieEvents() {
     dictLoaded = true;
     dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Building trie...</p></div>';
 
-    // Build in next frame so the UI updates
     await new Promise(r => setTimeout(r, 10));
     buildFullTrie();
 
@@ -895,12 +1175,29 @@ function setupTrieEvents() {
 })();
 
 // ══════════════════════════════════════════
+// ── Mode toggle ──
+// ══════════════════════════════════════════
+function switchTrieMode(mode) {
+  trieMode = mode;
+  // Re-render with current input
+  const input = document.getElementById("input").value;
+  if (input.trim()) render(input);
+}
+
+// ══════════════════════════════════════════
 // ── Rendering ──
 // ══════════════════════════════════════════
 const inputEl = document.getElementById("input");
 const dashEl = document.getElementById("dash");
 const pipeEl = document.getElementById("pipe");
 let debounceTimer;
+
+// Cache last computed data for mode switching
+let lastUniqueMatches = [];
+let lastExpansions = [];
+let lastSkeletal = [];
+let lastTokens = [];
+let lastBranchCount = 1;
 
 inputEl.addEventListener("input", () => {
   if (!dictLoaded) return;
@@ -913,7 +1210,6 @@ function render(raw) {
   if (!input) {
     dashEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p></div>';
     pipeEl.innerHTML = '';
-    // Collapse highlighted paths
     highlightIds = new Set();
     return;
   }
@@ -937,29 +1233,47 @@ function render(raw) {
   let branchCount = 1;
   for (const t of tokens) branchCount *= t.arabic.length;
 
-  // Auto-expand trie paths for top matches
-  highlightIds = new Set(['r']);
-  for (const m of uniqueMatches.slice(0, 3)) {
-    const ids = expandPath(m.word);
-    for (const id of ids) highlightIds.add(id);
-  }
-
-  // Reset viewbox for re-layout
-  vb = { x: 0, y: 0, w: 0, h: 0 };
+  // Cache for mode switching
+  lastTokens = tokens;
+  lastExpansions = expansions;
+  lastUniqueMatches = uniqueMatches;
+  lastSkeletal = skeletal;
+  lastBranchCount = branchCount;
 
   // Pipeline summary
   pipeEl.innerHTML = `<span class="pv">${input}</span><span class="pa">\u2192</span><span class="pv">${tokens.length}</span><span class="pa">tokens \u2192</span><span class="pv">${expansions.length}</span><span class="pa">forms \u2192</span><span class="pv">${uniqueMatches.length}</span><span class="pa">matches \u2192 ranked</span>`;
 
-  // Build dashboard
-  dashEl.innerHTML = `<div class="dash-grid">
-    <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
-    <div class="panel panel-trie" data-p="1">${buildTriePanel()}</div>
-    <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
-  </div>`;
+  // Build dashboard based on mode
+  if (trieMode === 'full') {
+    // Auto-expand trie paths for top matches
+    highlightIds = new Set(['r']);
+    for (const m of uniqueMatches.slice(0, 3)) {
+      const ids = expandPath(m.word);
+      for (const id of ids) highlightIds.add(id);
+    }
+    vb = { x: 0, y: 0, w: 0, h: 0 };
 
-  // Render the trie SVG into the panel
-  renderTrie();
-  animateDashboard();
+    dashEl.innerHTML = `<div class="dash-grid">
+      <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
+      <div class="panel panel-trie" data-p="1">${buildFullTriePanel()}</div>
+      <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
+    </div>`;
+
+    renderFullTrie();
+    animateDashboard('full');
+  } else {
+    const trieWords = selectTrieWords(uniqueMatches, expansions);
+    const trieRoot = buildVizTrie(trieWords);
+    const lookupCands = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
+
+    dashEl.innerHTML = `<div class="dash-grid">
+      <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
+      <div class="panel panel-trie" data-p="1">${buildSimpleTriePanel(trieRoot, lookupCands, trieWords.size)}</div>
+      <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
+    </div>`;
+
+    animateDashboard('simple');
+  }
 }
 
 function buildMappings(tokens, branchCount, actualCount) {
@@ -982,13 +1296,59 @@ function buildMappings(tokens, branchCount, actualCount) {
     </div>`;
 }
 
-function buildTriePanel() {
+function buildModeToggle() {
+  return `<div class="mode-toggle">
+    <button onclick="switchTrieMode('simple')" class="${trieMode === 'simple' ? 'active' : ''}">Simple</button>
+    <button onclick="switchTrieMode('full')" class="${trieMode === 'full' ? 'active' : ''}">Full</button>
+  </div>`;
+}
+
+function buildSimpleTriePanel(trieRoot, lookupCands, trieWordCount) {
+  const bounds = layoutSimpleTrie(trieRoot);
+  const svg = simpleTrieToSVG(trieRoot, bounds);
+
+  let cards = "";
+  lookupCands.forEach((cand, ci) => {
+    const { steps, matched } = simpleTrieLookup(trieRoot, cand.word);
+    const isFound = cand.inDict && matched;
+    const cls = isFound ? 'lk-found' : 'lk-miss';
+    let trace = "";
+    steps.forEach((step, si) => {
+      const sc = step.found ? 'ok' : 'fail';
+      const arrow = step.found ? '\u2190' : '\u2190\u2717';
+      let badge = '';
+      if (step.found && step.isWord) badge = `<span class="wb">\u2605${step.wordFreq}</span>`;
+      trace += `<div class="tr-step ${sc} visible">${step.char} ${arrow} ${step.prefix} ${badge}</div>`;
+    });
+    const rCls = isFound ? 'lk-ok' : 'lk-no';
+    const rTxt = isFound ? `\u2705 ${cand.freq}` : '\u274C';
+    cards += `<div class="lk-card ${cls}" data-word="${cand.word}" data-found="${isFound}"><div class="lk-word">${cand.word}</div><div class="lk-trace">${trace}</div><div class="lk-result ${rCls} visible">${rTxt}</div></div>`;
+  });
+
+  return `<div class="trie-top">
+      <div class="panel-label"><span class="num">2</span>Trie lookup <span style="font-weight:400;text-transform:none">(${trieWordCount} nearby words)</span></div>
+      <div class="trie-controls">
+        ${buildModeToggle()}
+        <div class="trie-legend">
+          <span class="trie-legend-item"><span class="lg-circle lg-default"></span>node</span>
+          <span class="trie-legend-item"><span class="lg-circle lg-word"></span>word</span>
+          <span class="trie-legend-item"><span class="lg-circle lg-found"></span>found</span>
+          <span class="trie-legend-item"><span class="lg-circle lg-dead"></span>dead end</span>
+        </div>
+      </div>
+    </div>
+    <div class="trie-svg-area">${svg}</div>
+    <div class="trie-bottom">${cards}</div>`;
+}
+
+function buildFullTriePanel() {
   return `<div class="trie-top">
       <div class="panel-label"><span class="num">2</span>Full dictionary trie</div>
       <div class="trie-controls">
+        ${buildModeToggle()}
         <span id="trie-stats" class="trie-stats"></span>
-        <button onclick="zoomBy(1/1.3);renderTrie(true)" title="Zoom in">+</button>
-        <button onclick="zoomBy(1.3);renderTrie(true)" title="Zoom out">\u2212</button>
+        <button onclick="zoomBy(1/1.3);renderFullTrie(true)" title="Zoom in">+</button>
+        <button onclick="zoomBy(1.3);renderFullTrie(true)" title="Zoom out">\u2212</button>
         <button onclick="resetView()" title="Fit to view">\u2302</button>
         <button onclick="collapseAll()" title="Collapse all">\u25B2</button>
       </div>
@@ -1039,7 +1399,7 @@ function buildResults(matches, skeletal, totalExpansions) {
 }
 
 // ── Animation ──
-function animateDashboard() {
+function animateDashboard(mode) {
   document.querySelectorAll(".panel").forEach((el, i) => {
     setTimeout(() => el.classList.add("visible"), i * 60);
   });
@@ -1054,18 +1414,23 @@ function animateDashboard() {
     }, d + 150);
   });
 
-  // Candidate hover -> highlight trie path
-  document.querySelectorAll('.cand-item[data-word]').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      highlightIds = expandPath(el.dataset.word);
-      highlightIds.add('r');
-      renderTrie(true);
+  if (mode === 'full') {
+    // Full mode: candidate hover -> highlight trie path
+    document.querySelectorAll('.cand-item[data-word]').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        highlightIds = expandPath(el.dataset.word);
+        highlightIds.add('r');
+        renderFullTrie(true);
+      });
+      el.addEventListener('mouseleave', () => {
+        highlightIds = new Set();
+        renderFullTrie(true);
+      });
     });
-    el.addEventListener('mouseleave', () => {
-      highlightIds = new Set();
-      renderTrie(true);
-    });
-  });
+  } else {
+    // Simple mode: path highlighting on hover
+    setupSimpleTrieInteraction();
+  }
 }
 </script>
 </body>
