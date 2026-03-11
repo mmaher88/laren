@@ -183,6 +183,75 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
+    # In GUI mode: write autologin config files via cloud-init write_files
+    # (much more reliable than generating them via runcmd shell commands)
+    if $INTERACTIVE; then
+        case "$DE" in
+            kde-plasma)
+                cat >> "$userdata" <<'WRITEFILES'
+
+write_files:
+  - path: /etc/sddm.conf
+    content: |
+      [Autologin]
+      User=laren
+      Session=plasma
+    owner: root:root
+    permissions: '0644'
+WRITEFILES
+                ;;
+            gnome)
+                cat >> "$userdata" <<'WRITEFILES'
+
+write_files:
+  - path: /etc/gdm/custom.conf
+    content: |
+      [daemon]
+      AutomaticLoginEnable=true
+      AutomaticLogin=laren
+    owner: root:root
+    permissions: '0644'
+WRITEFILES
+                ;;
+            sway)
+                cat >> "$userdata" <<WRITEFILES
+
+write_files:
+  - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
+    owner: root:root
+    permissions: '0644'
+  - path: /home/${SSH_USER}/.bash_profile
+    content: |
+      [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && exec sway
+    owner: ${SSH_USER}:${SSH_USER}
+    permissions: '0644'
+WRITEFILES
+                ;;
+            hyprland)
+                cat >> "$userdata" <<WRITEFILES
+
+write_files:
+  - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
+    owner: root:root
+    permissions: '0644'
+  - path: /home/${SSH_USER}/.bash_profile
+    content: |
+      [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && exec Hyprland
+    owner: ${SSH_USER}:${SSH_USER}
+    permissions: '0644'
+WRITEFILES
+                ;;
+        esac
+    fi
+
     # Add packages if the profile defined them
     if [[ -n "$DE_PACKAGES" ]]; then
         echo "packages:" >> "$userdata"
@@ -204,47 +273,13 @@ USERDATA
         done <<< "$DE_POST_INSTALL"
     fi
 
-    # In GUI mode: enable graphical target + autologin so the DE loads
+    # In GUI mode: ensure graphical target is set via runcmd
     if $INTERACTIVE; then
         if ! $has_runcmd; then
             echo "runcmd:" >> "$userdata"
         fi
 
         echo "  - systemctl set-default graphical.target" >> "$userdata"
-
-        case "$DE" in
-            kde-plasma)
-                cat >> "$userdata" <<'GUICMD'
-  - mkdir -p /etc/sddm.conf.d
-  - |
-    SESSION=$(basename -s .desktop "$(ls /usr/share/wayland-sessions/plasma*.desktop 2>/dev/null | head -1)" 2>/dev/null || echo plasma)
-    printf '[Autologin]\nUser=laren\nSession=%s\n' "$SESSION" > /etc/sddm.conf.d/autologin.conf
-GUICMD
-                ;;
-            gnome)
-                cat >> "$userdata" <<'GUICMD'
-  - mkdir -p /etc/gdm
-  - printf '[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=laren\n' > /etc/gdm/custom.conf
-GUICMD
-                ;;
-            sway)
-                # TTY autologin + start sway from .bash_profile
-                cat >> "$userdata" <<'GUICMD'
-  - mkdir -p /etc/systemd/system/getty@tty1.service.d
-  - printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin laren --noclear %%I $TERM\n' > /etc/systemd/system/getty@tty1.service.d/autologin.conf
-  - 'echo ''[ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ] && exec sway'' >> /home/laren/.bash_profile'
-  - chown laren:laren /home/laren/.bash_profile
-GUICMD
-                ;;
-            hyprland)
-                cat >> "$userdata" <<'GUICMD'
-  - mkdir -p /etc/systemd/system/getty@tty1.service.d
-  - printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin laren --noclear %%I $TERM\n' > /etc/systemd/system/getty@tty1.service.d/autologin.conf
-  - 'echo ''[ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ] && exec Hyprland'' >> /home/laren/.bash_profile'
-  - chown laren:laren /home/laren/.bash_profile
-GUICMD
-                ;;
-        esac
     fi
 
     # Power state: don't reboot, we'll drive it over SSH
