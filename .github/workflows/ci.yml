@@ -24,16 +24,16 @@ jobs:
         include:
           - distro: archlinux
             container: archlinux:latest
-            install: pacman -Syu --noconfirm cmake gcc fcitx5 gtest
+            install: pacman -Syu --noconfirm cmake make gcc git fcitx5 gtest
           - distro: fedora-41
             container: fedora:41
-            install: dnf install -y cmake gcc-c++ fcitx5-devel gtest-devel
+            install: dnf install -y cmake make gcc-c++ git fcitx5-devel gtest-devel
           - distro: ubuntu-24.04
             container: ubuntu:24.04
-            install: apt-get update -qq && apt-get install -y cmake g++ fcitx5-modules-dev libfcitx5core-dev libgtest-dev
+            install: apt-get update -qq && apt-get install -y cmake make g++ git fcitx5-modules-dev libfcitx5core-dev libgtest-dev
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest
-            install: zypper install -y cmake gcc-c++ fcitx5-devel gtest
+            install: zypper install -y cmake make gcc-c++ git fcitx5-devel gtest
 
     steps:
       - name: Install dependencies
@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: dnf install -y rpm-build cmake gcc-c++ fcitx5-devel rpmdevtools
+        run: dnf install -y rpm-build cmake make gcc-c++ git fcitx5-devel rpmdevtools
 
       - name: Checkout
         uses: actions/checkout@v4
