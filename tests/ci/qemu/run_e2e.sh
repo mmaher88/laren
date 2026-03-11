@@ -216,7 +216,9 @@ USERDATA
             kde-plasma)
                 cat >> "$userdata" <<'GUICMD'
   - mkdir -p /etc/sddm.conf.d
-  - printf '[Autologin]\nUser=laren\nSession=plasma\n' > /etc/sddm.conf.d/autologin.conf
+  - |
+    SESSION=$(basename -s .desktop "$(ls /usr/share/wayland-sessions/plasma*.desktop 2>/dev/null | head -1)" 2>/dev/null || echo plasma)
+    printf '[Autologin]\nUser=laren\nSession=%s\n' "$SESSION" > /etc/sddm.conf.d/autologin.conf
 GUICMD
                 ;;
             gnome)
