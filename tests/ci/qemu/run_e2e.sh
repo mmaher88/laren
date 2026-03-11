@@ -179,6 +179,7 @@ EOF
 #cloud-config
 hostname: laren-e2e
 users:
+  - default
   - name: ${SSH_USER}
     plain_text_passwd: "${SSH_PASS}"
     sudo: ALL=(ALL) NOPASSWD:ALL
@@ -186,6 +187,9 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - ${ssh_pubkey}
+
+chpasswd:
+  expire: false
 
 ssh_pwauth: true
 
