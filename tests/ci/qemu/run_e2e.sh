@@ -5,7 +5,7 @@
 # Usage: ./run_e2e.sh [--gui] <distro> <de> [package-path]
 #   --gui:   Open a QEMU window, boot into the DE, and keep VM alive for
 #            manual inspection. Default is headless (automated test only).
-#   distro:  arch | fedora | ubuntu
+#   distro:  arch | fedora | ubuntu | opensuse
 #   de:      kde-plasma | gnome | sway | hyprland
 #   package: path to .pkg.tar.zst / .rpm / .deb  (optional; built from source if omitted)
 
@@ -32,7 +32,7 @@ usage() {
     echo ""
     echo "  --gui:   Show QEMU window, boot into the DE after install,"
     echo "           and keep VM running for manual inspection."
-    echo "  distro:  arch | fedora | ubuntu"
+    echo "  distro:  arch | fedora | ubuntu | opensuse"
     echo "  de:      kde-plasma | gnome | sway | hyprland"
     echo "  package: path to .pkg.tar.zst / .rpm / .deb"
     exit 1
@@ -57,8 +57,8 @@ DE="$2"
 PACKAGE="${3:-}"
 
 case "$DISTRO" in
-    arch|fedora|ubuntu) ;;
-    *) error "Unknown distro: $DISTRO (supported: arch, fedora, ubuntu)" ;;
+    arch|fedora|ubuntu|opensuse) ;;
+    *) error "Unknown distro: $DISTRO (supported: arch, fedora, ubuntu, opensuse)" ;;
 esac
 
 case "$DE" in
@@ -123,6 +123,10 @@ download_image() {
         ubuntu)
             IMAGE_URL="https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
             IMAGE_FILE="$CACHE_DIR/ubuntu-noble-cloudimg.qcow2"
+            ;;
+        opensuse)
+            IMAGE_URL="https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud.qcow2"
+            IMAGE_FILE="$CACHE_DIR/opensuse-tw-cloudimg.qcow2"
             ;;
     esac
 
@@ -409,8 +413,9 @@ install_package() {
         vm_copy "$SCRIPT_DIR/install_package.sh" "/tmp/install_package.sh"
         vm_exec "chmod +x /tmp/install_package.sh && sudo /tmp/install_package.sh /tmp/$pkg_name"
     else
-        warn "No package specified; skipping package install"
-        warn "Laren will not be available in the VM unless already in the image"
+        info "No package specified; building from source in VM"
+        vm_copy "$SCRIPT_DIR/install_from_source.sh" "/tmp/install_from_source.sh"
+        vm_exec "chmod +x /tmp/install_from_source.sh && sudo /tmp/install_from_source.sh"
     fi
 }
 
@@ -423,7 +428,7 @@ run_verification() {
 
     info "Running verification (DISTRO=$DISTRO, DE=$DE)"
     # Pass DISTRO and DE as env vars so verify_ime.sh can do DE-specific checks
-    vm_exec "DISTRO=$DISTRO DE=$DE GUI_MODE=$INTERACTIVE /tmp/verify_ime.sh" || true
+    vm_exec "DISTRO=$DISTRO DE=$DE GUI_MODE=false /tmp/verify_ime.sh" || true
 }
 
 # --- Capture screenshot ------------------------------------------------------

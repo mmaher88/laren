@@ -27,4 +27,12 @@ cp /etc/sway/config /etc/skel/.config/sway/config 2>/dev/null || true
 CMD
 )"
         ;;
+    opensuse)
+        DE_PACKAGES="sway foot wmenu xwayland"
+        DE_POST_INSTALL="$(cat <<'CMD'
+mkdir -p /etc/skel/.config/sway
+cp /etc/sway/config /etc/skel/.config/sway/config 2>/dev/null || true
+CMD
+)"
+        ;;
 esac

@@ -29,4 +29,12 @@ mkdir -p /etc/skel/.config/hypr
 CMD
 )"
         ;;
+    opensuse)
+        DE_PACKAGES="hyprland kitty xwayland polkit-kde-agent"
+        DE_POST_INSTALL="$(cat <<'CMD'
+mkdir -p /etc/skel/.config/hypr
+cp /usr/share/hyprland/hyprland.conf /etc/skel/.config/hypr/hyprland.conf 2>/dev/null || true
+CMD
+)"
+        ;;
 esac

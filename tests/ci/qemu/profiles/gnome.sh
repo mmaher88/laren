@@ -26,4 +26,12 @@ systemctl set-default graphical.target
 CMD
 )"
         ;;
+    opensuse)
+        DE_PACKAGES="patterns-gnome-gnome gdm xorg-x11-server"
+        DE_POST_INSTALL="$(cat <<'CMD'
+systemctl enable gdm
+systemctl set-default graphical.target
+CMD
+)"
+        ;;
 esac
