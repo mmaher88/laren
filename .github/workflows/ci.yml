@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Job 1: Build + Unit Tests (matrix across 4 distros)
+  # --------------------------------------------------------------------------
+  build:
+    name: Build (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: archlinux
+            container: archlinux:latest
+            install: pacman -Syu --noconfirm cmake gcc fcitx5 gtest
+          - distro: fedora-41
+            container: fedora:41
+            install: dnf install -y cmake gcc-c++ fcitx5-devel gtest-devel
+          - distro: ubuntu-24.04
+            container: ubuntu:24.04
+            install: apt-get update -qq && apt-get install -y cmake g++ fcitx5-modules-dev libfcitx5core-dev libgtest-dev
+          - distro: opensuse-tumbleweed
+            container: opensuse/tumbleweed:latest
+            install: zypper install -y cmake gcc-c++ fcitx5-devel gtest
+
+    steps:
+      - name: Install dependencies
+        run: ${{ matrix.install }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Run tests
+        run: cd build && ctest --output-on-failure
+
+      - name: Install to staging directory
+        run: DESTDIR=${{ github.workspace }}/staging cmake --install build
+
+      - name: Verify installed files
+        run: |
+          echo "Checking installed files..."
+          STAGING="${{ github.workspace }}/staging"
+
+          find_file() {
+            local pattern="$1"
+            local desc="$2"
+            if find "$STAGING" -path "$pattern" | grep -q .; then
+              echo "  OK: $desc"
+            else
+              echo "  MISSING: $desc ($pattern)"
+              exit 1
+            fi
+          }
+
+          find_file "*/fcitx5/laren.so"                   "laren.so (engine module)"
+          find_file "*/fcitx5/addon/laren.conf"            "addon conf"
+          find_file "*/fcitx5/inputmethod/laren.conf"      "inputmethod conf"
+          find_file "*/laren/dictionary.tsv"               "dictionary.tsv"
+          find_file "*/laren/emoji.tsv"                    "emoji.tsv"
+          find_file "*/icons/hicolor/scalable/apps/fcitx-laren.svg" "icon svg"
+
+          echo "All expected files present."
+
+  # --------------------------------------------------------------------------
+  # Job 2: Package build - Fedora RPM
+  # --------------------------------------------------------------------------
+  rpm:
+    name: RPM Package (Fedora 41)
+    runs-on: ubuntu-latest
+    container: fedora:41
+    needs: build
+
+    steps:
+      - name: Install dependencies
+        run: dnf install -y rpm-build cmake gcc-c++ fcitx5-devel rpmdevtools
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up rpmbuild tree
+        run: rpmdev-setuptree
+
+      - name: Create source tarball
+        run: |
+          VERSION=$(grep 'project(laren VERSION' CMakeLists.txt | grep -oP '\d+\.\d+\.\d+')
+          mkdir -p "laren-${VERSION}"
+          # Copy project files (exclude .git and build dirs)
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' ! -name 'build' ! -name 'staging' \
+            -exec cp -a {} "laren-${VERSION}/" \;
+          tar czf "$HOME/rpmbuild/SOURCES/laren-${VERSION}.tar.gz" "laren-${VERSION}"
+          rm -rf "laren-${VERSION}"
+
+      - name: Patch spec for local source
+        run: |
+          VERSION=$(grep 'project(laren VERSION' CMakeLists.txt | grep -oP '\d+\.\d+\.\d+')
+          cp pkg/fedora/fcitx5-laren.spec "$HOME/rpmbuild/SPECS/"
+          # Replace the remote Source0 URL with the local tarball filename
+          sed -i "s|^Source0:.*|Source0: laren-${VERSION}.tar.gz|" "$HOME/rpmbuild/SPECS/fcitx5-laren.spec"
+
+      - name: Build RPM
+        run: rpmbuild -ba "$HOME/rpmbuild/SPECS/fcitx5-laren.spec"
+
+      - name: Verify RPM produced
+        run: |
+          RPM_COUNT=$(find "$HOME/rpmbuild/RPMS" -name '*.rpm' | wc -l)
+          echo "RPMs built: $RPM_COUNT"
+          find "$HOME/rpmbuild/RPMS" -name '*.rpm' -exec echo "  {}" \;
+          if [ "$RPM_COUNT" -eq 0 ]; then
+            echo "ERROR: No RPM files produced"
+            exit 1
+          fi
+
+  # --------------------------------------------------------------------------
+  # Job 3: Post-install tests
+  # --------------------------------------------------------------------------
+  postinstall:
+    name: Post-install Tests
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run post-install tests
+        run: bash tests/ci/postinstall/run_tests.sh
+
+  # --------------------------------------------------------------------------
+  # Job 4: Summary gate
+  # --------------------------------------------------------------------------
+  ci-ok:
+    name: CI Summary
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [build, rpm, postinstall]
+    steps:
+      - name: Check all jobs passed
+        run: |
+          echo "Build:       ${{ needs.build.result }}"
+          echo "RPM:         ${{ needs.rpm.result }}"
+          echo "Post-install: ${{ needs.postinstall.result }}"
+
+          if [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.rpm.result }}" != "success" ] || \
+             [ "${{ needs.postinstall.result }}" != "success" ]; then
+            echo ""
+            echo "One or more jobs failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "All jobs passed."
