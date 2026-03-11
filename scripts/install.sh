@@ -124,10 +124,25 @@ Layout=
 EOF
 fi
 
+# Configure KDE Wayland to use Fcitx5 as virtual keyboard
+KWINRC="$HOME/.config/kwinrc"
+if [ -n "${XDG_CURRENT_DESKTOP:-}" ] && echo "$XDG_CURRENT_DESKTOP" | grep -qi KDE; then
+    if ! grep -q 'InputMethod' "$KWINRC" 2>/dev/null; then
+        info "Configuring KDE Wayland to use Fcitx5"
+        cat >> "$KWINRC" << 'EOF'
+
+[Wayland]
+InputMethod[$e]=$HOME/.local/share/applications/fcitx5-wayland-launcher.desktop
+VirtualKeyboardEnabled=true
+EOF
+    fi
+fi
+
 # Restart Fcitx5 if running
 if pgrep -x fcitx5 >/dev/null 2>&1; then
     info "Restarting Fcitx5"
-    fcitx5 -r -d 2>/dev/null || true
+    qdbus6 org.fcitx.Fcitx5 /controller org.fcitx.Fcitx.Controller1.Restart 2>/dev/null \
+        || fcitx5 -r -d 2>/dev/null || true
 else
     info "Starting Fcitx5"
     fcitx5 -d 2>/dev/null || true

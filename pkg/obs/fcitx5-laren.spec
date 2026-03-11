@@ -31,20 +31,35 @@ similar to Microsoft Maren.
 
 %post
 # Auto-add Laren to each user's Fcitx5 profile if not already present
+# and configure KDE Wayland to use Fcitx5 as virtual keyboard
 for _home in /home/*; do
-    _profile="$_home/.config/fcitx5/profile"
-    [ -f "$_profile" ] || continue
-    grep -q 'Name=laren' "$_profile" && continue
     _user=$(basename "$_home")
-    # Find the last Items index and add laren after it
-    _last=$(grep -c '^\[Groups/0/Items/' "$_profile" 2>/dev/null || echo 0)
-    cat >> "$_profile" << EOF
+    _profile="$_home/.config/fcitx5/profile"
+    if [ -f "$_profile" ] && ! grep -q 'Name=laren' "$_profile"; then
+        _last=$(grep -c '^\[Groups/0/Items/' "$_profile" 2>/dev/null || echo 0)
+        cat >> "$_profile" << EOF
 
 [Groups/0/Items/$_last]
 Name=laren
 Layout=
 EOF
-    chown "$_user":"$_user" "$_profile" 2>/dev/null || true
+        chown "$_user":"$_user" "$_profile" 2>/dev/null || true
+    fi
+    # Set Fcitx5 as KDE virtual keyboard if not already configured
+    _kwinrc="$_home/.config/kwinrc"
+    if [ -d "$_home/.config" ] && ! grep -q 'InputMethod' "$_kwinrc" 2>/dev/null; then
+        if [ -f /usr/share/applications/fcitx5-wayland-launcher.desktop ] || \
+           [ -f "$_home/.local/share/applications/fcitx5-wayland-launcher.desktop" ]; then
+            mkdir -p "$(dirname "$_kwinrc")"
+            cat >> "$_kwinrc" << 'EOF'
+
+[Wayland]
+InputMethod[$e]=$HOME/.local/share/applications/fcitx5-wayland-launcher.desktop
+VirtualKeyboardEnabled=true
+EOF
+            chown "$_user":"$_user" "$_kwinrc" 2>/dev/null || true
+        fi
+    fi
 done
 echo ""
 echo "  Laren installed successfully!"
