@@ -11,7 +11,7 @@ CMD
 )"
         ;;
     fedora)
-        DE_PACKAGES="@gnome-desktop gdm"
+        DE_PACKAGES="@gnome-desktop gdm gnome-session-xsession xorg-x11-server-Xorg"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable gdm
 systemctl set-default graphical.target

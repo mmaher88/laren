@@ -26,11 +26,11 @@ case "$DISTRO" in
         pacman -Syu --noconfirm cmake make gcc git fcitx5 fcitx5-configtool
         ;;
     fedora)
-        dnf install -y cmake make gcc-c++ git fcitx5-devel fcitx5-configtool
+        dnf install -y cmake make gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
         ;;
     opensuse*)
         zypper refresh
-        zypper install -y cmake make gcc-c++ git fcitx5-devel fcitx5-configtool
+        zypper install -y cmake make gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
         ;;
     ubuntu|debian|pop|linuxmint)
         apt-get update -qq
