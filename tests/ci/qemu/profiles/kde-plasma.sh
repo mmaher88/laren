@@ -28,7 +28,7 @@ CMD
 )"
         ;;
     opensuse)
-        DE_PACKAGES="patterns-kde-kde_plasma sddm xorg-x11-server Mesa konsole kate"
+        DE_PACKAGES="patterns-kde-kde_plasma sddm xorg-x11-server Mesa konsole kate plasma6-workspace plasma6-desktop kwin6"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
 systemctl enable display-manager.service

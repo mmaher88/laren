@@ -463,10 +463,10 @@ interactive_session() {
     # (done here over SSH because cloud-init write_files runs before home dir exists)
     local _session_exec=""
     case "$DE" in
-        kde-plasma) _session_exec="exec dbus-run-session startplasma-wayland" ;;
-        gnome)      _session_exec="exec dbus-run-session gnome-session" ;;
-        sway)       _session_exec="exec dbus-run-session sway" ;;
-        hyprland)   _session_exec="exec dbus-run-session Hyprland" ;;
+        kde-plasma) _session_exec="exec startplasma-wayland" ;;
+        gnome)      _session_exec="exec gnome-session" ;;
+        sway)       _session_exec="exec sway" ;;
+        hyprland)   _session_exec="exec Hyprland" ;;
     esac
     vm_exec "printf '%s\n' '[ -z \"\$WAYLAND_DISPLAY\" ] && [ \"\$(tty)\" = \"/dev/tty1\" ] && ${_session_exec}' > ~/.bash_profile"
     info "Created .bash_profile with: ${_session_exec}"
