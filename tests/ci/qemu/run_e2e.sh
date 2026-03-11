@@ -183,15 +183,23 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
-    # In GUI mode: set up autologin
+    # Build write_files section (single YAML key, multiple entries)
+    cat >> "$userdata" <<'WRITEFILES'
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+    content: |
+      PasswordAuthentication yes
+    owner: root:root
+    permissions: '0644'
+WRITEFILES
+
+    # In GUI mode: append autologin entries to write_files
     # GNOME: use GDM autologin (GNOME is tightly coupled to GDM)
     # Others: use TTY autologin + .bash_profile (more reliable than SDDM autologin)
     if $INTERACTIVE; then
         if [[ "$DE" == "gnome" ]]; then
-            # GDM autologin config — written via write_files, applied after GDM install
             cat >> "$userdata" <<WRITEFILES
-
-write_files:
   - path: /etc/gdm3/custom.conf
     content: |
       [daemon]
@@ -210,10 +218,7 @@ write_files:
     permissions: '0644'
 WRITEFILES
         else
-            # TTY autologin for non-GNOME DEs
             cat >> "$userdata" <<'WRITEFILES'
-
-write_files:
   - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
     content: |
       [Service]
