@@ -84,6 +84,19 @@ else
     info "Installed: $FOUND_SO"
 fi
 
+_setup_env_vars() {
+    ENVFILE="$HOME/.config/environment.d/fcitx5.conf"
+    if [ ! -f "$ENVFILE" ]; then
+        mkdir -p "$HOME/.config/environment.d"
+        cat > "$ENVFILE" << 'ENVEOF'
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
+SDL_IM_MODULE=fcitx
+ENVEOF
+    fi
+}
+
 # Set Fcitx5 as input method (DEB-based distros)
 if command -v im-config >/dev/null 2>&1; then
     info "Setting Fcitx5 as input method framework"
@@ -124,19 +137,60 @@ Layout=
 EOF
 fi
 
-# Configure KDE Wayland to use Fcitx5 as virtual keyboard
-KWINRC="$HOME/.config/kwinrc"
-if [ -n "${XDG_CURRENT_DESKTOP:-}" ] && echo "$XDG_CURRENT_DESKTOP" | grep -qi KDE; then
-    if ! grep -q 'InputMethod' "$KWINRC" 2>/dev/null; then
-        info "Configuring KDE Wayland to use Fcitx5"
-        cat >> "$KWINRC" << 'EOF'
+# Desktop-specific configuration
+_de=$(echo "${XDG_CURRENT_DESKTOP:-}" | tr '[:upper:]' '[:lower:]')
 
-[Wayland]
-InputMethod[$e]=$HOME/.local/share/applications/fcitx5-wayland-launcher.desktop
-VirtualKeyboardEnabled=true
-EOF
-    fi
-fi
+case "$_de" in
+    *kde*|*plasma*)
+        # KDE Wayland: configure virtual keyboard, no env vars needed
+        KWINRC="$HOME/.config/kwinrc"
+        if ! grep -q 'InputMethod' "$KWINRC" 2>/dev/null; then
+            info "Configuring KDE Wayland to use Fcitx5"
+            _desktop=""
+            [ -f /usr/share/applications/org.fcitx.Fcitx5.desktop ] && _desktop="/usr/share/applications/org.fcitx.Fcitx5.desktop"
+            [ -z "$_desktop" ] && [ -f /usr/share/applications/fcitx5-wayland-launcher.desktop ] && _desktop="/usr/share/applications/fcitx5-wayland-launcher.desktop"
+            if [ -n "$_desktop" ]; then
+                printf '\n[Wayland]\nInputMethod[$e]=%s\nVirtualKeyboardEnabled=true\n' "$_desktop" >> "$KWINRC"
+            fi
+        fi
+        # Restart via KWin reconfigure
+        qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+        ;;
+    *sway*)
+        info "Configuring for Sway"
+        _setup_env_vars
+        SWAYCONF="$HOME/.config/sway/config"
+        if [ -f "$SWAYCONF" ] && ! grep -q 'exec.*fcitx5' "$SWAYCONF" 2>/dev/null; then
+            echo 'exec_always fcitx5 -d --replace' >> "$SWAYCONF"
+        fi
+        ;;
+    *hyprland*)
+        info "Configuring for Hyprland"
+        _setup_env_vars
+        HYPRCONF="$HOME/.config/hypr/hyprland.conf"
+        if [ -f "$HYPRCONF" ] && ! grep -q 'exec.*fcitx5' "$HYPRCONF" 2>/dev/null; then
+            echo 'exec-once = fcitx5 -d' >> "$HYPRCONF"
+        fi
+        ;;
+    *)
+        info "Configuring environment variables for Fcitx5"
+        _setup_env_vars
+        # Autostart
+        AUTOSTART="$HOME/.config/autostart/org.fcitx.Fcitx5.desktop"
+        if [ ! -f "$AUTOSTART" ]; then
+            mkdir -p "$HOME/.config/autostart"
+            cat > "$AUTOSTART" << 'AUTOEOF'
+[Desktop Entry]
+Name=Fcitx 5
+Comment=Start Input Method
+Exec=fcitx5 -d
+Type=Application
+Categories=System;Utility;
+X-GNOME-Autostart-enabled=true
+AUTOEOF
+        fi
+        ;;
+esac
 
 # Restart Fcitx5 if running
 if pgrep -x fcitx5 >/dev/null 2>&1; then
