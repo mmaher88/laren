@@ -84,18 +84,9 @@ else
     info "Installed: $FOUND_SO"
 fi
 
-_setup_env_vars() {
-    ENVFILE="$HOME/.config/environment.d/fcitx5.conf"
-    if [ ! -f "$ENVFILE" ]; then
-        mkdir -p "$HOME/.config/environment.d"
-        cat > "$ENVFILE" << 'ENVEOF'
-GTK_IM_MODULE=fcitx
-QT_IM_MODULE=fcitx
-XMODIFIERS=@im=fcitx
-SDL_IM_MODULE=fcitx
-ENVEOF
-    fi
-}
+# Source shared post-install configuration logic
+export _PI_NO_CHOWN=1  # Running as current user, no chown needed
+. /usr/share/laren/postinstall-common.sh
 
 # Set Fcitx5 as input method (DEB-based distros)
 if command -v im-config >/dev/null 2>&1; then
@@ -103,94 +94,10 @@ if command -v im-config >/dev/null 2>&1; then
     im-config -n fcitx5
 fi
 
-# Enable Laren in Fcitx5 profile if not already present
-PROFILE="$HOME/.config/fcitx5/profile"
-if [ -f "$PROFILE" ]; then
-    if ! grep -q 'Name=laren' "$PROFILE" 2>/dev/null; then
-        info "Adding Laren to existing Fcitx5 profile"
-        # Find the highest Items index in the default group and append
-        LAST_IDX=$(grep -oP 'Groups/0/Items/\K\d+' "$PROFILE" | sort -n | tail -1)
-        NEXT_IDX=$(( LAST_IDX + 1 ))
-        echo -e "\n[Groups/0/Items/${NEXT_IDX}]\nName=laren\nLayout=" >> "$PROFILE"
-    else
-        info "Laren already in Fcitx5 profile"
-    fi
-else
-    info "Creating Fcitx5 profile with Laren enabled"
-    mkdir -p "$(dirname "$PROFILE")"
-    cat > "$PROFILE" <<'EOF'
-[Groups/0]
-Name=Default
-Default Layout=us
-DefaultIM=laren
-
-[Groups/0/Items/0]
-Name=keyboard-us
-Layout=
-
-[Groups/0/Items/1]
-Name=laren
-Layout=
-
-[GroupOrder]
-0=Default
-EOF
-fi
-
-# Desktop-specific configuration
+# Detect DE and configure (profile, kwinrc, env vars, autostart, compositor)
 _de=$(echo "${XDG_CURRENT_DESKTOP:-}" | tr '[:upper:]' '[:lower:]')
-
-case "$_de" in
-    *kde*|*plasma*)
-        # KDE Wayland: configure virtual keyboard, no env vars needed
-        KWINRC="$HOME/.config/kwinrc"
-        if ! grep -q 'InputMethod' "$KWINRC" 2>/dev/null; then
-            info "Configuring KDE Wayland to use Fcitx5"
-            _desktop=""
-            [ -f /usr/share/applications/org.fcitx.Fcitx5.desktop ] && _desktop="/usr/share/applications/org.fcitx.Fcitx5.desktop"
-            [ -z "$_desktop" ] && [ -f /usr/share/applications/fcitx5-wayland-launcher.desktop ] && _desktop="/usr/share/applications/fcitx5-wayland-launcher.desktop"
-            if [ -n "$_desktop" ]; then
-                printf '\n[Wayland]\nInputMethod[$e]=%s\nVirtualKeyboardEnabled=true\n' "$_desktop" >> "$KWINRC"
-            fi
-        fi
-        # Restart via KWin reconfigure
-        qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
-        ;;
-    *sway*)
-        info "Configuring for Sway"
-        _setup_env_vars
-        SWAYCONF="$HOME/.config/sway/config"
-        if [ -f "$SWAYCONF" ] && ! grep -q 'exec.*fcitx5' "$SWAYCONF" 2>/dev/null; then
-            echo 'exec_always fcitx5 -d --replace' >> "$SWAYCONF"
-        fi
-        ;;
-    *hyprland*)
-        info "Configuring for Hyprland"
-        _setup_env_vars
-        HYPRCONF="$HOME/.config/hypr/hyprland.conf"
-        if [ -f "$HYPRCONF" ] && ! grep -q 'exec.*fcitx5' "$HYPRCONF" 2>/dev/null; then
-            echo 'exec-once = fcitx5 -d' >> "$HYPRCONF"
-        fi
-        ;;
-    *)
-        info "Configuring environment variables for Fcitx5"
-        _setup_env_vars
-        # Autostart
-        AUTOSTART="$HOME/.config/autostart/org.fcitx.Fcitx5.desktop"
-        if [ ! -f "$AUTOSTART" ]; then
-            mkdir -p "$HOME/.config/autostart"
-            cat > "$AUTOSTART" << 'AUTOEOF'
-[Desktop Entry]
-Name=Fcitx 5
-Comment=Start Input Method
-Exec=fcitx5 -d
-Type=Application
-Categories=System;Utility;
-X-GNOME-Autostart-enabled=true
-AUTOEOF
-        fi
-        ;;
-esac
+info "Configuring for ${_de:-generic} desktop"
+configure_user "$HOME" "$USER" "${_de:-generic}"
 
 # Restart Fcitx5 if running
 if pgrep -x fcitx5 >/dev/null 2>&1; then
