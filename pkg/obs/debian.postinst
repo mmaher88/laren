@@ -2,24 +2,29 @@
 set -e
 
 if [ "$1" = "configure" ]; then
-    # Copy tray icon into Breeze theme (KDE tray doesn't reliably fall back to hicolor)
-    _src=/usr/share/icons/hicolor/scalable/apps/fcitx-laren.svg
-    if [ -f "$_src" ]; then
-        for _theme in /usr/share/icons/breeze /usr/share/icons/breeze-dark; do
-            if [ -d "$_theme/status/22" ]; then
-                cp "$_src" "$_theme/status/22/fcitx-laren.svg" 2>/dev/null || true
-                cp "$_src" "$_theme/status/24/fcitx-laren.svg" 2>/dev/null || true
-                gtk-update-icon-cache -f -q "$_theme" 2>/dev/null || true
-            fi
-        done
-    fi
+    # Auto-add Laren to each user's Fcitx5 profile if not already present
+    for _home in /home/*; do
+        _profile="$_home/.config/fcitx5/profile"
+        [ -f "$_profile" ] || continue
+        grep -q 'Name=laren' "$_profile" && continue
+        _user=$(basename "$_home")
+        # Find the last Items index and add laren after it
+        _last=$(grep -c '^\[Groups/0/Items/' "$_profile" 2>/dev/null || echo 0)
+        cat >> "$_profile" << EOF
+
+[Groups/0/Items/$_last]
+Name=laren
+Layout=
+EOF
+        chown "$_user":"$_user" "$_profile" 2>/dev/null || true
+    done
     echo ""
     echo "  Laren installed successfully!"
     echo ""
     echo "  To activate:"
     echo "    1. Set Fcitx5 as your input method:"
     echo "         im-config -n fcitx5"
-    echo "    2. Log out and back in"
+    echo "    2. Log out and back in (or restart Fcitx5)"
     echo "    3. Press Ctrl+Space to switch to Laren"
     echo ""
     echo "  To configure: fcitx5-configtool"

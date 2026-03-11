@@ -39,11 +39,10 @@ sudo dnf config-manager addrepo --from-repofile=https://download.opensuse.org/re
 sudo dnf install fcitx5-laren
 ```
 
-### Ubuntu / Debian
+### Ubuntu
 
 ```bash
-sudo apt install -y curl gpg && \
-  DISTRO="xUbuntu_$(lsb_release -rs)" && \
+DISTRO="xUbuntu_$(lsb_release -rs)" && \
   sudo mkdir -p /etc/apt/keyrings && \
   curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" \
     | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg && \
@@ -52,7 +51,31 @@ sudo apt install -y curl gpg && \
   sudo apt update && sudo apt install -y fcitx5-laren
 ```
 
-For Debian 12, replace the first line with `DISTRO="Debian_12"`.
+### Linux Mint
+
+Mint 22.x is based on Ubuntu 24.04. Use `xUbuntu_24.04` directly:
+
+```bash
+DISTRO="xUbuntu_24.04" && \
+  sudo mkdir -p /etc/apt/keyrings && \
+  curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" \
+    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/laren.gpg] https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/ /" \
+    | sudo tee /etc/apt/sources.list.d/laren.list && \
+  sudo apt update && sudo apt install -y fcitx5-laren
+```
+
+### Debian 12
+
+```bash
+DISTRO="Debian_12" && \
+  sudo mkdir -p /etc/apt/keyrings && \
+  curl -fsSL "https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/Release.key" \
+    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/laren.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/laren.gpg] https://download.opensuse.org/repositories/home:/mmaher88:/laren/${DISTRO}/ /" \
+    | sudo tee /etc/apt/sources.list.d/laren.list && \
+  sudo apt update && sudo apt install -y fcitx5-laren
+```
 
 
 ### openSUSE Tumbleweed

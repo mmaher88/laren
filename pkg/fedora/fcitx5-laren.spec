@@ -11,6 +11,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  fcitx5-devel
 
 Requires:       fcitx5
+Requires:       fcitx5-configtool
 
 %description
 Laren is an Arabizi-to-Arabic transliteration input method for Fcitx5.

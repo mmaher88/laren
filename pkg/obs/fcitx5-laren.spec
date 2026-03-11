@@ -11,6 +11,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  fcitx5-devel
 
 Requires:       fcitx5
+Requires:       fcitx5-configtool
 Requires:       hicolor-icon-theme
 
 %description
@@ -29,6 +30,22 @@ similar to Microsoft Maren.
 %cmake_install
 
 %post
+# Auto-add Laren to each user's Fcitx5 profile if not already present
+for _home in /home/*; do
+    _profile="$_home/.config/fcitx5/profile"
+    [ -f "$_profile" ] || continue
+    grep -q 'Name=laren' "$_profile" && continue
+    _user=$(basename "$_home")
+    # Find the last Items index and add laren after it
+    _last=$(grep -c '^\[Groups/0/Items/' "$_profile" 2>/dev/null || echo 0)
+    cat >> "$_profile" << EOF
+
+[Groups/0/Items/$_last]
+Name=laren
+Layout=
+EOF
+    chown "$_user":"$_user" "$_profile" 2>/dev/null || true
+done
 echo ""
 echo "  Laren installed successfully!"
 echo ""
@@ -36,7 +53,7 @@ echo "  To activate:"
 echo "    1. Set Fcitx5 as your input method (if not already):"
 echo "       - Fedora/openSUSE: usually set by default"
 echo "       - Ubuntu/Debian:   im-config -n fcitx5"
-echo "    2. Log out and back in"
+echo "    2. Log out and back in (or restart Fcitx5)"
 echo "    3. Press Ctrl+Space to switch to Laren"
 echo ""
 echo "  To configure: fcitx5-configtool"
