@@ -4,9 +4,10 @@
 
 case "$DISTRO" in
     arch)
-        DE_PACKAGES="plasma-meta sddm konsole dolphin qt6-virtualkeyboard xorg-server"
+        DE_PACKAGES="plasma-meta sddm konsole dolphin qt6-virtualkeyboard xorg-server mesa xf86-video-fbdev"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
+systemctl set-default graphical.target
 CMD
 )"
         ;;
