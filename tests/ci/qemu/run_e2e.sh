@@ -485,6 +485,13 @@ capture_screenshot() {
 # --- GUI mode: reboot into graphical session ---------------------------------
 
 interactive_session() {
+    # Debug: dump autologin config before rebooting (while SSH still works)
+    info "Checking autologin config before reboot..."
+    vm_exec "echo '--- /etc/sddm.conf ---'; cat /etc/sddm.conf 2>/dev/null || echo 'NOT FOUND'; echo '--- /etc/sddm.conf.d/ ---'; cat /etc/sddm.conf.d/autologin.conf 2>/dev/null || echo 'NOT FOUND'; echo '--- wayland-sessions ---'; ls /usr/share/wayland-sessions/ 2>/dev/null || echo 'NONE'; echo '--- cloud-init autologin log ---'; sudo grep -i 'autologin\|SDDM' /var/log/cloud-init-output.log 2>/dev/null | tail -5" || true
+
+    # Ensure sshd stays up after reboot
+    vm_exec "sudo systemctl enable sshd 2>/dev/null || sudo systemctl enable ssh 2>/dev/null || true" 2>/dev/null
+
     info "Rebooting VM into graphical desktop..."
     vm_exec "sudo reboot" 2>/dev/null || true
 
