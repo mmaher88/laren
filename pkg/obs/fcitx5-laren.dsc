@@ -1,6 +1,6 @@
 Format: 1.0
 Source: fcitx5-laren
-Version: 0.2.8-1
+Version: 0.2.9-1
 Binary: fcitx5-laren
 Maintainer: mmaher88 <mina.maher88@hotmail.com>
 Architecture: any
