@@ -183,10 +183,9 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
-    # In GUI mode: write TTY autologin + session autostart via write_files
-    # Uses getty autologin on tty1 + .bash_profile to launch the session.
-    # This is more reliable than DM-specific autologin (e.g. SDDM ignores
-    # autologin config on some distros like openSUSE).
+    # In GUI mode: write TTY autologin systemd override via write_files
+    # (.bash_profile is created from runcmd instead, because write_files
+    # runs before the user home directory exists)
     if $INTERACTIVE; then
         local _session_exec=""
         case "$DE" in
@@ -196,20 +195,15 @@ USERDATA
             hyprland)   _session_exec="exec Hyprland" ;;
         esac
 
-        cat >> "$userdata" <<WRITEFILES
+        cat >> "$userdata" <<'WRITEFILES'
 
 write_files:
   - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
     content: |
       [Service]
       ExecStart=
-      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
+      ExecStart=-/sbin/agetty --autologin laren --noclear %I $TERM
     owner: root:root
-    permissions: '0644'
-  - path: /home/${SSH_USER}/.bash_profile
-    content: |
-      [ -z "\$WAYLAND_DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && ${_session_exec}
-    owner: ${SSH_USER}:${SSH_USER}
     permissions: '0644'
 WRITEFILES
     fi
@@ -464,6 +458,18 @@ capture_screenshot() {
 interactive_session() {
     # Ensure sshd stays up after reboot
     vm_exec "sudo systemctl enable sshd 2>/dev/null || sudo systemctl enable ssh 2>/dev/null || true" 2>/dev/null
+
+    # Create .bash_profile to auto-start the Wayland session on tty1 login
+    # (done here over SSH because cloud-init write_files runs before home dir exists)
+    local _session_exec=""
+    case "$DE" in
+        kde-plasma) _session_exec="exec startplasma-wayland" ;;
+        gnome)      _session_exec="exec gnome-session" ;;
+        sway)       _session_exec="exec sway" ;;
+        hyprland)   _session_exec="exec Hyprland" ;;
+    esac
+    vm_exec "printf '%s\n' '[ -z \"\$WAYLAND_DISPLAY\" ] && [ \"\$(tty)\" = \"/dev/tty1\" ] && ${_session_exec}' > ~/.bash_profile"
+    info "Created .bash_profile with: ${_session_exec}"
 
     info "Rebooting VM into graphical desktop..."
     vm_exec "sudo reboot" 2>/dev/null || true
