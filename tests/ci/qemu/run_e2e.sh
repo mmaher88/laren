@@ -19,6 +19,7 @@ VM_RAM=4096
 VM_CPUS=2
 SSH_USER="laren"
 SSH_PASS="laren"
+SSH_KEY=""  # set by generate_cloud_init
 SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=5"
 BOOT_TIMEOUT=600  # 10 minutes for cloud-init
 INTERACTIVE=false
@@ -76,7 +77,7 @@ fi
 
 # --- Prerequisites check ----------------------------------------------------
 
-for cmd in qemu-system-x86_64 cloud-localds sshpass; do
+for cmd in qemu-system-x86_64 cloud-localds ssh-keygen; do
     if ! command -v "$cmd" &>/dev/null; then
         # cloud-localds might not exist; we fall back to genisoimage
         if [[ "$cmd" == "cloud-localds" ]]; then
@@ -162,6 +163,13 @@ generate_cloud_init() {
     local userdata="$WORK_DIR/user-data"
     local metadata="$WORK_DIR/meta-data"
 
+    # Generate ephemeral SSH keypair for this test run
+    SSH_KEY="$WORK_DIR/ssh_key"
+    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -q
+    local ssh_pubkey
+    ssh_pubkey="$(cat "$SSH_KEY.pub")"
+    SSH_OPTS="$SSH_OPTS -i $SSH_KEY"
+
     cat > "$metadata" <<EOF
 instance-id: laren-e2e-${DISTRO}-${DE}
 local-hostname: laren-e2e
@@ -176,35 +184,22 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     lock_passwd: false
     shell: /bin/bash
-    ssh_authorized_keys: []
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
 
 ssh_pwauth: true
-
-bootcmd:
-  - "sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null || true"
-  - "echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-laren-e2e.conf"
-  - "systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || true"
 
 package_update: true
 USERDATA
 
-    # Build write_files section (single YAML key, multiple entries)
-    cat >> "$userdata" <<'WRITEFILES'
-
-write_files:
-  - path: /etc/ssh/sshd_config.d/01-laren-e2e.conf
-    content: |
-      PasswordAuthentication yes
-    owner: root:root
-    permissions: '0644'
-WRITEFILES
-
-    # In GUI mode: append autologin entries to write_files
+    # In GUI mode: write autologin config files
     # GNOME: use GDM autologin (GNOME is tightly coupled to GDM)
     # Others: use TTY autologin + .bash_profile (more reliable than SDDM autologin)
     if $INTERACTIVE; then
         if [[ "$DE" == "gnome" ]]; then
             cat >> "$userdata" <<WRITEFILES
+
+write_files:
   - path: /etc/gdm3/custom.conf
     content: |
       [daemon]
@@ -224,6 +219,8 @@ WRITEFILES
 WRITEFILES
         else
             cat >> "$userdata" <<'WRITEFILES'
+
+write_files:
   - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
     content: |
       [Service]
@@ -389,8 +386,8 @@ wait_for_ssh() {
             error "QEMU process died unexpectedly"
         fi
 
-        # Try SSH
-        if sshpass -p "$SSH_PASS" ssh $SSH_OPTS -p "$SSH_PORT" "${SSH_USER}@localhost" \
+        # Try SSH (key-based auth)
+        if ssh $SSH_OPTS -p "$SSH_PORT" "${SSH_USER}@localhost" \
             "echo ok" &>/dev/null; then
             info "SSH ready (after ${elapsed}s)"
             return
@@ -403,11 +400,11 @@ wait_for_ssh() {
 # --- Run command in VM -------------------------------------------------------
 
 vm_exec() {
-    sshpass -p "$SSH_PASS" ssh $SSH_OPTS -p "$SSH_PORT" "${SSH_USER}@localhost" "$@"
+    ssh $SSH_OPTS -p "$SSH_PORT" "${SSH_USER}@localhost" "$@"
 }
 
 vm_copy() {
-    sshpass -p "$SSH_PASS" scp $SSH_OPTS -P "$SSH_PORT" "$1" "${SSH_USER}@localhost:$2"
+    scp $SSH_OPTS -P "$SSH_PORT" "$1" "${SSH_USER}@localhost:$2"
 }
 
 # --- Wait for cloud-init to finish ------------------------------------------
@@ -525,7 +522,7 @@ done'" 2>/dev/null
     echo ""
     info "The VM is rebooting into ${DE}."
     info "It will auto-login as user '${SSH_USER}' (password: ${SSH_PASS})."
-    info "You can SSH in:  sshpass -p ${SSH_PASS} ssh -p ${SSH_PORT} ${SSH_USER}@localhost"
+    info "You can SSH in:  ssh ${SSH_OPTS} -p ${SSH_PORT} ${SSH_USER}@localhost"
     info "Close the QEMU window when you're done."
     echo ""
 
