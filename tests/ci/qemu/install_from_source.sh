@@ -34,7 +34,7 @@ case "$DISTRO" in
         ;;
     ubuntu|debian|pop|linuxmint)
         apt-get update -qq
-        apt-get install -y cmake make g++ git fcitx5-modules-dev libfcitx5core-dev fcitx5-configtool
+        apt-get install -y cmake make g++ git fcitx5 fcitx5-modules-dev libfcitx5core-dev fcitx5-config-qt
         ;;
     *)
         error "Unsupported distro: $DISTRO"

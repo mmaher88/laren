@@ -183,19 +183,33 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
-    # In GUI mode: write TTY autologin systemd override via write_files
-    # (.bash_profile is created from runcmd instead, because write_files
-    # runs before the user home directory exists)
+    # In GUI mode: set up autologin
+    # GNOME: use GDM autologin (GNOME is tightly coupled to GDM)
+    # Others: use TTY autologin + .bash_profile (more reliable than SDDM autologin)
     if $INTERACTIVE; then
-        local _session_exec=""
-        case "$DE" in
-            kde-plasma) _session_exec="exec startplasma-wayland" ;;
-            gnome)      _session_exec="exec gnome-session" ;;
-            sway)       _session_exec="exec sway" ;;
-            hyprland)   _session_exec="exec Hyprland" ;;
-        esac
+        if [[ "$DE" == "gnome" ]]; then
+            # GDM autologin config — written via write_files, applied after GDM install
+            cat >> "$userdata" <<WRITEFILES
 
-        cat >> "$userdata" <<'WRITEFILES'
+write_files:
+  - path: /etc/gdm3/custom.conf
+    content: |
+      [daemon]
+      AutomaticLoginEnable=true
+      AutomaticLogin=${SSH_USER}
+    owner: root:root
+    permissions: '0644'
+  - path: /etc/gdm/custom.conf
+    content: |
+      [daemon]
+      AutomaticLoginEnable=true
+      AutomaticLogin=${SSH_USER}
+    owner: root:root
+    permissions: '0644'
+WRITEFILES
+        else
+            # TTY autologin for non-GNOME DEs
+            cat >> "$userdata" <<'WRITEFILES'
 
 write_files:
   - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
@@ -206,6 +220,7 @@ write_files:
     owner: root:root
     permissions: '0644'
 WRITEFILES
+        fi
     fi
 
     # Add packages if the profile defined them
@@ -229,17 +244,23 @@ WRITEFILES
         done <<< "$DE_POST_INSTALL"
     fi
 
-    # In GUI mode: disable DM and use TTY autologin instead
-    # (SDDM autologin is broken on some distros like openSUSE)
+    # In GUI mode: configure autologin strategy
     if $INTERACTIVE; then
         if ! $has_runcmd; then
             echo "runcmd:" >> "$userdata"
         fi
 
-        # Disable display managers so TTY autologin takes over
-        cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'systemctl disable sddm gdm display-manager display-manager-legacy 2>/dev/null; systemctl set-default multi-user.target']
+        if [[ "$DE" == "gnome" ]]; then
+            # GNOME: keep GDM enabled, disable other DMs, ensure graphical target
+            cat >> "$userdata" <<'RUNCMD'
+  - ['sh', '-c', 'systemctl disable sddm display-manager-legacy 2>/dev/null; systemctl set-default graphical.target']
 RUNCMD
+        else
+            # Non-GNOME: disable all DMs and use TTY autologin
+            cat >> "$userdata" <<'RUNCMD'
+  - ['sh', '-c', 'systemctl disable sddm gdm gdm3 display-manager display-manager-legacy 2>/dev/null; systemctl set-default multi-user.target']
+RUNCMD
+        fi
     fi
 
     # Power state: don't reboot, we'll drive it over SSH
@@ -459,17 +480,31 @@ interactive_session() {
     # Ensure sshd stays up after reboot
     vm_exec "sudo systemctl enable sshd 2>/dev/null || sudo systemctl enable ssh 2>/dev/null || true" 2>/dev/null
 
-    # Create .bash_profile to auto-start the Wayland session on tty1 login
-    # (done here over SSH because cloud-init write_files runs before home dir exists)
-    local _session_exec=""
-    case "$DE" in
-        kde-plasma) _session_exec="exec startplasma-wayland" ;;
-        gnome)      _session_exec="exec gnome-session" ;;
-        sway)       _session_exec="exec sway" ;;
-        hyprland)   _session_exec="exec Hyprland" ;;
-    esac
-    vm_exec "printf '%s\n' '[ -z \"\$WAYLAND_DISPLAY\" ] && [ \"\$(tty)\" = \"/dev/tty1\" ] && ${_session_exec}' > ~/.bash_profile"
-    info "Created .bash_profile with: ${_session_exec}"
+    if [[ "$DE" == "gnome" ]]; then
+        # GNOME uses GDM autologin — ensure config is in place
+        # (write_files already created it, but cloud-init write_files runs before
+        # package install, so the package may overwrite it; re-apply here)
+        vm_exec "sudo mkdir -p /etc/gdm3 /etc/gdm && sudo sh -c 'for d in /etc/gdm3 /etc/gdm; do cat > \$d/custom.conf << EOF
+[daemon]
+AutomaticLoginEnable=true
+AutomaticLogin=${SSH_USER}
+EOF
+done'" 2>/dev/null
+        vm_exec "sudo systemctl enable gdm3 2>/dev/null || sudo systemctl enable gdm 2>/dev/null || true" 2>/dev/null
+        vm_exec "sudo systemctl set-default graphical.target" 2>/dev/null
+        info "Configured GDM autologin for user ${SSH_USER}"
+    else
+        # Non-GNOME: create .bash_profile to auto-start the Wayland session on tty1 login
+        # (done here over SSH because cloud-init write_files runs before home dir exists)
+        local _session_exec=""
+        case "$DE" in
+            kde-plasma) _session_exec="exec startplasma-wayland" ;;
+            sway)       _session_exec="exec sway" ;;
+            hyprland)   _session_exec="exec Hyprland" ;;
+        esac
+        vm_exec "printf '%s\n' '[ -z \"\$WAYLAND_DISPLAY\" ] && [ \"\$(tty)\" = \"/dev/tty1\" ] && ${_session_exec}' > ~/.bash_profile"
+        info "Created .bash_profile with: ${_session_exec}"
+    fi
 
     info "Rebooting VM into graphical desktop..."
     vm_exec "sudo reboot" 2>/dev/null || true
