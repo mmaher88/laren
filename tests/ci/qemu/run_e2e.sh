@@ -117,8 +117,8 @@ download_image() {
             IMAGE_FILE="$CACHE_DIR/arch-cloudimg.qcow2"
             ;;
         fedora)
-            IMAGE_URL="https://download.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
-            IMAGE_FILE="$CACHE_DIR/fedora-41-cloudimg.qcow2"
+            IMAGE_URL="https://dl.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-42-1.1.x86_64.qcow2"
+            IMAGE_FILE="$CACHE_DIR/fedora-42-cloudimg.qcow2"
             ;;
         ubuntu)
             IMAGE_URL="https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
