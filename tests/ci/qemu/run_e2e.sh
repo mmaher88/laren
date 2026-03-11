@@ -2,7 +2,9 @@
 # End-to-end test orchestrator: boots a throwaway QEMU VM with a real DE,
 # installs the Laren package, and runs verification.
 #
-# Usage: ./run_e2e.sh <distro> <de> [package-path]
+# Usage: ./run_e2e.sh [--gui] <distro> <de> [package-path]
+#   --gui:   Open a QEMU window, boot into the DE, and keep VM alive for
+#            manual inspection. Default is headless (automated test only).
 #   distro:  arch | fedora | ubuntu
 #   de:      kde-plasma | gnome | sway | hyprland
 #   package: path to .pkg.tar.zst / .rpm / .deb  (optional; built from source if omitted)
@@ -19,14 +21,17 @@ SSH_USER="laren"
 SSH_PASS="laren"
 SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=5"
 BOOT_TIMEOUT=600  # 10 minutes for cloud-init
+INTERACTIVE=false
 
 info()  { echo -e "\033[1;34m==>\033[0m \033[1m$*\033[0m"; }
 warn()  { echo -e "\033[1;33m==> WARNING:\033[0m $*"; }
 error() { echo -e "\033[1;31m==> ERROR:\033[0m $*" >&2; exit 1; }
 
 usage() {
-    echo "Usage: $0 <distro> <de> [package-path]"
+    echo "Usage: $0 [--gui] <distro> <de> [package-path]"
     echo ""
+    echo "  --gui:   Show QEMU window, boot into the DE after install,"
+    echo "           and keep VM running for manual inspection."
     echo "  distro:  arch | fedora | ubuntu"
     echo "  de:      kde-plasma | gnome | sway | hyprland"
     echo "  package: path to .pkg.tar.zst / .rpm / .deb"
@@ -34,6 +39,16 @@ usage() {
 }
 
 # --- Argument parsing -------------------------------------------------------
+
+# Extract --gui flag, collect remaining positional args
+POSITIONAL=()
+for arg in "$@"; do
+    case "$arg" in
+        --gui) INTERACTIVE=true ;;
+        *)     POSITIONAL+=("$arg") ;;
+    esac
+done
+set -- "${POSITIONAL[@]+"${POSITIONAL[@]}"}"
 
 [[ $# -lt 2 ]] && usage
 
@@ -173,14 +188,57 @@ USERDATA
         done
     fi
 
-    # Add runcmd for post-install
+    # Build runcmd list
+    local has_runcmd=false
+
     if [[ -n "$DE_POST_INSTALL" ]]; then
         echo "runcmd:" >> "$userdata"
-        # Each line of DE_POST_INSTALL is a separate command
+        has_runcmd=true
         while IFS= read -r cmd; do
             [[ -z "$cmd" ]] && continue
             echo "  - $cmd" >> "$userdata"
         done <<< "$DE_POST_INSTALL"
+    fi
+
+    # In GUI mode: enable graphical target + autologin so the DE loads
+    if $INTERACTIVE; then
+        if ! $has_runcmd; then
+            echo "runcmd:" >> "$userdata"
+        fi
+
+        echo "  - systemctl set-default graphical.target" >> "$userdata"
+
+        case "$DE" in
+            kde-plasma)
+                cat >> "$userdata" <<'GUICMD'
+  - mkdir -p /etc/sddm.conf.d
+  - printf '[Autologin]\nUser=laren\nSession=plasma\n' > /etc/sddm.conf.d/autologin.conf
+GUICMD
+                ;;
+            gnome)
+                cat >> "$userdata" <<'GUICMD'
+  - mkdir -p /etc/gdm
+  - printf '[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=laren\n' > /etc/gdm/custom.conf
+GUICMD
+                ;;
+            sway)
+                # TTY autologin + start sway from .bash_profile
+                cat >> "$userdata" <<'GUICMD'
+  - mkdir -p /etc/systemd/system/getty@tty1.service.d
+  - printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin laren --noclear %%I $TERM\n' > /etc/systemd/system/getty@tty1.service.d/autologin.conf
+  - 'echo ''[ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ] && exec sway'' >> /home/laren/.bash_profile'
+  - chown laren:laren /home/laren/.bash_profile
+GUICMD
+                ;;
+            hyprland)
+                cat >> "$userdata" <<'GUICMD'
+  - mkdir -p /etc/systemd/system/getty@tty1.service.d
+  - printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin laren --noclear %%I $TERM\n' > /etc/systemd/system/getty@tty1.service.d/autologin.conf
+  - 'echo ''[ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ] && exec Hyprland'' >> /home/laren/.bash_profile'
+  - chown laren:laren /home/laren/.bash_profile
+GUICMD
+                ;;
+        esac
     fi
 
     # Power state: don't reboot, we'll drive it over SSH
@@ -218,7 +276,7 @@ boot_vm() {
     info "Booting QEMU VM (${DISTRO}/${DE})"
     info "  RAM: ${VM_RAM}MB, CPUs: ${VM_CPUS}"
     info "  SSH: localhost:${SSH_PORT}"
-    info "  VNC: :${VNC_DISPLAY}"
+    $INTERACTIVE && info "  Mode: GUI (window)" || info "  VNC: :${VNC_DISPLAY}"
 
     # Check if SSH port is already in use
     if ss -tlnp 2>/dev/null | grep -q ":${SSH_PORT} " || \
@@ -234,22 +292,46 @@ boot_vm() {
         kvm_flag="-cpu qemu64"
     fi
 
-    # shellcheck disable=SC2086
-    qemu-system-x86_64 \
-        $kvm_flag \
-        -m "$VM_RAM" \
-        -smp "$VM_CPUS" \
-        -drive file="$WORK_DIR/disk.qcow2",format=qcow2,if=virtio \
-        -drive file="$WORK_DIR/cloud-init.iso",format=raw,if=virtio \
-        -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22 \
-        -device virtio-net-pci,netdev=net0 \
-        -vnc :${VNC_DISPLAY} \
-        -display none \
-        -daemonize \
-        -pidfile "$WORK_DIR/qemu.pid" \
-        || error "Failed to start QEMU"
+    local display_opts
+    if $INTERACTIVE; then
+        display_opts="-device virtio-vga -display gtk"
+    else
+        display_opts="-vnc :${VNC_DISPLAY} -display none"
+    fi
 
-    QEMU_PID="$(cat "$WORK_DIR/qemu.pid")"
+    if $INTERACTIVE; then
+        # Can't use -daemonize with -display gtk; background with &
+        # shellcheck disable=SC2086
+        qemu-system-x86_64 \
+            $kvm_flag \
+            -m "$VM_RAM" \
+            -smp "$VM_CPUS" \
+            -drive file="$WORK_DIR/disk.qcow2",format=qcow2,if=virtio \
+            -drive file="$WORK_DIR/cloud-init.iso",format=raw,if=virtio \
+            -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22 \
+            -device virtio-net-pci,netdev=net0 \
+            $display_opts \
+            -pidfile "$WORK_DIR/qemu.pid" \
+            &
+        QEMU_PID=$!
+    else
+        # shellcheck disable=SC2086
+        qemu-system-x86_64 \
+            $kvm_flag \
+            -m "$VM_RAM" \
+            -smp "$VM_CPUS" \
+            -drive file="$WORK_DIR/disk.qcow2",format=qcow2,if=virtio \
+            -drive file="$WORK_DIR/cloud-init.iso",format=raw,if=virtio \
+            -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22 \
+            -device virtio-net-pci,netdev=net0 \
+            $display_opts \
+            -daemonize \
+            -pidfile "$WORK_DIR/qemu.pid" \
+            || error "Failed to start QEMU"
+
+        QEMU_PID="$(cat "$WORK_DIR/qemu.pid")"
+    fi
+
     info "QEMU started (PID: $QEMU_PID)"
 }
 
@@ -367,11 +449,37 @@ capture_screenshot() {
     fi
 }
 
+# --- GUI mode: reboot into graphical session ---------------------------------
+
+interactive_session() {
+    info "Rebooting VM into graphical desktop..."
+    vm_exec "sudo reboot" 2>/dev/null || true
+
+    echo ""
+    info "The VM is rebooting into ${DE}."
+    info "It will auto-login as user '${SSH_USER}' (password: ${SSH_PASS})."
+    info "You can SSH in:  sshpass -p ${SSH_PASS} ssh -p ${SSH_PORT} ${SSH_USER}@localhost"
+    info "Close the QEMU window when you're done."
+    echo ""
+
+    # Disable cleanup trap — we don't want to kill the VM while the user is using it
+    trap - EXIT INT TERM
+
+    # Wait for user to close the QEMU window
+    wait "$QEMU_PID" 2>/dev/null || true
+
+    # Clean up work directory after VM exits
+    if [[ -n "$WORK_DIR" && -d "$WORK_DIR" ]]; then
+        rm -rf "$WORK_DIR"
+    fi
+}
+
 # --- Main --------------------------------------------------------------------
 
 main() {
     info "Laren E2E test: ${DISTRO} + ${DE}"
     [[ -n "$PACKAGE" ]] && info "Package: $PACKAGE"
+    $INTERACTIVE && info "Mode: GUI (interactive)"
     echo ""
 
     download_image
@@ -382,7 +490,12 @@ main() {
     wait_for_cloud_init
     install_package
     run_verification
-    capture_screenshot
+
+    if $INTERACTIVE; then
+        interactive_session
+    else
+        capture_screenshot
+    fi
 
     info "E2E test complete for ${DISTRO}/${DE}"
 }
