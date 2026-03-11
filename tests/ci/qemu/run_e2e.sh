@@ -197,6 +197,7 @@ write_files:
       [daemon]
       AutomaticLoginEnable=true
       AutomaticLogin=${SSH_USER}
+      WaylandEnable=false
     owner: root:root
     permissions: '0644'
   - path: /etc/gdm/custom.conf
@@ -204,6 +205,7 @@ write_files:
       [daemon]
       AutomaticLoginEnable=true
       AutomaticLogin=${SSH_USER}
+      WaylandEnable=false
     owner: root:root
     permissions: '0644'
 WRITEFILES
@@ -488,6 +490,7 @@ interactive_session() {
 [daemon]
 AutomaticLoginEnable=true
 AutomaticLogin=${SSH_USER}
+WaylandEnable=false
 EOF
 done'" 2>/dev/null
         vm_exec "sudo systemctl enable gdm3 2>/dev/null || sudo systemctl enable gdm 2>/dev/null || true" 2>/dev/null
