@@ -183,47 +183,35 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
-    # In GUI mode: write autologin configs for tiling WMs via write_files
-    # (these are systemd overrides that won't be overwritten by package install)
+    # In GUI mode: write TTY autologin + session autostart via write_files
+    # Uses getty autologin on tty1 + .bash_profile to launch the session.
+    # This is more reliable than DM-specific autologin (e.g. SDDM ignores
+    # autologin config on some distros like openSUSE).
     if $INTERACTIVE; then
+        local _session_exec=""
         case "$DE" in
-            sway)
-                cat >> "$userdata" <<WRITEFILES
-
-write_files:
-  - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
-    content: |
-      [Service]
-      ExecStart=
-      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
-    owner: root:root
-    permissions: '0644'
-  - path: /home/${SSH_USER}/.bash_profile
-    content: |
-      [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && exec sway
-    owner: ${SSH_USER}:${SSH_USER}
-    permissions: '0644'
-WRITEFILES
-                ;;
-            hyprland)
-                cat >> "$userdata" <<WRITEFILES
-
-write_files:
-  - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
-    content: |
-      [Service]
-      ExecStart=
-      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
-    owner: root:root
-    permissions: '0644'
-  - path: /home/${SSH_USER}/.bash_profile
-    content: |
-      [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && exec Hyprland
-    owner: ${SSH_USER}:${SSH_USER}
-    permissions: '0644'
-WRITEFILES
-                ;;
+            kde-plasma) _session_exec="exec startplasma-wayland" ;;
+            gnome)      _session_exec="exec gnome-session" ;;
+            sway)       _session_exec="exec sway" ;;
+            hyprland)   _session_exec="exec Hyprland" ;;
         esac
+
+        cat >> "$userdata" <<WRITEFILES
+
+write_files:
+  - path: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/sbin/agetty --autologin ${SSH_USER} --noclear %I \$TERM
+    owner: root:root
+    permissions: '0644'
+  - path: /home/${SSH_USER}/.bash_profile
+    content: |
+      [ -z "\$WAYLAND_DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ] && ${_session_exec}
+    owner: ${SSH_USER}:${SSH_USER}
+    permissions: '0644'
+WRITEFILES
     fi
 
     # Add packages if the profile defined them
@@ -247,30 +235,17 @@ WRITEFILES
         done <<< "$DE_POST_INSTALL"
     fi
 
-    # In GUI mode: set graphical target + autologin via runcmd
-    # (runcmd runs AFTER packages are installed, so DM configs won't be overwritten)
+    # In GUI mode: disable DM and use TTY autologin instead
+    # (SDDM autologin is broken on some distros like openSUSE)
     if $INTERACTIVE; then
         if ! $has_runcmd; then
             echo "runcmd:" >> "$userdata"
         fi
 
-        echo "  - systemctl set-default graphical.target" >> "$userdata"
-
-        case "$DE" in
-            kde-plasma)
-                # Write to both locations for maximum compatibility
-                # Use printf in a sh -c to avoid YAML escaping issues
-                # Detect session name dynamically (plasma vs plasmawayland)
-                cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'S=$(basename -s .desktop "$(ls /usr/share/wayland-sessions/plasma*.desktop 2>/dev/null | head -1)" 2>/dev/null); S=${S:-plasma}; printf "[Autologin]\nUser=laren\nSession=%s\n" "$S" > /etc/sddm.conf; mkdir -p /etc/sddm.conf.d; cp /etc/sddm.conf /etc/sddm.conf.d/autologin.conf; echo "SDDM autologin: Session=$S"']
+        # Disable display managers so TTY autologin takes over
+        cat >> "$userdata" <<'RUNCMD'
+  - ['sh', '-c', 'systemctl disable sddm gdm display-manager display-manager-legacy 2>/dev/null; systemctl set-default multi-user.target']
 RUNCMD
-                ;;
-            gnome)
-                cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'mkdir -p /etc/gdm && printf "[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=laren\n" > /etc/gdm/custom.conf']
-RUNCMD
-                ;;
-        esac
     fi
 
     # Power state: don't reboot, we'll drive it over SSH
@@ -487,10 +462,6 @@ capture_screenshot() {
 # --- GUI mode: reboot into graphical session ---------------------------------
 
 interactive_session() {
-    # Debug: dump autologin config before rebooting (while SSH still works)
-    info "Checking autologin config before reboot..."
-    vm_exec "echo '--- /etc/sddm.conf ---'; cat /etc/sddm.conf 2>/dev/null || echo 'NOT FOUND'; echo '--- /etc/sddm.conf.d/ ---'; cat /etc/sddm.conf.d/autologin.conf 2>/dev/null || echo 'NOT FOUND'; echo '--- wayland-sessions ---'; ls /usr/share/wayland-sessions/ 2>/dev/null || echo 'NONE'; echo '--- cloud-init autologin log ---'; sudo grep -i 'autologin\|SDDM' /var/log/cloud-init-output.log 2>/dev/null | tail -5" || true
-
     # Ensure sshd stays up after reboot
     vm_exec "sudo systemctl enable sshd 2>/dev/null || sudo systemctl enable ssh 2>/dev/null || true" 2>/dev/null
 
