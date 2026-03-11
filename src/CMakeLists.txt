@@ -57,7 +57,9 @@ foreach(SIZE 16 22 24 32 48 128)
             DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${SIZE}x${SIZE}/apps")
 endforeach()
 
-# Also install into Fcitx5's own icon dir as a fallback for distros where
-# the hicolor icon cache isn't updated (e.g., EndeavourOS, minimal installs).
-install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/fcitx-laren.svg"
-        DESTINATION "${CMAKE_INSTALL_DATADIR}/fcitx5/icons")
+# Install into breeze/breeze-dark status dirs (where other fcitx icons live)
+# so KDE Plasma tray finds it without relying on hicolor fallback.
+foreach(THEME breeze breeze-dark)
+    install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/fcitx-laren.svg"
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/${THEME}/status/22")
+endforeach()
