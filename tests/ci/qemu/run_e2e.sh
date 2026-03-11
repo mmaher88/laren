@@ -180,6 +180,11 @@ users:
 
 ssh_pwauth: true
 
+bootcmd:
+  - "sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null || true"
+  - "echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-laren-e2e.conf"
+  - "systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || true"
+
 package_update: true
 USERDATA
 
@@ -187,7 +192,7 @@ USERDATA
     cat >> "$userdata" <<'WRITEFILES'
 
 write_files:
-  - path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+  - path: /etc/ssh/sshd_config.d/01-laren-e2e.conf
     content: |
       PasswordAuthentication yes
     owner: root:root
