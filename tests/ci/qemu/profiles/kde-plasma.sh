@@ -12,7 +12,7 @@ CMD
 )"
         ;;
     fedora)
-        DE_PACKAGES="@kde-desktop-environment sddm"
+        DE_PACKAGES="@kde-desktop-environment sddm konsole kate"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
 systemctl set-default graphical.target
@@ -20,7 +20,7 @@ CMD
 )"
         ;;
     ubuntu)
-        DE_PACKAGES="kde-standard sddm xserver-xorg"
+        DE_PACKAGES="kde-standard sddm xserver-xorg konsole kate"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
 systemctl set-default graphical.target
@@ -28,7 +28,7 @@ CMD
 )"
         ;;
     opensuse)
-        DE_PACKAGES="patterns-kde-kde_plasma sddm xorg-x11-server Mesa"
+        DE_PACKAGES="patterns-kde-kde_plasma sddm xorg-x11-server Mesa konsole kate"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
 systemctl enable display-manager.service
