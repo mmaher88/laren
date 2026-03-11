@@ -33,7 +33,7 @@ jobs:
             install: apt-get update -qq && apt-get install -y cmake make g++ git fcitx5-modules-dev libfcitx5core-dev libgtest-dev
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest
-            install: zypper install -y cmake make gcc-c++ git fcitx5-devel gtest
+            install: zypper refresh && zypper install -y cmake make gcc-c++ git fcitx5-devel gtest
 
     steps:
       - name: Install dependencies
@@ -86,7 +86,6 @@ jobs:
     name: RPM Package (Fedora 41)
     runs-on: ubuntu-latest
     container: fedora:41
-    needs: build
 
     steps:
       - name: Install dependencies
@@ -136,7 +135,6 @@ jobs:
     name: Post-install Tests
     runs-on: ubuntu-latest
     container: ubuntu:24.04
-    needs: build
 
     steps:
       - name: Checkout
