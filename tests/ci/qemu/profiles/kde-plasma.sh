@@ -31,6 +31,7 @@ CMD
         DE_PACKAGES="patterns-kde-kde_plasma sddm xorg-x11-server Mesa"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable sddm
+systemctl enable display-manager.service
 systemctl set-default graphical.target
 CMD
 )"

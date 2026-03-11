@@ -260,9 +260,9 @@ WRITEFILES
             kde-plasma)
                 # Write to both locations for maximum compatibility
                 # Use printf in a sh -c to avoid YAML escaping issues
+                # Detect session name dynamically (plasma vs plasmawayland)
                 cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'printf "[Autologin]\nUser=laren\nSession=plasma\n" > /etc/sddm.conf']
-  - ['sh', '-c', 'mkdir -p /etc/sddm.conf.d && printf "[Autologin]\nUser=laren\nSession=plasma\n" > /etc/sddm.conf.d/autologin.conf']
+  - ['sh', '-c', 'S=$(basename -s .desktop "$(ls /usr/share/wayland-sessions/plasma*.desktop 2>/dev/null | head -1)" 2>/dev/null); S=${S:-plasma}; printf "[Autologin]\nUser=laren\nSession=%s\n" "$S" > /etc/sddm.conf; mkdir -p /etc/sddm.conf.d; cp /etc/sddm.conf /etc/sddm.conf.d/autologin.conf; echo "SDDM autologin: Session=$S"']
 RUNCMD
                 ;;
             gnome)
