@@ -192,8 +192,6 @@ chpasswd:
   expire: false
 
 ssh_pwauth: true
-
-package_update: true
 USERDATA
 
     # In GUI mode: write autologin config files
@@ -236,45 +234,10 @@ WRITEFILES
         fi
     fi
 
-    # Add packages if the profile defined them
-    if [[ -n "$DE_PACKAGES" ]]; then
-        echo "packages:" >> "$userdata"
-        # Split DE_PACKAGES by space and write each as a YAML list item
-        for pkg in $DE_PACKAGES; do
-            echo "  - $pkg" >> "$userdata"
-        done
-    fi
-
-    # Build runcmd list
-    local has_runcmd=false
-
-    if [[ -n "$DE_POST_INSTALL" ]]; then
-        echo "runcmd:" >> "$userdata"
-        has_runcmd=true
-        while IFS= read -r cmd; do
-            [[ -z "$cmd" ]] && continue
-            echo "  - $cmd" >> "$userdata"
-        done <<< "$DE_POST_INSTALL"
-    fi
-
-    # In GUI mode: configure autologin strategy
-    if $INTERACTIVE; then
-        if ! $has_runcmd; then
-            echo "runcmd:" >> "$userdata"
-        fi
-
-        if [[ "$DE" == "gnome" ]]; then
-            # GNOME: keep GDM enabled, disable other DMs, ensure graphical target
-            cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'systemctl disable sddm display-manager-legacy 2>/dev/null; systemctl set-default graphical.target']
-RUNCMD
-        else
-            # Non-GNOME: disable all DMs and use TTY autologin
-            cat >> "$userdata" <<'RUNCMD'
-  - ['sh', '-c', 'systemctl disable sddm gdm gdm3 display-manager display-manager-legacy 2>/dev/null; systemctl set-default multi-user.target']
-RUNCMD
-        fi
-    fi
+    # NOTE: DE packages are NOT installed via cloud-init packages: directive.
+    # On Fedora, cloud-init blocks SSH until it finishes, and installing
+    # @gnome-desktop takes 10+ minutes, causing SSH timeouts. Instead, we
+    # install DE packages over SSH after cloud-init finishes (see install_de).
 
     # Power state: don't reboot, we'll drive it over SSH
     cat >> "$userdata" <<'USERDATA'
@@ -434,6 +397,50 @@ wait_for_cloud_init() {
     done
 }
 
+# --- Install DE packages over SSH -------------------------------------------
+
+install_de() {
+    [[ -z "$DE_PACKAGES" ]] && return
+
+    info "Installing DE packages: $DE_PACKAGES"
+
+    # Detect distro and install
+    local distro_id
+    distro_id="$(vm_exec 'source /etc/os-release && echo $ID')"
+    case "$distro_id" in
+        arch|endeavouros|manjaro|cachyos)
+            vm_exec "sudo pacman -Syu --noconfirm $DE_PACKAGES"
+            ;;
+        fedora)
+            vm_exec "sudo dnf install -y $DE_PACKAGES"
+            ;;
+        opensuse*)
+            vm_exec "sudo zypper refresh && sudo zypper install -y $DE_PACKAGES"
+            ;;
+        ubuntu|debian|pop|linuxmint)
+            vm_exec "sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y $DE_PACKAGES"
+            ;;
+    esac
+
+    # Run post-install commands
+    if [[ -n "$DE_POST_INSTALL" ]]; then
+        info "Running DE post-install"
+        while IFS= read -r cmd; do
+            [[ -z "$cmd" ]] && continue
+            vm_exec "sudo $cmd" 2>/dev/null || true
+        done <<< "$DE_POST_INSTALL"
+    fi
+
+    # GUI mode autologin setup
+    if $INTERACTIVE; then
+        if [[ "$DE" == "gnome" ]]; then
+            vm_exec "sudo sh -c 'systemctl disable sddm display-manager-legacy 2>/dev/null; systemctl set-default graphical.target'" 2>/dev/null || true
+        else
+            vm_exec "sudo sh -c 'systemctl disable sddm gdm gdm3 display-manager display-manager-legacy 2>/dev/null; systemctl set-default multi-user.target'" 2>/dev/null || true
+        fi
+    fi
+}
+
 # --- Install package in VM ---------------------------------------------------
 
 install_package() {
@@ -556,6 +563,7 @@ main() {
     boot_vm
     wait_for_ssh
     wait_for_cloud_init
+    install_de
     install_package
     run_verification
 
