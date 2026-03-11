@@ -56,3 +56,8 @@ foreach(SIZE 16 22 24 32 48 128)
     install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/${SIZE}x${SIZE}/fcitx-laren.png"
             DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${SIZE}x${SIZE}/apps")
 endforeach()
+
+# Also install into Fcitx5's own icon dir as a fallback for distros where
+# the hicolor icon cache isn't updated (e.g., EndeavourOS, minimal installs).
+install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/fcitx-laren.svg"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/fcitx5/icons")
