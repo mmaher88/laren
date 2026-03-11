@@ -183,36 +183,10 @@ ssh_pwauth: true
 package_update: true
 USERDATA
 
-    # In GUI mode: write autologin config files via cloud-init write_files
-    # (much more reliable than generating them via runcmd shell commands)
+    # In GUI mode: write autologin configs for tiling WMs via write_files
+    # (these are systemd overrides that won't be overwritten by package install)
     if $INTERACTIVE; then
         case "$DE" in
-            kde-plasma)
-                cat >> "$userdata" <<'WRITEFILES'
-
-write_files:
-  - path: /etc/sddm.conf
-    content: |
-      [Autologin]
-      User=laren
-      Session=plasma
-    owner: root:root
-    permissions: '0644'
-WRITEFILES
-                ;;
-            gnome)
-                cat >> "$userdata" <<'WRITEFILES'
-
-write_files:
-  - path: /etc/gdm/custom.conf
-    content: |
-      [daemon]
-      AutomaticLoginEnable=true
-      AutomaticLogin=laren
-    owner: root:root
-    permissions: '0644'
-WRITEFILES
-                ;;
             sway)
                 cat >> "$userdata" <<WRITEFILES
 
@@ -273,13 +247,30 @@ WRITEFILES
         done <<< "$DE_POST_INSTALL"
     fi
 
-    # In GUI mode: ensure graphical target is set via runcmd
+    # In GUI mode: set graphical target + autologin via runcmd
+    # (runcmd runs AFTER packages are installed, so DM configs won't be overwritten)
     if $INTERACTIVE; then
         if ! $has_runcmd; then
             echo "runcmd:" >> "$userdata"
         fi
 
         echo "  - systemctl set-default graphical.target" >> "$userdata"
+
+        case "$DE" in
+            kde-plasma)
+                # Write to both locations for maximum compatibility
+                # Use printf in a sh -c to avoid YAML escaping issues
+                cat >> "$userdata" <<'RUNCMD'
+  - ['sh', '-c', 'printf "[Autologin]\nUser=laren\nSession=plasma\n" > /etc/sddm.conf']
+  - ['sh', '-c', 'mkdir -p /etc/sddm.conf.d && printf "[Autologin]\nUser=laren\nSession=plasma\n" > /etc/sddm.conf.d/autologin.conf']
+RUNCMD
+                ;;
+            gnome)
+                cat >> "$userdata" <<'RUNCMD'
+  - ['sh', '-c', 'mkdir -p /etc/gdm && printf "[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=laren\n" > /etc/gdm/custom.conf']
+RUNCMD
+                ;;
+        esac
     fi
 
     # Power state: don't reboot, we'll drive it over SSH
