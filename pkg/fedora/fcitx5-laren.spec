@@ -34,3 +34,15 @@ similar to Microsoft Maren.
 %{_datadir}/fcitx5/addon/laren.conf
 %{_datadir}/fcitx5/inputmethod/laren.conf
 %{_datadir}/laren/dictionary.tsv
+%{_datadir}/laren/emoji.tsv
+%{_datadir}/fcitx5/default/profile
+%{_datadir}/icons/hicolor/scalable/apps/fcitx-laren.svg
+%{_datadir}/icons/hicolor/*/apps/fcitx-laren.png
+%dir %{_datadir}/icons/breeze
+%dir %{_datadir}/icons/breeze/status
+%dir %{_datadir}/icons/breeze/status/22
+%{_datadir}/icons/breeze/status/22/fcitx-laren.svg
+%dir %{_datadir}/icons/breeze-dark
+%dir %{_datadir}/icons/breeze-dark/status
+%dir %{_datadir}/icons/breeze-dark/status/22
+%{_datadir}/icons/breeze-dark/status/22/fcitx-laren.svg
