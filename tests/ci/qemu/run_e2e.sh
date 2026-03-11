@@ -326,7 +326,9 @@ boot_vm() {
 
     local display_opts
     if $INTERACTIVE; then
-        display_opts="-device virtio-vga -display gtk"
+        # virtio-keyboard + virtio-tablet provide input devices that work
+        # properly with Wayland compositors (PS/2 defaults don't)
+        display_opts="-device virtio-vga -display gtk -device virtio-keyboard-pci -device virtio-tablet-pci"
     else
         display_opts="-vnc :${VNC_DISPLAY} -display none"
     fi
