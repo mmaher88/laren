@@ -423,7 +423,7 @@ run_verification() {
 
     info "Running verification (DISTRO=$DISTRO, DE=$DE)"
     # Pass DISTRO and DE as env vars so verify_ime.sh can do DE-specific checks
-    vm_exec "DISTRO=$DISTRO DE=$DE /tmp/verify_ime.sh" || true
+    vm_exec "DISTRO=$DISTRO DE=$DE GUI_MODE=$INTERACTIVE /tmp/verify_ime.sh" || true
 }
 
 # --- Capture screenshot ------------------------------------------------------

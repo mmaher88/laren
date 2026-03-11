@@ -227,80 +227,86 @@ case "$DE" in
 esac
 
 # ---------------------------------------------------------------------------
-# 5. Fcitx5 headless startup test
+# 5. Fcitx5 runtime test (GUI mode only — needs a display session)
 # ---------------------------------------------------------------------------
 
-info "Fcitx5 headless addon loading test"
+GUI_MODE="${GUI_MODE:-false}"
 
-if command -v fcitx5 &>/dev/null; then
-    # Start Fcitx5 in the background with a timeout
-    export DISPLAY=:99
-    export WAYLAND_DISPLAY=""
+if [[ "$GUI_MODE" == "true" ]]; then
+    info "Fcitx5 runtime addon loading test"
 
-    # Try to start Xvfb if available (for X11 fallback)
-    if command -v Xvfb &>/dev/null; then
-        Xvfb :99 -screen 0 1024x768x24 &>/dev/null &
-        XVFB_PID=$!
-        sleep 1
-    else
-        XVFB_PID=""
-    fi
+    if command -v fcitx5 &>/dev/null; then
+        # Start Fcitx5 in the background with a timeout
+        export DISPLAY=:99
+        export WAYLAND_DISPLAY=""
 
-    # Start fcitx5 and wait briefly for it to initialize
-    fcitx5 -d &>/dev/null &
-    FCITX_PID=$!
-    sleep 3
-
-    if kill -0 "$FCITX_PID" 2>/dev/null; then
-        pass "Fcitx5 started successfully"
-
-        # Check if laren addon was loaded via log or /tmp debug log
-        if [[ -f /tmp/laren-debug.log ]]; then
-            pass "Laren addon loaded (debug log exists)"
+        # Try to start Xvfb if available (for X11 fallback)
+        if command -v Xvfb &>/dev/null; then
+            Xvfb :99 -screen 0 1024x768x24 &>/dev/null &
+            XVFB_PID=$!
+            sleep 1
         else
-            # Try checking fcitx5 log output
-            if journalctl --user -u fcitx5 --no-pager -n 20 2>/dev/null | grep -qi laren; then
-                pass "Laren addon referenced in fcitx5 journal"
-            else
-                skip "Cannot confirm laren addon loaded (no debug log or journal)"
-            fi
+            XVFB_PID=""
         fi
 
-        # D-Bus query for available input methods
-        if command -v qdbus6 &>/dev/null; then
-            info "Querying D-Bus for input methods"
-            IM_LIST=$(qdbus6 org.fcitx.Fcitx5 /controller \
-                org.fcitx.Fcitx.Controller1.AvailableInputMethods 2>/dev/null || true)
-            if echo "$IM_LIST" | grep -qi laren; then
-                pass "Laren listed in D-Bus AvailableInputMethods"
+        # Start fcitx5 and wait briefly for it to initialize
+        fcitx5 -d &>/dev/null &
+        FCITX_PID=$!
+        sleep 3
+
+        if kill -0 "$FCITX_PID" 2>/dev/null; then
+            pass "Fcitx5 started successfully"
+
+            # Check if laren addon was loaded via log or /tmp debug log
+            if [[ -f /tmp/laren-debug.log ]]; then
+                pass "Laren addon loaded (debug log exists)"
             else
-                fail "Laren NOT found in D-Bus AvailableInputMethods"
+                # Try checking fcitx5 log output
+                if journalctl --user -u fcitx5 --no-pager -n 20 2>/dev/null | grep -qi laren; then
+                    pass "Laren addon referenced in fcitx5 journal"
+                else
+                    skip "Cannot confirm laren addon loaded (no debug log or journal)"
+                fi
             fi
-        elif command -v dbus-send &>/dev/null; then
-            info "Querying D-Bus (dbus-send) for input methods"
-            IM_LIST=$(dbus-send --session --print-reply --dest=org.fcitx.Fcitx5 \
-                /controller org.fcitx.Fcitx.Controller1.AvailableInputMethods 2>/dev/null || true)
-            if echo "$IM_LIST" | grep -qi laren; then
-                pass "Laren listed in D-Bus AvailableInputMethods"
+
+            # D-Bus query for available input methods
+            if command -v qdbus6 &>/dev/null; then
+                info "Querying D-Bus for input methods"
+                IM_LIST=$(qdbus6 org.fcitx.Fcitx5 /controller \
+                    org.fcitx.Fcitx.Controller1.AvailableInputMethods 2>/dev/null || true)
+                if echo "$IM_LIST" | grep -qi laren; then
+                    pass "Laren listed in D-Bus AvailableInputMethods"
+                else
+                    fail "Laren NOT found in D-Bus AvailableInputMethods"
+                fi
+            elif command -v dbus-send &>/dev/null; then
+                info "Querying D-Bus (dbus-send) for input methods"
+                IM_LIST=$(dbus-send --session --print-reply --dest=org.fcitx.Fcitx5 \
+                    /controller org.fcitx.Fcitx.Controller1.AvailableInputMethods 2>/dev/null || true)
+                if echo "$IM_LIST" | grep -qi laren; then
+                    pass "Laren listed in D-Bus AvailableInputMethods"
+                else
+                    fail "Laren NOT found in D-Bus AvailableInputMethods"
+                fi
             else
-                fail "Laren NOT found in D-Bus AvailableInputMethods"
+                skip "No D-Bus query tool (qdbus6 or dbus-send) available"
             fi
+
+            # Clean up
+            kill "$FCITX_PID" 2>/dev/null || true
         else
-            skip "No D-Bus query tool (qdbus6 or dbus-send) available"
+            fail "Fcitx5 failed to start"
         fi
 
-        # Clean up
-        kill "$FCITX_PID" 2>/dev/null || true
+        # Clean up Xvfb
+        if [[ -n "${XVFB_PID:-}" ]]; then
+            kill "$XVFB_PID" 2>/dev/null || true
+        fi
     else
-        fail "Fcitx5 failed to start"
-    fi
-
-    # Clean up Xvfb
-    if [[ -n "${XVFB_PID:-}" ]]; then
-        kill "$XVFB_PID" 2>/dev/null || true
+        fail "fcitx5 binary not found"
     fi
 else
-    fail "fcitx5 binary not found"
+    skip "Fcitx5 runtime test (skipped in headless mode, use --gui)"
 fi
 
 # ---------------------------------------------------------------------------
