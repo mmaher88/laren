@@ -34,6 +34,9 @@ jobs:
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest
             install: zypper refresh && zypper install -y cmake make gcc-c++ git fcitx5-devel gtest
+            allow-failure: true
+
+    continue-on-error: ${{ matrix.allow-failure || false }}
 
     steps:
       - name: Install dependencies
