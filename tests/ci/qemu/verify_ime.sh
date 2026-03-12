@@ -158,8 +158,12 @@ info "DE-specific checks ($DE)"
 case "$DE" in
     kde-plasma)
         # Check that SDDM is the display manager
+        # openSUSE uses display-manager.service with alternatives (default-displaymanager -> sddm)
         if systemctl is-enabled sddm &>/dev/null; then
             pass "SDDM is enabled"
+        elif systemctl is-enabled display-manager.service &>/dev/null && \
+             grep -q sddm /usr/lib/X11/displaymanagers/default-displaymanager 2>/dev/null; then
+            pass "SDDM is enabled (via display-manager.service)"
         else
             fail "SDDM is not enabled (expected for KDE Plasma)"
         fi
