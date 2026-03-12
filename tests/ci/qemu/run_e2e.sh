@@ -418,7 +418,7 @@ install_de() {
             vm_exec "sudo zypper refresh && sudo zypper install -y $DE_PACKAGES"
             ;;
         ubuntu|debian|pop|linuxmint)
-            vm_exec "sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y $DE_PACKAGES"
+            vm_exec "sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::='--force-confold' $DE_PACKAGES"
             ;;
     esac
 
