@@ -30,6 +30,7 @@ case "$DISTRO" in
         ;;
     opensuse*)
         zypper refresh
+        zypper install -y --force-resolution diffutils
         zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel fcitx5-configtool
         ;;
     ubuntu|debian|pop|linuxmint)
