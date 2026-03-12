@@ -4,7 +4,7 @@
 
 case "$DISTRO" in
     arch)
-        DE_PACKAGES="gnome gnome-extra gdm xorg-server"
+        DE_PACKAGES="gnome gnome-extra gdm xorg-server gnome-shell-extension-appindicator"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable gdm
 CMD
@@ -19,7 +19,7 @@ CMD
 )"
         ;;
     ubuntu)
-        DE_PACKAGES="ubuntu-desktop gdm3"
+        DE_PACKAGES="ubuntu-desktop gdm3 gnome-shell-extension-appindicator"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable gdm3
 systemctl set-default graphical.target
@@ -27,7 +27,7 @@ CMD
 )"
         ;;
     opensuse)
-        DE_PACKAGES="patterns-gnome-gnome gdm xorg-x11-server"
+        DE_PACKAGES="patterns-gnome-gnome gdm xorg-x11-server gnome-shell-extension-appindicator"
         DE_POST_INSTALL="$(cat <<'CMD'
 systemctl enable gdm
 systemctl set-default graphical.target
