@@ -718,14 +718,15 @@ function buildVizTrie(words) {
 function simpleTrieLookup(root, word) {
   const steps = [];
   let node = root;
+  let lost = false;
   for (let i = 0; i < word.length; i++) {
     const ch = word[i];
-    if (node.children[ch]) {
+    if (!lost && node.children[ch]) {
       node = node.children[ch];
       steps.push({ nodeId: node.id, char: ch, prefix: word.slice(0, i + 1), found: true, isWord: node.isWord, wordFreq: node.freq });
     } else {
+      lost = true;
       steps.push({ nodeId: null, char: ch, prefix: word.slice(0, i + 1), found: false, isWord: false });
-      break;
     }
   }
   return { steps, matched: steps.length === word.length && steps.length > 0 && steps[steps.length - 1].found };
@@ -1275,6 +1276,24 @@ function render(raw) {
     const trieWords = selectTrieWords(uniqueMatches, expansions);
     const trieRoot = buildVizTrie(trieWords);
     const lookupCands = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
+
+    // Insert non-dictionary candidates into the trie so their full path
+    // is visible when hovered (without marking intermediate nodes as words)
+    for (const cand of lookupCands) {
+      if (!cand.inDict) {
+        let node = trieRoot;
+        for (let i = 0; i < cand.word.length; i++) {
+          const ch = cand.word[i];
+          if (!node.children[ch]) {
+            const child = createSimpleTrieNode(ch, i + 1);
+            child.parent = node;
+            node.children[ch] = child;
+            simpleNodeMap[child.id] = child;
+          }
+          node = node.children[ch];
+        }
+      }
+    }
 
     dashEl.innerHTML = `<div class="dash-grid">
       <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
