@@ -29,3 +29,12 @@ include(GoogleTest)
 gtest_discover_tests(laren_tests
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+# Fcitx5 integration tests (requires TestFrontend module)
+find_package(Fcitx5ModuleTestFrontend QUIET)
+find_package(Fcitx5ModuleTestIM QUIET)
+if(Fcitx5ModuleTestFrontend_FOUND AND Fcitx5ModuleTestIM_FOUND)
+    add_subdirectory(integration)
+else()
+    message(STATUS "Fcitx5 TestFrontend/TestIM not found, skipping integration tests")
+endif()

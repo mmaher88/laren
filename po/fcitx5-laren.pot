@@ -1,0 +1,33 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 Laren contributors
+# This file is distributed under the same license as the laren package.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: fcitx5-laren 0.2.10\n"
+"Report-Msgid-Bugs-To: https://github.com/mmaher88/laren/issues\n"
+"POT-Creation-Date: 2026-03-12 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: laren-addon.conf.in:2
+msgid "Laren"
+msgstr ""
+
+#: laren-addon.conf.in:3
+msgid "Arabizi to Arabic transliteration engine"
+msgstr ""
+
+#: laren-im.conf.in:2
+msgid "Laren (Arabizi)"
+msgstr ""
+
+#: laren-im.conf.in:3
+msgid "Type in Latin script (Arabizi) to get Arabic"
+msgstr ""

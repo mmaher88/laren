@@ -1,6 +1,6 @@
 [InputMethod]
 Name=Laren (Arabizi)
-Name[ar]=لارن (عربيزي)
+Comment=Type in Latin script (Arabizi) to get Arabic
 Icon=fcitx-laren
 Label=ع
 LangCode=ar

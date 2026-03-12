@@ -33,11 +33,27 @@ set_target_properties(laren PROPERTIES PREFIX "" NO_SONAME ON INSTALL_RPATH "")
 # Install targets
 install(TARGETS laren DESTINATION "${FCITX_INSTALL_ADDONDIR}")
 
-install(FILES "${CMAKE_SOURCE_DIR}/resources/laren-addon.conf.in"
+# Two-stage conf processing: .conf.in.in -> configure_file -> .conf.in -> translate -> .conf
+configure_file(
+    "${CMAKE_SOURCE_DIR}/resources/laren-addon.conf.in.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/laren-addon.conf.in"
+    @ONLY
+)
+fcitx5_translate_desktop_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/laren-addon.conf.in"
+    laren-addon.conf
+    PO_DIRECTORY "${CMAKE_SOURCE_DIR}/po"
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/laren-addon.conf"
         RENAME laren.conf
         DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon")
 
-install(FILES "${CMAKE_SOURCE_DIR}/resources/laren-im.conf"
+fcitx5_translate_desktop_file(
+    "${CMAKE_SOURCE_DIR}/resources/laren-im.conf.in"
+    laren-im.conf
+    PO_DIRECTORY "${CMAKE_SOURCE_DIR}/po"
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/laren-im.conf"
         RENAME laren.conf
         DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod")
 

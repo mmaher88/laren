@@ -1,8 +1,8 @@
 [Addon]
 Name=Laren
-Name[ar]=لارن
+Comment=Arabizi to Arabic transliteration engine
 Category=InputMethod
-Version=0.1.0
+Version=@PROJECT_VERSION@
 Library=laren
 Type=SharedLibrary
 OnDemand=True
