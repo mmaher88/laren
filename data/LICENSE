@@ -1,0 +1,44 @@
+The dictionary data (dictionary.tsv) is derived from the following
+open-source word frequency lists and is distributed under the
+Creative Commons Attribution-ShareAlike 4.0 International License
+(CC BY-SA 4.0).
+
+License: https://creativecommons.org/licenses/by-sa/4.0/
+
+Sources
+-------
+
+1. CAMeL Arabic Frequency Lists (MIX)
+   License: CC BY-SA 4.0
+   URL: https://github.com/CAMeL-Lab/Camel_Arabic_Frequency_Lists
+   Data: Combined Classical, Dialectal, and Modern Standard Arabic
+         frequency lists from CAMeLBERT pretraining data (17.3B tokens).
+
+   Citation (required by license):
+   Go Inoue, Bashar Alhafni, Nurpeiis Baimukan, Houda Bouamor, and
+   Nizar Habash. 2021. The Interplay of Variant, Size, and Task Type
+   in Arabic Pre-trained Language Models. In Proceedings of the Sixth
+   Arabic Natural Language Processing Workshop, pages 92-104, Kyiv,
+   Ukraine (Virtual). Association for Computational Linguistics.
+
+2. FrequencyWords (OpenSubtitles 2018)
+   License: MIT
+   URL: https://github.com/hermitdave/FrequencyWords
+   Data: Arabic word frequencies from OpenSubtitles 2018 corpus.
+
+3. Wikipedia Word Frequency
+   License: MIT
+   URL: https://github.com/IlyaSemenov/wikipedia-word-frequency
+   Data: Arabic word frequencies from Arabic Wikipedia (2022-08-29 dump).
+
+Build Process
+-------------
+
+The dictionary is built by scripts/build_dictionary.py which:
+- Includes words appearing in 2+ of the above sources (cross-validated)
+- Includes single-source words with raw frequency >= 1000
+- Auto-generates taa marbuta variants (ة/ه) for IME coverage
+- Normalizes combined frequencies to a 1-10000 scale
+
+To reproduce:
+  See scripts/build_dictionary.py for full instructions.
