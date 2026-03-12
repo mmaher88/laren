@@ -413,9 +413,6 @@ void LarenState::updateUI() {
     }
     panel.setPreedit(preedit);
 
-    // Show the Arabizi input as header above the candidate list
-    panel.setAuxUp(fcitx::Text(buffer_));
-
     // Build vertical candidate list
     auto candidateList = std::make_unique<LarenCandidateList>();
     candidateList->setPageSize(9);

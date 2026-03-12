@@ -1,3 +1,9 @@
+fcitx5-laren (0.3.2-1) unstable; urgency=medium
+
+  * Fix: preedit text doubled in candidate popup.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Thu, 12 Mar 2026 16:20:00 -0400
+
 fcitx5-laren (0.3.1-1) unstable; urgency=medium
 
   * Fix: never skip initial vowels in Arabizi-to-Arabic expansion.
