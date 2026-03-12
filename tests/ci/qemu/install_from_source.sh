@@ -23,18 +23,18 @@ info "Detected: ${PRETTY_NAME:-$DISTRO}"
 info "Installing dependencies"
 case "$DISTRO" in
     arch|endeavouros|manjaro|cachyos)
-        pacman -Syu --noconfirm cmake make gcc git fcitx5 fcitx5-configtool
+        pacman -Syu --noconfirm cmake make gcc git gettext fcitx5 fcitx5-configtool
         ;;
     fedora)
-        dnf install -y cmake make gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
+        dnf install -y cmake make gcc-c++ git gettext fcitx5 fcitx5-devel fcitx5-configtool
         ;;
     opensuse*)
         zypper refresh
-        zypper install -y cmake make gcc-c++ git fcitx5 fcitx5-devel fcitx5-configtool
+        zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel fcitx5-configtool
         ;;
     ubuntu|debian|pop|linuxmint)
         apt-get update -qq
-        apt-get install -y cmake make g++ git fcitx5 fcitx5-modules-dev libfcitx5core-dev fcitx5-config-qt
+        apt-get install -y cmake make g++ git gettext fcitx5 fcitx5-modules-dev libfcitx5core-dev fcitx5-config-qt
         ;;
     *)
         error "Unsupported distro: $DISTRO"
