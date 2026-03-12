@@ -53,6 +53,14 @@ cmake --build build -j"$(nproc)"
 info "Installing"
 cmake --install build
 
+# Update icon cache so desktop environments find fcitx-laren icon
+info "Updating icon cache"
+if command -v gtk-update-icon-cache &>/dev/null; then
+    gtk-update-icon-cache -f -q /usr/share/icons/hicolor 2>/dev/null || true
+elif command -v gtk4-update-icon-cache &>/dev/null; then
+    gtk4-update-icon-cache -f -q /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
 # Run post-install
 if [ -f /usr/share/laren/postinstall-common.sh ]; then
     . /usr/share/laren/postinstall-common.sh
