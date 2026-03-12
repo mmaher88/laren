@@ -1,3 +1,9 @@
+fcitx5-laren (0.3.1-1) unstable; urgency=medium
+
+  * Fix: never skip initial vowels in Arabizi-to-Arabic expansion.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Thu, 12 Mar 2026 12:00:00 -0400
+
 fcitx5-laren (0.2.9-1) unstable; urgency=medium
 
   * Release 0.2.9.
