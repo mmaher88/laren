@@ -31,12 +31,12 @@ gtest_discover_tests(laren_tests
 )
 
 # Fcitx5 integration tests
-# Requires: TestFrontend/TestIM modules + fcitx5 >= 5.1.8 (setupTestingEnvironmentPath)
+# Requires: TestFrontend/TestIM modules + fcitx5 >= 5.1.13 (setupTestingEnvironmentPath)
 find_package(Fcitx5ModuleTestFrontend QUIET)
 find_package(Fcitx5ModuleTestIM QUIET)
 if(Fcitx5ModuleTestFrontend_FOUND AND Fcitx5ModuleTestIM_FOUND
-   AND Fcitx5Core_VERSION VERSION_GREATER_EQUAL "5.1.8")
+   AND Fcitx5Core_VERSION VERSION_GREATER_EQUAL "5.1.13")
     add_subdirectory(integration)
 else()
-    message(STATUS "Skipping integration tests (need Fcitx5 >= 5.1.8 with TestFrontend/TestIM)")
+    message(STATUS "Skipping integration tests (need Fcitx5 >= 5.1.13 with TestFrontend/TestIM)")
 endif()
