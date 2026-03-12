@@ -1,5 +1,5 @@
 Name:           fcitx5-laren
-Version:        0.2.10
+Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Arabizi to Arabic transliteration engine for Fcitx5
 License:        GPL-3.0-or-later
@@ -8,6 +8,7 @@ Source0:        %{url}/archive/v%{version}/laren-%{version}.tar.gz
 
 BuildRequires:  cmake >= 3.21
 BuildRequires:  gcc-c++
+BuildRequires:  gettext
 BuildRequires:  fcitx5-devel
 
 Requires:       fcitx5
@@ -57,3 +58,4 @@ echo ""
 %dir %{_datadir}/icons/breeze-dark/status
 %dir %{_datadir}/icons/breeze-dark/status/22
 %{_datadir}/icons/breeze-dark/status/22/fcitx-laren.svg
+%{_datadir}/locale/ar/LC_MESSAGES/fcitx5-laren.mo
