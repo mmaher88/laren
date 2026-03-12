@@ -1216,20 +1216,24 @@ function render(raw) {
 function buildMappings(tokens, branchCount, actualCount) {
   let cards = "";
   tokens.forEach((t, i) => {
-    const opts = t.arabic.map(ar => {
+    // Filter out SKIP (∅) for the first token — Arabic words always start with a letter
+    const arOptions = t.pos === 0 ? t.arabic.filter(ar => ar !== "\u2205") : t.arabic;
+    const opts = arOptions.map(ar => {
       if (ar === "\u2205") return '<span class="ar-opt skip">skip</span>';
       return `<span class="ar-opt">${ar}</span>`;
     }).join(" ");
-    cards += `<div class="m-card" data-delay="${i * 40}"><div class="lat">${t.latin}</div><div class="ar-opts">${opts}</div><div class="cnt">${t.arabic.length}</div></div>`;
+    cards += `<div class="m-card" data-delay="${i * 40}"><div class="lat">${t.latin}</div><div class="ar-opts">${opts}</div><div class="cnt">${arOptions.length}</div></div>`;
   });
 
-  const eq = tokens.map(t => `<span class="bv">${t.arabic.length}</span>`).join('<span class="bm">\u00D7</span>');
-  const info = actualCount < branchCount ? `${actualCount} explored` : 'all explored';
+  const effectiveCounts = tokens.map(t => t.pos === 0 ? t.arabic.filter(ar => ar !== "\u2205").length : t.arabic.length);
+  const eq = effectiveCounts.map(c => `<span class="bv">${c}</span>`).join('<span class="bm">\u00D7</span>');
+  const effectiveBranch = effectiveCounts.reduce((a, b) => a * b, 1);
+  const info = actualCount < effectiveBranch ? `${actualCount} explored` : 'all explored';
 
   return `<div class="panel-label"><span class="num">1</span>Character mappings</div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div class="mapping-cards">${cards}</div>
-      <div class="branch-eq">${eq}<span class="bm">=</span><span class="bt">${branchCount.toLocaleString()}</span><span class="bi">(${info})</span></div>
+      <div class="branch-eq">${eq}<span class="bm">=</span><span class="bt">${effectiveBranch.toLocaleString()}</span><span class="bi">(${info})</span></div>
     </div>`;
 }
 
