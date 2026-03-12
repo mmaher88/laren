@@ -29,8 +29,8 @@ void sendString(AddonInstance *testfrontend, ICUUID uuid,
     }
 }
 
-void scheduleEvent(Instance *instance) {
-    instance->eventDispatcher().schedule([instance]() {
+void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
+    dispatcher.schedule([&dispatcher, instance]() {
         // 1. Verify addon loaded
         auto *laren = instance->addonManager().addon("laren", true);
         FCITX_ASSERT(laren) << "Laren addon failed to load";
@@ -128,10 +128,8 @@ void scheduleEvent(Instance *instance) {
         // 9. Clean up
         testfrontend->call<ITestFrontend::destroyInputContext>(uuid);
 
-        instance->deactivate();
+        dispatcher.schedule([instance]() { instance->exit(); });
     });
-
-    instance->eventDispatcher().schedule([instance]() { instance->exit(); });
 }
 
 int main() {
@@ -166,7 +164,9 @@ int main() {
     Log::setLogRule("default=5,laren=5");
     Instance instance(FCITX_ARRAY_SIZE(argv), argv);
     instance.addonManager().registerDefaultLoader(nullptr);
-    scheduleEvent(&instance);
+    EventDispatcher dispatcher;
+    dispatcher.attach(&instance.eventLoop());
+    scheduleEvent(dispatcher, &instance);
     instance.exec();
     return 0;
 }
