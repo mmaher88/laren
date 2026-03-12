@@ -316,41 +316,6 @@ body {
 
 .trie-controls > button:hover { border-color: #818cf8; color: #e2e8f0; }
 
-.trie-stats {
-  font-size: 0.55rem;
-  color: #475569;
-  margin: 0 6px;
-}
-
-/* ── Mode Toggle ── */
-.mode-toggle {
-  display: flex;
-  background: #0f172a;
-  border-radius: 4px;
-  border: 1px solid #334155;
-  overflow: hidden;
-  margin: 0 6px;
-}
-
-.mode-toggle button {
-  background: transparent;
-  border: none;
-  color: #64748b;
-  font-size: 0.6rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.mode-toggle button:hover { color: #94a3b8; }
-.mode-toggle button.active {
-  background: linear-gradient(135deg, #818cf8, #38bdf8);
-  color: #0f172a;
-}
-
 .trie-legend {
   display: flex;
   gap: 8px;
@@ -369,7 +334,6 @@ body {
 .lg-circle.lg-default { background: #1e293b; border-color: #475569; }
 .lg-circle.lg-word { background: #1e293b; border-color: #475569; outline: 1.5px solid #854d0e; outline-offset: 1px; }
 .lg-circle.lg-found { background: #052e16; border-color: #22c55e; }
-.lg-circle.lg-collapsed { background: #1e1b4b; border-color: #818cf8; }
 .lg-circle.lg-dead { background: #450a0a; border-color: #ef4444; }
 
 .trie-svg-area {
@@ -382,10 +346,6 @@ body {
   overflow: hidden;
 }
 
-.trie-svg-area.pannable { cursor: grab; }
-
-.trie-svg-area.panning { cursor: grabbing; }
-
 .trie-svg-area svg {
   width: 100%;
   height: 100%;
@@ -397,22 +357,10 @@ body {
 .trie-word-ring { fill: none; stroke: #854d0e; stroke-width: 2; opacity: 0.5; transition: stroke 0.3s, opacity 0.3s; }
 .trie-text { fill: #94a3b8; font-size: 14px; font-family: 'Segoe UI', system-ui, sans-serif; transition: fill 0.3s; pointer-events: none; }
 .trie-edge { stroke: #334155; stroke-width: 1.5; transition: stroke 0.3s, stroke-width 0.3s; }
-.trie-badge { font-size: 9px; fill: #818cf8; pointer-events: none; }
-
 .trie-node-g { cursor: pointer; }
 .trie-node-g:hover .trie-circle { stroke: #818cf8; stroke-width: 2.5; }
 
-/* Full mode: collapsed node */
-.trie-node-g.collapsed .trie-circle { fill: #1e1b4b; stroke: #818cf8; }
-.trie-node-g.collapsed .trie-text { fill: #c7d2fe; }
-
-/* Full mode: search path highlights */
-.trie-node-g.on-path .trie-circle { fill: #052e16; stroke: #22c55e; stroke-width: 2.5; }
-.trie-node-g.on-path .trie-text { fill: #bbf7d0; }
-.trie-node-g.on-path .trie-word-ring { stroke: #22c55e; opacity: 0.9; }
-.trie-edge.on-path { stroke: #22c55e; stroke-width: 2.5; }
-
-/* Simple mode: visiting/found/dead-end highlights */
+/* Trie animation highlights */
 .trie-node-g.visiting .trie-circle { fill: #1e1b4b; stroke: #818cf8; stroke-width: 2.5; }
 .trie-node-g.visiting .trie-text { fill: #c7d2fe; }
 .trie-node-g.visiting .trie-word-ring { stroke: #818cf8; opacity: 0.8; }
@@ -425,27 +373,7 @@ body {
 .trie-edge.found { stroke: #22c55e; stroke-width: 2.5; }
 .trie-edge.dead-end { stroke: #ef4444; stroke-width: 2; stroke-dasharray: 5 3; }
 
-/* Tooltip (full mode) */
-.trie-tooltip {
-  position: absolute;
-  background: #1e293b;
-  border: 1px solid #475569;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.7rem;
-  color: #e2e8f0;
-  pointer-events: none;
-  z-index: 10;
-  display: none;
-  direction: rtl;
-  max-width: 200px;
-}
-
-.trie-tooltip.show { display: block; }
-.trie-tooltip .tt-char { font-size: 1.1rem; font-weight: 700; }
-.trie-tooltip .tt-info { font-size: 0.6rem; color: #94a3b8; direction: ltr; margin-top: 2px; }
-
-/* ── Simple mode: lookup cards ── */
+/* ── Lookup cards ── */
 .trie-bottom {
   display: flex;
   gap: 5px;
@@ -671,43 +599,6 @@ body {
 .cand-sep { border-top: 1px dashed #334155; margin: 2px 0; opacity: 0; transition: opacity 0.3s; }
 .cand-sep.visible { opacity: 1; }
 
-.freq-section {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.freq-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 4px;
-  border-radius: 5px;
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: all 0.3s;
-  flex-shrink: 0;
-}
-
-.freq-row.visible { opacity: 1; transform: translateX(0); }
-.freq-row.fr-match { background: #052e16; border: 1px solid #166534; }
-.freq-row.fr-fall { opacity: 0.5; }
-
-.freq-row .fa { font-size: 0.9rem; direction: rtl; min-width: 60px; text-align: center; }
-.freq-row .fb-wrap { flex: 1; height: 5px; background: #0f172a; border-radius: 3px; overflow: hidden; }
-.freq-row .fb { height: 100%; border-radius: 3px; transition: width 0.8s ease-out; width: 0; }
-.freq-row.fr-match .fb { background: linear-gradient(90deg, #22c55e, #38bdf8); }
-.freq-row .fl { font-size: 0.55rem; color: #64748b; min-width: 50px; text-align: right; }
-
-.freq-header {
-  font-size: 0.55rem;
-  color: #475569;
-  text-align: center;
-  flex-shrink: 0;
-}
 </style>
 </head>
 <body>
@@ -771,9 +662,6 @@ const MAPPINGS = {
 // ── Dictionary ──
 let DICTIONARY = {};
 let dictLoaded = false;
-
-// ── Trie mode: 'simple' or 'full' ──
-let trieMode = 'simple';
 
 // ── Animation speed (lower = faster) ──
 let animSpeed = 1;
@@ -1236,297 +1124,7 @@ function insertCandidateByFreq(container, word, freq) {
 }
 
 // ══════════════════════════════════════════
-// ── Full Trie Engine ──
-// ══════════════════════════════════════════
-let fullTrie = null;
-let trieNodeCount = 0;
-let trieIdCounter = 0;
-const trieNodes = {};
-
-function buildFullTrie() {
-  trieIdCounter = 0;
-  const root = { ch: '', children: {}, isWord: false, freq: 0, wordCount: 0, expanded: true, id: 'r', x: 0, y: 0 };
-  trieNodes['r'] = root;
-
-  for (const word in DICTIONARY) {
-    let node = root;
-    for (const ch of word) {
-      if (!node.children[ch]) {
-        const id = 'n' + (trieIdCounter++);
-        const child = { ch, children: {}, isWord: false, freq: 0, wordCount: 0, expanded: false, id, x: 0, y: 0 };
-        node.children[ch] = child;
-        trieNodes[id] = child;
-      }
-      node = node.children[ch];
-    }
-    node.isWord = true;
-    node.freq = DICTIONARY[word];
-  }
-
-  function count(n) {
-    let c = n.isWord ? 1 : 0;
-    for (const ch of Object.values(n.children)) c += count(ch);
-    n.wordCount = c;
-    return c;
-  }
-  count(root);
-
-  trieNodeCount = trieIdCounter + 1;
-  fullTrie = root;
-
-  for (const child of Object.values(root.children)) {
-    child.expanded = false;
-  }
-}
-
-// Full trie layout
-const NODE_W = 52;
-const ROW_H = 62;
-
-function visibleWidth(node) {
-  if (!node.expanded || Object.keys(node.children).length === 0) return NODE_W;
-  const kids = Object.values(node.children);
-  return Math.max(kids.reduce((s, c) => s + visibleWidth(c), 0), NODE_W);
-}
-
-function layoutVisible(node, cx, cy) {
-  node.x = cx; node.y = cy;
-  if (!node.expanded) return;
-  const kids = Object.values(node.children);
-  if (kids.length === 0) return;
-  const totalW = kids.reduce((s, c) => s + visibleWidth(c), 0);
-  let x = cx - totalW / 2;
-  for (const child of kids) {
-    const w = visibleWidth(child);
-    layoutVisible(child, x + w / 2, cy + ROW_H);
-    x += w;
-  }
-}
-
-function computeBounds(node) {
-  let minX = node.x, maxX = node.x, maxY = node.y;
-  if (node.expanded) {
-    for (const c of Object.values(node.children)) {
-      const b = computeBounds(c);
-      minX = Math.min(minX, b.minX);
-      maxX = Math.max(maxX, b.maxX);
-      maxY = Math.max(maxY, b.maxY);
-    }
-  }
-  return { minX, maxX, maxY };
-}
-
-function renderTrieSVG(root, highlightPaths) {
-  const hp = highlightPaths || new Set();
-  let edges = '', nodes = '';
-
-  function drawNode(node, parentExpanded) {
-    if (!parentExpanded) return;
-    const hasKids = Object.keys(node.children).length > 0;
-    const isCollapsed = hasKids && !node.expanded;
-    let cls = 'trie-node-g';
-    if (isCollapsed) cls += ' collapsed';
-    if (hp.has(node.id)) cls += ' on-path';
-
-    if (node.expanded) {
-      for (const child of Object.values(node.children)) {
-        let eCls = 'trie-edge';
-        if (hp.has(child.id)) eCls += ' on-path';
-        edges += `<line class="${eCls}" id="e-${child.id}" x1="${node.x}" y1="${node.y}" x2="${child.x}" y2="${child.y}"/>`;
-      }
-    }
-
-    nodes += `<g class="${cls}" id="g-${node.id}" data-id="${node.id}">`;
-    if (node.isWord) nodes += `<circle cx="${node.x}" cy="${node.y}" r="21" class="trie-word-ring"/>`;
-    nodes += `<circle cx="${node.x}" cy="${node.y}" r="17" class="trie-circle"/>`;
-    const label = node.ch || '\u25CF';
-    nodes += `<text x="${node.x}" y="${node.y}" dy="0.38em" text-anchor="middle" class="trie-text">${label}</text>`;
-
-    if (isCollapsed) {
-      const badge = node.wordCount >= 1000 ? (node.wordCount / 1000).toFixed(0) + 'k' : node.wordCount.toString();
-      nodes += `<text x="${node.x + 14}" y="${node.y - 14}" text-anchor="middle" class="trie-badge">${badge}</text>`;
-    }
-    nodes += '</g>';
-
-    if (node.expanded) {
-      for (const child of Object.values(node.children)) drawNode(child, true);
-    }
-  }
-
-  drawNode(root, true);
-  return edges + nodes;
-}
-
-// Zoom & Pan State
-let vb = { x: 0, y: 0, w: 800, h: 600 };
-let isPanning = false;
-let panStart = { x: 0, y: 0, vbx: 0, vby: 0 };
-
-function resetView() {
-  if (!fullTrie) return;
-  layoutVisible(fullTrie, 0, 30);
-  const b = computeBounds(fullTrie);
-  const pad = 40;
-  vb.x = b.minX - pad;
-  vb.y = 0;
-  vb.w = (b.maxX - b.minX) + pad * 2;
-  vb.h = b.maxY + pad + 30;
-  renderFullTrie();
-}
-
-function zoomBy(factor, cx, cy) {
-  if (cx === undefined) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
-  const nx = cx - (cx - vb.x) * factor;
-  const ny = cy - (cy - vb.y) * factor;
-  vb.x = nx; vb.y = ny; vb.w *= factor; vb.h *= factor;
-}
-
-function expandPath(word) {
-  if (!fullTrie) return new Set();
-  const ids = new Set(['r']);
-  let node = fullTrie;
-  for (const ch of word) {
-    if (!node.children[ch]) break;
-    node = node.children[ch];
-    node.expanded = true;
-    ids.add(node.id);
-  }
-  return ids;
-}
-
-function collapseAll() {
-  function collapse(n) {
-    n.expanded = false;
-    for (const c of Object.values(n.children)) collapse(c);
-  }
-  if (!fullTrie) return;
-  for (const c of Object.values(fullTrie.children)) collapse(c);
-  fullTrie.expanded = true;
-  resetView();
-}
-
-let highlightIds = new Set();
-
-// AbortController to cleanly remove area-level listeners between renders
-let trieAbort = null;
-
-function renderFullTrie(skipLayout) {
-  const svgArea = document.getElementById('trie-svg-area');
-  if (!svgArea || !fullTrie) return;
-
-  if (!skipLayout) {
-    layoutVisible(fullTrie, 0, 30);
-    const b = computeBounds(fullTrie);
-    if (vb.w <= 1) {
-      const pad = 40;
-      vb.x = b.minX - pad;
-      vb.y = 0;
-      vb.w = (b.maxX - b.minX) + pad * 2;
-      vb.h = b.maxY + pad + 30;
-    }
-  }
-
-  const content = renderTrieSVG(fullTrie, highlightIds);
-  const svg = `<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet">${content}</svg>`;
-  svgArea.innerHTML = svg;
-
-  const statsEl = document.getElementById('trie-stats');
-  if (statsEl) {
-    const totalWords = fullTrie.wordCount;
-    statsEl.textContent = `${totalWords.toLocaleString()} words \u00B7 ${trieNodeCount.toLocaleString()} nodes`;
-  }
-
-  // Abort previous listeners before attaching new ones
-  if (trieAbort) trieAbort.abort();
-  trieAbort = new AbortController();
-  const sig = { signal: trieAbort.signal };
-
-  const area = svgArea;
-  const svgEl = area.querySelector('svg');
-  if (!svgEl) return;
-
-  // Click to expand/collapse (on SVG, replaced each render — no stacking)
-  svgEl.addEventListener('click', (e) => {
-    const g = e.target.closest('.trie-node-g');
-    if (!g) return;
-    const id = g.dataset.id;
-    const node = trieNodes[id];
-    if (!node || Object.keys(node.children).length === 0) return;
-    node.expanded = !node.expanded;
-    layoutVisible(fullTrie, 0, 30);
-    renderFullTrie(true);
-  });
-
-  // Tooltip
-  const tooltip = document.getElementById('trie-tooltip');
-  svgEl.addEventListener('mouseover', (e) => {
-    const g = e.target.closest('.trie-node-g');
-    if (!g || !tooltip) return;
-    const node = trieNodes[g.dataset.id];
-    if (!node) return;
-    const hasKids = Object.keys(node.children).length;
-    let info = `${node.wordCount} word${node.wordCount !== 1 ? 's' : ''} in subtree`;
-    if (node.isWord) info += ` \u00B7 freq: ${node.freq}`;
-    if (hasKids) info += ` \u00B7 ${hasKids} children`;
-    info += node.expanded ? ' \u00B7 click to collapse' : (hasKids ? ' \u00B7 click to expand' : '');
-    tooltip.querySelector('.tt-char').textContent = node.ch || 'root';
-    tooltip.querySelector('.tt-info').textContent = info;
-    tooltip.classList.add('show');
-    const rect = area.getBoundingClientRect();
-    const svgRect = svgEl.getBoundingClientRect();
-    const sx = (node.x - vb.x) / vb.w * svgRect.width;
-    const sy = (node.y - vb.y) / vb.h * svgRect.height;
-    tooltip.style.left = Math.min(sx + 20, rect.width - 160) + 'px';
-    tooltip.style.top = Math.max(sy - 10, 0) + 'px';
-  });
-
-  svgEl.addEventListener('mouseout', (e) => {
-    if (!e.target.closest('.trie-node-g') && tooltip) tooltip.classList.remove('show');
-  });
-
-  // Zoom — on area, abortable to prevent stacking
-  area.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const s = area.querySelector('svg');
-    if (!s) return;
-    const factor = e.deltaY > 0 ? 1.15 : 1 / 1.15;
-    const rect = s.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) / rect.width;
-    const my = (e.clientY - rect.top) / rect.height;
-    const px = vb.x + mx * vb.w;
-    const py = vb.y + my * vb.h;
-    zoomBy(factor, px, py);
-    s.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  }, { passive: false, ...sig });
-
-  // Pan — mousedown on area, mousemove/mouseup on window, all abortable
-  area.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.trie-node-g')) return;
-    isPanning = true;
-    panStart = { x: e.clientX, y: e.clientY, vbx: vb.x, vby: vb.y };
-    area.classList.add('panning');
-  }, sig);
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    const r = area.querySelector('svg')?.getBoundingClientRect();
-    if (!r) return;
-    const dx = (e.clientX - panStart.x) / r.width * vb.w;
-    const dy = (e.clientY - panStart.y) / r.height * vb.h;
-    vb.x = panStart.vbx - dx;
-    vb.y = panStart.vby - dy;
-    const s = area.querySelector('svg');
-    if (s) s.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  }, sig);
-
-  window.addEventListener('mouseup', () => {
-    isPanning = false;
-    area.classList.remove('panning');
-  }, sig);
-}
-
-// ══════════════════════════════════════════
-// ── Load dictionary & build trie ──
+// ── Load dictionary ──
 // ══════════════════════════════════════════
 (async function() {
   const dashEl = document.getElementById("dash");
@@ -1544,15 +1142,7 @@ function renderFullTrie(skipLayout) {
   }
 })();
 
-// ══════════════════════════════════════════
-// ── Mode toggle ──
-// ══════════════════════════════════════════
-function switchTrieMode(mode) {
-  trieMode = mode;
-  // Re-render with current input
-  const input = document.getElementById("input").value;
-  if (input.trim()) render(input);
-}
+
 
 // ══════════════════════════════════════════
 // ── Rendering ──
@@ -1562,12 +1152,6 @@ const dashEl = document.getElementById("dash");
 const pipeEl = document.getElementById("pipe");
 let debounceTimer;
 
-// Cache last computed data for mode switching
-let lastUniqueMatches = [];
-let lastExpansions = [];
-let lastSkeletal = [];
-let lastTokens = [];
-let lastBranchCount = 1;
 
 inputEl.addEventListener("input", () => {
   if (!dictLoaded) return;
@@ -1583,7 +1167,6 @@ function render(raw) {
   if (!input) {
     dashEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p></div>';
     pipeEl.innerHTML = '';
-    highlightIds = new Set();
     return;
   }
 
@@ -1606,61 +1189,28 @@ function render(raw) {
   let branchCount = 1;
   for (const t of tokens) branchCount *= t.arabic.length;
 
-  // Cache for mode switching
-  lastTokens = tokens;
-  lastExpansions = expansions;
-  lastUniqueMatches = uniqueMatches;
-  lastSkeletal = skeletal;
-  lastBranchCount = branchCount;
-
   // Pipeline summary
   pipeEl.innerHTML = `<span class="pv">${input}</span><span class="pa">\u2192</span><span class="pv">${tokens.length}</span><span class="pa">tokens \u2192</span><span class="pv">${expansions.length}</span><span class="pa">forms \u2192</span><span class="pv">${uniqueMatches.length}</span><span class="pa">matches \u2192 ranked</span>`;
 
-  // Build dashboard based on mode
-  if (trieMode === 'full') {
-    if (!fullTrie) {
-      dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Building full trie...</p></div>';
-      setTimeout(() => { buildFullTrie(); render(raw); }, 10);
-      return;
-    }
-    // Auto-expand trie paths for top matches
-    highlightIds = new Set(['r']);
-    for (const m of uniqueMatches.slice(0, 3)) {
-      const ids = expandPath(m.word);
-      for (const id of ids) highlightIds.add(id);
-    }
-    vb = { x: 0, y: 0, w: 0, h: 0 };
+  // Abort any running animation
+  if (animController) { animController.abort(); animController = null; }
 
-    dashEl.innerHTML = `<div class="dash-grid">
-      <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
-      <div class="panel panel-trie" data-p="1">${buildFullTriePanel()}</div>
-      <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
-    </div>`;
+  const trieWords = selectTrieWords(uniqueMatches, expansions);
+  const trieRoot = buildVizTrie(trieWords);
+  const expList = selectExpansionList(expansions);
 
-    renderFullTrie();
-    animateDashboard('full');
-  } else {
-    // Abort any running animation
-    if (animController) { animController.abort(); animController = null; }
+  dashEl.innerHTML = `<div class="dash-grid">
+    <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
+    <div class="panel panel-trie" data-p="1">${buildTriePanel(trieRoot, trieWords.size)}</div>
+    <div class="panel panel-results" data-p="2">${buildEmptyResults()}</div>
+  </div>`;
 
-    const trieWords = selectTrieWords(uniqueMatches, expansions);
-    const trieRoot = buildVizTrie(trieWords);
+  animateDashboard();
 
-    const expList = selectExpansionList(expansions);
-
-    dashEl.innerHTML = `<div class="dash-grid">
-      <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
-      <div class="panel panel-trie" data-p="1">${buildSimpleTriePanel(trieRoot, trieWords.size)}</div>
-      <div class="panel panel-results" data-p="2">${buildEmptyResults()}</div>
-    </div>`;
-
-    animateDashboard('simple');
-
-    // Start animated walkthrough after panels appear
-    setTimeout(() => {
-      runSimpleAnimation(expList, uniqueMatches, expansions.length);
-    }, 400);
-  }
+  // Start animated walkthrough after panels appear
+  setTimeout(() => {
+    runSimpleAnimation(expList, uniqueMatches, expansions.length);
+  }, 400);
 }
 
 function buildMappings(tokens, branchCount, actualCount) {
@@ -1683,21 +1233,13 @@ function buildMappings(tokens, branchCount, actualCount) {
     </div>`;
 }
 
-function buildModeToggle() {
-  return `<div class="mode-toggle">
-    <button onclick="switchTrieMode('simple')" class="${trieMode === 'simple' ? 'active' : ''}">Simple</button>
-    <button onclick="switchTrieMode('full')" class="${trieMode === 'full' ? 'active' : ''}">Full</button>
-  </div>`;
-}
-
-function buildSimpleTriePanel(trieRoot, trieWordCount) {
+function buildTriePanel(trieRoot, trieWordCount) {
   const bounds = layoutSimpleTrie(trieRoot);
   const svg = simpleTrieToSVG(trieRoot, bounds);
 
   return `<div class="trie-top">
       <div class="panel-label"><span class="num">2</span>Trie lookup <span style="font-weight:400;text-transform:none">(${trieWordCount} nearby words)</span></div>
       <div class="trie-controls">
-        ${buildModeToggle()}
         <div class="trie-legend">
           <span class="trie-legend-item"><span class="lg-circle lg-default"></span>node</span>
           <span class="trie-legend-item"><span class="lg-circle lg-word"></span>word</span>
@@ -1708,25 +1250,6 @@ function buildSimpleTriePanel(trieRoot, trieWordCount) {
     </div>
     <div class="trie-svg-area">${svg}</div>
     <div class="anim-status" id="anim-status"></div>`;
-}
-
-function buildFullTriePanel() {
-  return `<div class="trie-top">
-      <div class="panel-label"><span class="num">2</span>Full dictionary trie</div>
-      <div class="trie-controls">
-        ${buildModeToggle()}
-        <span id="trie-stats" class="trie-stats"></span>
-        <button onclick="zoomBy(1/1.3);renderFullTrie(true)" title="Zoom in">+</button>
-        <button onclick="zoomBy(1.3);renderFullTrie(true)" title="Zoom out">\u2212</button>
-        <button onclick="resetView()" title="Fit to view">\u2302</button>
-        <button onclick="collapseAll()" title="Collapse all">\u25B2</button>
-      </div>
-    </div>
-    <div class="trie-svg-area pannable" id="trie-svg-area"></div>
-    <div class="trie-tooltip" id="trie-tooltip">
-      <div class="tt-char"></div>
-      <div class="tt-info"></div>
-    </div>`;
 }
 
 function buildEmptyResults() {
@@ -1742,76 +1265,16 @@ function buildEmptyResults() {
     <div class="exp-list" id="anim-exp-list"></div>`;
 }
 
-function buildResults(matches, skeletal, totalExpansions) {
-  const all = [
-    ...matches.map(m => ({ word: m.word, freq: m.freq, type: "dict" })),
-    ...skeletal.map(s => ({ word: s, freq: 0, type: "fallback" }))
-  ];
-  if (!all.length) return '<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#475569;font-size:0.8rem">Type more characters</div>';
-
-  const winner = all[0];
-
-  let cands = "";
-  all.slice(0, 7).forEach((item, i) => {
-    const rank = i === 0 ? '<span class="cr star">\u2605</span>' : `<span class="cr">${i}.</span>`;
-    const fl = item.freq ? item.freq : "fallback";
-    cands += `<div class="cand-item${i===0?' cand-top':''}" data-delay="${i*50}" data-word="${item.word}">${rank}<span class="cw">${item.word}</span><span class="cf">${fl}</span></div>`;
-    if (i === 0 && all.length > 1) cands += `<div class="cand-sep" data-delay="${(i+1)*50}"></div>`;
-  });
-
-  let freqs = "";
-  matches.slice(0, 5).forEach((m, i) => {
-    const pct = (m.freq / 8000 * 100).toFixed(0);
-    freqs += `<div class="freq-row fr-match" data-delay="${i*60}"><span class="fa">${m.word}</span><div class="fb-wrap"><div class="fb" data-width="${pct}%"></div></div><span class="fl">${m.freq}</span></div>`;
-  });
-  skeletal.slice(0, 2).forEach((s, i) => {
-    freqs += `<div class="freq-row fr-fall" data-delay="${(matches.length+i)*60}"><span class="fa">${s}</span><div class="fb-wrap"><div class="fb" data-width="0%"></div></div><span class="fl">fallback</span></div>`;
-  });
-
-  return `<div class="result-hero">
-      <div class="result-arabic" data-delay="100">${winner.word}</div>
-      <div class="result-sub">Press Space to insert</div>
-    </div>
-    <div class="result-divider"></div>
-    <div class="panel-label"><span class="num">3</span>Candidates</div>
-    <div class="cand-list">${cands}</div>
-    <div class="result-divider"></div>
-    <div class="freq-header">${matches.length}/${totalExpansions} forms in dictionary</div>
-    <div class="freq-section">${freqs}</div>`;
-}
-
 // ── Animation ──
-function animateDashboard(mode) {
+function animateDashboard() {
   document.querySelectorAll(".panel").forEach((el, i) => {
     setTimeout(() => el.classList.add("visible"), i * 60);
   });
 
-  const anim = ".m-card, .cand-item, .cand-sep, .result-arabic, .freq-row";
-  document.querySelectorAll(anim).forEach(el => {
+  document.querySelectorAll(".m-card").forEach(el => {
     const d = parseInt(el.dataset.delay || 0);
-    setTimeout(() => {
-      el.classList.add("visible");
-      const bar = el.querySelector?.(".fb");
-      if (bar) setTimeout(() => { bar.style.width = bar.dataset.width; }, 80);
-    }, d + 150);
+    setTimeout(() => el.classList.add("visible"), d + 150);
   });
-
-  if (mode === 'full') {
-    // Full mode: candidate hover -> highlight trie path
-    document.querySelectorAll('.cand-item[data-word]').forEach(el => {
-      el.addEventListener('mouseenter', () => {
-        highlightIds = expandPath(el.dataset.word);
-        highlightIds.add('r');
-        renderFullTrie(true);
-      });
-      el.addEventListener('mouseleave', () => {
-        highlightIds = new Set();
-        renderFullTrie(true);
-      });
-    });
-  } else {
-    // Simple mode: animation handles hover setup after it completes
-  }
 }
 </script>
 </body>
