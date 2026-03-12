@@ -58,6 +58,54 @@ body {
 .top-bar input:focus { border-color: #818cf8; }
 .top-bar input::placeholder { color: #475569; letter-spacing: 0.05em; font-size: 0.9rem; }
 
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.speed-control label { white-space: nowrap; }
+
+.speed-control input[type="range"] {
+  width: 70px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #334155;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.speed-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #818cf8;
+  cursor: pointer;
+}
+
+.speed-control input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #818cf8;
+  border: none;
+  cursor: pointer;
+}
+
+#speed-label {
+  min-width: 24px;
+  text-align: right;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
 .top-bar .pipe-summary {
   display: flex;
   align-items: center;
@@ -560,14 +608,6 @@ body {
   background: linear-gradient(90deg, #22c55e, #38bdf8);
 }
 
-.exp-more {
-  font-size: 0.55rem;
-  color: #475569;
-  text-align: center;
-  padding: 2px;
-  flex-shrink: 0;
-}
-
 /* ── Results Panel ── */
 .panel-results {
   grid-area: results;
@@ -676,6 +716,11 @@ body {
     <h1>Laren</h1>
     <input type="text" id="input" placeholder="Type Arabizi... e.g. 7abibi" autocomplete="off" spellcheck="false">
     <div class="pipe-summary" id="pipe"></div>
+    <div class="speed-control">
+      <label for="speed-slider">Speed</label>
+      <input type="range" id="speed-slider" min="0.25" max="3" step="0.25" value="1">
+      <span id="speed-label">1x</span>
+    </div>
   </div>
 
   <div id="dash" class="dash">
@@ -729,6 +774,14 @@ let dictLoaded = false;
 
 // ── Trie mode: 'simple' or 'full' ──
 let trieMode = 'simple';
+
+// ── Animation speed (lower = faster) ──
+let animSpeed = 1;
+
+document.getElementById('speed-slider').addEventListener('input', (e) => {
+  animSpeed = 1 / parseFloat(e.target.value);
+  document.getElementById('speed-label').textContent = e.target.value + 'x';
+});
 
 // ── Tokenize & DFS ──
 function getMatchesAt(input, pos) {
@@ -978,23 +1031,22 @@ function setupSimpleTrieInteraction() {
 let animController = null;
 
 function animDelay(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise(r => setTimeout(r, ms * animSpeed));
 }
 
-// Build ordered expansion list: unique forms in DFS order, max ~20
-function selectExpansionList(expansions, maxItems = 20) {
+// Build ordered expansion list: all unique forms in DFS order
+function selectExpansionList(expansions) {
   const list = [], seen = new Set();
   for (const exp of expansions) {
     if (exp.length > 0 && !seen.has(exp)) {
       seen.add(exp);
       list.push({ word: exp, freq: DICTIONARY[exp] || 0, isMatch: !!DICTIONARY[exp] });
-      if (list.length >= maxItems) break;
     }
   }
   return list;
 }
 
-async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUnique) {
+async function runSimpleAnimation(expList, allMatches, totalExpansions) {
   if (animController) animController.abort();
   const ctrl = new AbortController();
   animController = ctrl;
@@ -1017,17 +1069,11 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
     el.id = `exp-${i}`;
     el.innerHTML = `<span class="ei">${i+1}.</span><span class="ew">${item.word}</span>`;
     expListEl.appendChild(el);
-    await animDelay(25);
+    await animDelay(50);
   }
-  if (totalUnique > expList.length) {
-    const more = document.createElement('div');
-    more.className = 'exp-more';
-    more.textContent = `+${totalUnique - expList.length} more forms`;
-    expListEl.appendChild(more);
-  }
-  if (expLabel) expLabel.textContent = `Expansions (${expList.length}${totalUnique > expList.length ? '/' + totalUnique : ''})`;
+  if (expLabel) expLabel.textContent = `Expansions (${expList.length})`;
 
-  await animDelay(300);
+  await animDelay(500);
   if (ctrl.signal.aborted) return;
 
   // ── Phase 2: Evaluate each against trie ──
@@ -1060,7 +1106,7 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
       node = node.children[ch];
       lastNodeId = node.id;
 
-      await animDelay(80);
+      await animDelay(150);
       if (ctrl.signal.aborted) return;
 
       const nEl = document.getElementById(`node-${node.id}`);
@@ -1069,7 +1115,7 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
       if (eEl) eEl.classList.add('visiting');
     }
 
-    await animDelay(80);
+    await animDelay(150);
     if (ctrl.signal.aborted) return;
 
     const isFound = walkedAll && node.isWord && item.isMatch;
@@ -1090,10 +1136,10 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
       // Flash green in expansion list, then remove
       expEl.classList.remove('exp-active');
       expEl.classList.add('exp-found');
-      await animDelay(200);
+      await animDelay(350);
       if (ctrl.signal.aborted) return;
       expEl.classList.add('exp-move');
-      await animDelay(300);
+      await animDelay(400);
       if (ctrl.signal.aborted) return;
       expEl.remove();
 
@@ -1111,7 +1157,7 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
       }
 
       statusEl.innerHTML = `<span class="anim-word">${item.word}</span> <span class="anim-found">\u2713 ${item.freq}</span>`;
-      await animDelay(150);
+      await animDelay(250);
     } else {
       // Dead end
       if (lastNodeId) {
@@ -1125,11 +1171,11 @@ async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUni
       expEl.classList.add('exp-dead');
 
       statusEl.innerHTML = `<span class="anim-word">${item.word}</span> <span class="anim-dead">\u2717</span>`;
-      await animDelay(120);
+      await animDelay(200);
     }
 
     clearSimpleTrieHighlights();
-    await animDelay(40);
+    await animDelay(60);
   }
 
   if (ctrl.signal.aborted) return;
@@ -1489,13 +1535,9 @@ function renderFullTrie(skipLayout) {
     const resp = await fetch("dictionary.json");
     DICTIONARY = await resp.json();
     dictLoaded = true;
-    dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Building trie...</p></div>';
-
-    await new Promise(r => setTimeout(r, 10));
-    buildFullTrie();
 
     const n = Object.keys(DICTIONARY).length.toLocaleString();
-    dashEl.innerHTML = `<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p><p class="sub">${n} words loaded \u00B7 ${trieNodeCount.toLocaleString()} trie nodes</p></div>`;
+    dashEl.innerHTML = `<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p><p class="sub">${n} words loaded</p></div>`;
     document.getElementById("input").focus();
   } catch (e) {
     dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Could not load dictionary. Try refreshing.</p></div>';
@@ -1576,6 +1618,11 @@ function render(raw) {
 
   // Build dashboard based on mode
   if (trieMode === 'full') {
+    if (!fullTrie) {
+      dashEl.innerHTML = '<div class="empty-state"><div class="icon">\u23F3</div><p>Building full trie...</p></div>';
+      setTimeout(() => { buildFullTrie(); render(raw); }, 10);
+      return;
+    }
     // Auto-expand trie paths for top matches
     highlightIds = new Set(['r']);
     for (const m of uniqueMatches.slice(0, 3)) {
@@ -1599,10 +1646,7 @@ function render(raw) {
     const trieWords = selectTrieWords(uniqueMatches, expansions);
     const trieRoot = buildVizTrie(trieWords);
 
-    // Unique expansion forms for the expansion list
-    const uniqueExpSet = new Set();
-    for (const e of expansions) { if (e.length > 0) uniqueExpSet.add(e); }
-    const expList = selectExpansionList(expansions, 20);
+    const expList = selectExpansionList(expansions);
 
     dashEl.innerHTML = `<div class="dash-grid">
       <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
@@ -1614,7 +1658,7 @@ function render(raw) {
 
     // Start animated walkthrough after panels appear
     setTimeout(() => {
-      runSimpleAnimation(expList, uniqueMatches, expansions.length, uniqueExpSet.size);
+      runSimpleAnimation(expList, uniqueMatches, expansions.length);
     }, 400);
   }
 }
