@@ -115,7 +115,54 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
         testfrontend->call<ITestFrontend::sendKeyEvent>(
             uuid, Key("space"), false);
 
-        // 8. Test Escape resets state
+        // 8. Multi-word candidate quality: after two commits, verify
+        //    the third word still gets real dictionary candidates (not just
+        //    single-character expansions — this was the KDE/Wayland popup bug).
+        sendString(testfrontend, uuid, "ktb");
+
+        auto candList3 = ic->inputPanel().candidateList();
+        FCITX_ASSERT(candList3) << "No candidate list for 'ktb' after two commits";
+        FCITX_ASSERT(candList3->size() > 1)
+            << "Only " << candList3->size()
+            << " candidate(s) for 'ktb' — expected real dictionary matches";
+
+        // Verify candidates contain multi-character Arabic words (not single-char)
+        bool found_multichar = false;
+        bool found_ktb_word = false;
+        for (int i = 0; i < candList3->size(); i++) {
+            auto text = candList3->candidate(i).text().toString();
+            // Count UTF-8 code points (Arabic chars are multi-byte)
+            size_t codepoints = 0;
+            for (size_t j = 0; j < text.size(); ) {
+                auto byte = static_cast<unsigned char>(text[j]);
+                if (byte < 0x80) j += 1;
+                else if (byte < 0xE0) j += 2;
+                else if (byte < 0xF0) j += 3;
+                else j += 4;
+                codepoints++;
+            }
+            if (codepoints > 1) {
+                found_multichar = true;
+            }
+            // Check for كتاب (ktab) or كتب (ktb)
+            if (text.find("\xd9\x83\xd8\xaa\xd8\xa8") != std::string::npos || // كتب
+                text.find("\xd9\x83\xd8\xaa\xd8\xa7\xd8\xa8") != std::string::npos) { // كتاب
+                found_ktb_word = true;
+            }
+        }
+        FCITX_ASSERT(found_multichar)
+            << "No multi-character candidates for 'ktb' — possible popup state bug";
+        FCITX_ASSERT(found_ktb_word)
+            << "Neither كتاب nor كتب found in candidates for 'ktb'";
+
+        // Commit third word
+        auto topCandidate3 = candList3->candidate(0).text().toString();
+        testfrontend->call<ITestFrontend::pushCommitExpectation>(
+            topCandidate3 + " ");
+        testfrontend->call<ITestFrontend::sendKeyEvent>(
+            uuid, Key("space"), false);
+
+        // 9. Test Escape resets state
         sendString(testfrontend, uuid, "test");
         FCITX_ASSERT(ic->inputPanel().candidateList());
         testfrontend->call<ITestFrontend::sendKeyEvent>(
