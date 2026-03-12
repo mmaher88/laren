@@ -468,6 +468,106 @@ body {
 .lk-result.lk-ok { color: #22c55e; background: #052e16; }
 .lk-result.lk-no { color: #ef4444; background: #450a0a; }
 
+/* ── Trie Animation (Simple Mode) ── */
+.anim-status {
+  text-align: center;
+  padding: 6px 4px;
+  min-height: 28px;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: #64748b;
+  border-top: 1px solid #1e293b;
+}
+
+.anim-word {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #818cf8;
+  direction: rtl;
+  display: inline-block;
+}
+
+.anim-found { color: #22c55e !important; font-weight: 600; }
+.anim-dead { color: #ef4444 !important; font-weight: 600; }
+
+/* Expansion list */
+.exp-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.exp-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+  transition: all 0.25s;
+  flex-shrink: 0;
+}
+
+.exp-item .ew { direction: rtl; flex: 1; font-size: 0.85rem; }
+.exp-item .ei { font-size: 0.55rem; color: #475569; min-width: 14px; }
+
+.exp-item.exp-active { border-color: #818cf8; background: #1e1b4b; }
+.exp-item.exp-found { border-color: #22c55e; background: #052e16; }
+.exp-item.exp-dead { opacity: 0.35; }
+
+@keyframes expPopIn {
+  from { transform: translateX(8px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.exp-item.exp-enter { animation: expPopIn 0.12s ease-out forwards; }
+
+@keyframes expShrink {
+  to { max-height: 0; padding: 0; margin: 0; border: 0; opacity: 0; overflow: hidden; }
+}
+.exp-item.exp-move { animation: expShrink 0.3s ease-in forwards; }
+
+/* Candidate with inline freq bar */
+@keyframes candSlideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.cand-item.anim-enter {
+  animation: candSlideIn 0.35s ease-out forwards;
+  opacity: 1;
+  transform: none;
+}
+
+.cand-item .fb-wrap {
+  flex: 1;
+  height: 5px;
+  background: #0f172a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cand-item .fb {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease-out;
+  width: 0;
+  background: linear-gradient(90deg, #22c55e, #38bdf8);
+}
+
+.exp-more {
+  font-size: 0.55rem;
+  color: #475569;
+  text-align: center;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
 /* ── Results Panel ── */
 .panel-results {
   grid-area: results;
@@ -873,6 +973,223 @@ function setupSimpleTrieInteraction() {
 }
 
 // ══════════════════════════════════════════
+// ── Trie Animation Engine (Simple Mode) ──
+// ══════════════════════════════════════════
+let animController = null;
+
+function animDelay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// Build ordered expansion list: unique forms in DFS order, max ~20
+function selectExpansionList(expansions, maxItems = 20) {
+  const list = [], seen = new Set();
+  for (const exp of expansions) {
+    if (exp.length > 0 && !seen.has(exp)) {
+      seen.add(exp);
+      list.push({ word: exp, freq: DICTIONARY[exp] || 0, isMatch: !!DICTIONARY[exp] });
+      if (list.length >= maxItems) break;
+    }
+  }
+  return list;
+}
+
+async function runSimpleAnimation(expList, allMatches, totalExpansions, totalUnique) {
+  if (animController) animController.abort();
+  const ctrl = new AbortController();
+  animController = ctrl;
+
+  const statusEl = document.getElementById('anim-status');
+  const heroEl = document.querySelector('.result-arabic');
+  const candListEl = document.getElementById('anim-cand-list');
+  const expListEl = document.getElementById('anim-exp-list');
+  const expLabel = document.getElementById('anim-exp-label');
+
+  if (!statusEl || !candListEl || !expListEl) return;
+
+  // ── Phase 1: Populate expansion list ──
+  statusEl.innerHTML = 'Expanding forms...';
+  for (let i = 0; i < expList.length; i++) {
+    if (ctrl.signal.aborted) return;
+    const item = expList[i];
+    const el = document.createElement('div');
+    el.className = 'exp-item exp-enter';
+    el.id = `exp-${i}`;
+    el.innerHTML = `<span class="ei">${i+1}.</span><span class="ew">${item.word}</span>`;
+    expListEl.appendChild(el);
+    await animDelay(25);
+  }
+  if (totalUnique > expList.length) {
+    const more = document.createElement('div');
+    more.className = 'exp-more';
+    more.textContent = `+${totalUnique - expList.length} more forms`;
+    expListEl.appendChild(more);
+  }
+  if (expLabel) expLabel.textContent = `Expansions (${expList.length}${totalUnique > expList.length ? '/' + totalUnique : ''})`;
+
+  await animDelay(300);
+  if (ctrl.signal.aborted) return;
+
+  // ── Phase 2: Evaluate each against trie ──
+  let matchesFound = 0;
+
+  for (let i = 0; i < expList.length; i++) {
+    if (ctrl.signal.aborted) return;
+    const item = expList[i];
+    const expEl = document.getElementById(`exp-${i}`);
+    if (!expEl) continue;
+
+    // Highlight current item & scroll into view
+    expEl.classList.add('exp-active');
+    expEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    statusEl.innerHTML = `Testing <span class="anim-word">${item.word}</span>`;
+
+    // Walk trie node by node
+    clearSimpleTrieHighlights();
+    const rootEl = document.getElementById('node-troot');
+    if (rootEl) rootEl.classList.add('visiting');
+
+    let node = simpleTrieRoot;
+    let lastNodeId = null;
+    let walkedAll = true;
+
+    for (let ci = 0; ci < item.word.length; ci++) {
+      if (ctrl.signal.aborted) return;
+      const ch = item.word[ci];
+      if (!node.children[ch]) { walkedAll = false; break; }
+      node = node.children[ch];
+      lastNodeId = node.id;
+
+      await animDelay(80);
+      if (ctrl.signal.aborted) return;
+
+      const nEl = document.getElementById(`node-${node.id}`);
+      const eEl = document.getElementById(`edge-${node.id}`);
+      if (nEl) nEl.classList.add('visiting');
+      if (eEl) eEl.classList.add('visiting');
+    }
+
+    await animDelay(80);
+    if (ctrl.signal.aborted) return;
+
+    const isFound = walkedAll && node.isWord && item.isMatch;
+
+    if (isFound) {
+      // Flash path green
+      clearSimpleTrieHighlights();
+      if (rootEl) rootEl.classList.add('found');
+      let n = simpleTrieRoot;
+      for (const ch of item.word) {
+        n = n.children[ch];
+        const nEl = document.getElementById(`node-${n.id}`);
+        const eEl = document.getElementById(`edge-${n.id}`);
+        if (nEl) nEl.classList.add('found');
+        if (eEl) eEl.classList.add('found');
+      }
+
+      // Flash green in expansion list, then remove
+      expEl.classList.remove('exp-active');
+      expEl.classList.add('exp-found');
+      await animDelay(200);
+      if (ctrl.signal.aborted) return;
+      expEl.classList.add('exp-move');
+      await animDelay(300);
+      if (ctrl.signal.aborted) return;
+      expEl.remove();
+
+      // Insert into candidate list sorted by frequency
+      matchesFound++;
+      insertCandidateByFreq(candListEl, item.word, item.freq);
+
+      // Update hero
+      if (matchesFound === 1 && heroEl) {
+        heroEl.textContent = item.word;
+        heroEl.classList.add('visible');
+      } else if (heroEl && item.freq > parseInt(heroEl.dataset.freq || '0')) {
+        heroEl.textContent = item.word;
+        heroEl.dataset.freq = item.freq;
+      }
+
+      statusEl.innerHTML = `<span class="anim-word">${item.word}</span> <span class="anim-found">\u2713 ${item.freq}</span>`;
+      await animDelay(150);
+    } else {
+      // Dead end
+      if (lastNodeId) {
+        const nEl = document.getElementById(`node-${lastNodeId}`);
+        const eEl = document.getElementById(`edge-${lastNodeId}`);
+        if (nEl) { nEl.classList.remove('visiting'); nEl.classList.add('dead-end'); }
+        if (eEl) { eEl.classList.remove('visiting'); eEl.classList.add('dead-end'); }
+      }
+
+      expEl.classList.remove('exp-active');
+      expEl.classList.add('exp-dead');
+
+      statusEl.innerHTML = `<span class="anim-word">${item.word}</span> <span class="anim-dead">\u2717</span>`;
+      await animDelay(120);
+    }
+
+    clearSimpleTrieHighlights();
+    await animDelay(40);
+  }
+
+  if (ctrl.signal.aborted) return;
+
+  // ── Phase 3: Final state ──
+  statusEl.innerHTML = `<span style="color:#22c55e">\u2713</span> ${matchesFound} matches from ${totalExpansions} forms`;
+  if (expLabel) expLabel.textContent = `Fallback (${expList.length - matchesFound})`;
+
+  // Enable hover interaction
+  simpleActiveWord = allMatches[0]?.word || null;
+  setupSimpleTrieInteraction();
+  if (simpleActiveWord) setSimpleActiveCandidate(simpleActiveWord);
+}
+
+function insertCandidateByFreq(container, word, freq) {
+  const existing = container.querySelectorAll('.cand-item');
+  let insertBefore = null;
+
+  for (const el of existing) {
+    if (freq > parseInt(el.dataset.freq || '0')) {
+      insertBefore = el;
+      break;
+    }
+  }
+
+  const el = document.createElement('div');
+  el.className = 'cand-item anim-enter';
+  el.dataset.word = word;
+  el.dataset.freq = freq;
+  const pct = (freq / 8000 * 100).toFixed(0);
+  el.innerHTML = `<span class="cr"></span><span class="cw">${word}</span><div class="fb-wrap"><div class="fb" style="width:0" data-width="${pct}%"></div></div><span class="cf">${freq}</span>`;
+
+  if (insertBefore) {
+    container.insertBefore(el, insertBefore);
+  } else {
+    container.appendChild(el);
+  }
+
+  // Re-number all ranks
+  container.querySelectorAll('.cand-item').forEach((item, idx) => {
+    const cr = item.querySelector('.cr');
+    if (idx === 0) {
+      cr.className = 'cr star';
+      cr.textContent = '\u2605';
+      item.classList.add('cand-top');
+    } else {
+      cr.className = 'cr';
+      cr.textContent = `${idx+1}.`;
+      item.classList.remove('cand-top');
+    }
+  });
+
+  // Animate frequency bar
+  requestAnimationFrame(() => {
+    const bar = el.querySelector('.fb');
+    if (bar) setTimeout(() => { bar.style.width = bar.dataset.width; }, 50);
+  });
+}
+
+// ══════════════════════════════════════════
 // ── Full Trie Engine ──
 // ══════════════════════════════════════════
 let fullTrie = null;
@@ -1218,6 +1535,9 @@ inputEl.addEventListener("input", () => {
 
 function render(raw) {
   const input = raw.trim().toLowerCase();
+  // Abort any running animation
+  if (animController) { animController.abort(); animController = null; }
+
   if (!input) {
     dashEl.innerHTML = '<div class="empty-state"><div class="icon">&#x2328;&#xFE0F;</div><p>Start typing to see the transliteration pipeline</p></div>';
     pipeEl.innerHTML = '';
@@ -1273,35 +1593,29 @@ function render(raw) {
     renderFullTrie();
     animateDashboard('full');
   } else {
+    // Abort any running animation
+    if (animController) { animController.abort(); animController = null; }
+
     const trieWords = selectTrieWords(uniqueMatches, expansions);
     const trieRoot = buildVizTrie(trieWords);
-    const lookupCands = selectLookupCandidates(uniqueMatches, expansions, trieRoot);
 
-    // Insert non-dictionary candidates into the trie so their full path
-    // is visible when hovered (without marking intermediate nodes as words)
-    for (const cand of lookupCands) {
-      if (!cand.inDict) {
-        let node = trieRoot;
-        for (let i = 0; i < cand.word.length; i++) {
-          const ch = cand.word[i];
-          if (!node.children[ch]) {
-            const child = createSimpleTrieNode(ch, i + 1);
-            child.parent = node;
-            node.children[ch] = child;
-            simpleNodeMap[child.id] = child;
-          }
-          node = node.children[ch];
-        }
-      }
-    }
+    // Unique expansion forms for the expansion list
+    const uniqueExpSet = new Set();
+    for (const e of expansions) { if (e.length > 0) uniqueExpSet.add(e); }
+    const expList = selectExpansionList(expansions, 20);
 
     dashEl.innerHTML = `<div class="dash-grid">
       <div class="panel panel-mappings" data-p="0">${buildMappings(tokens, branchCount, expansions.length)}</div>
-      <div class="panel panel-trie" data-p="1">${buildSimpleTriePanel(trieRoot, lookupCands, trieWords.size)}</div>
-      <div class="panel panel-results" data-p="2">${buildResults(uniqueMatches, skeletal, expansions.length)}</div>
+      <div class="panel panel-trie" data-p="1">${buildSimpleTriePanel(trieRoot, trieWords.size)}</div>
+      <div class="panel panel-results" data-p="2">${buildEmptyResults()}</div>
     </div>`;
 
     animateDashboard('simple');
+
+    // Start animated walkthrough after panels appear
+    setTimeout(() => {
+      runSimpleAnimation(expList, uniqueMatches, expansions.length, uniqueExpSet.size);
+    }, 400);
   }
 }
 
@@ -1332,27 +1646,9 @@ function buildModeToggle() {
   </div>`;
 }
 
-function buildSimpleTriePanel(trieRoot, lookupCands, trieWordCount) {
+function buildSimpleTriePanel(trieRoot, trieWordCount) {
   const bounds = layoutSimpleTrie(trieRoot);
   const svg = simpleTrieToSVG(trieRoot, bounds);
-
-  let cards = "";
-  lookupCands.forEach((cand, ci) => {
-    const { steps, matched } = simpleTrieLookup(trieRoot, cand.word);
-    const isFound = cand.inDict && matched;
-    const cls = isFound ? 'lk-found' : 'lk-miss';
-    let trace = "";
-    steps.forEach((step, si) => {
-      const sc = step.found ? 'ok' : 'fail';
-      const arrow = step.found ? '\u2190' : '\u2190\u2717';
-      let badge = '';
-      if (step.found && step.isWord) badge = `<span class="wb">\u2605${step.wordFreq}</span>`;
-      trace += `<div class="tr-step ${sc} visible">${step.char} ${arrow} ${step.prefix} ${badge}</div>`;
-    });
-    const rCls = isFound ? 'lk-ok' : 'lk-no';
-    const rTxt = isFound ? `\u2705 ${cand.freq}` : '\u274C';
-    cards += `<div class="lk-card ${cls}" data-word="${cand.word}" data-found="${isFound}"><div class="lk-word">${cand.word}</div><div class="lk-trace">${trace}</div><div class="lk-result ${rCls} visible">${rTxt}</div></div>`;
-  });
 
   return `<div class="trie-top">
       <div class="panel-label"><span class="num">2</span>Trie lookup <span style="font-weight:400;text-transform:none">(${trieWordCount} nearby words)</span></div>
@@ -1367,7 +1663,7 @@ function buildSimpleTriePanel(trieRoot, lookupCands, trieWordCount) {
       </div>
     </div>
     <div class="trie-svg-area">${svg}</div>
-    <div class="trie-bottom">${cards}</div>`;
+    <div class="anim-status" id="anim-status"></div>`;
 }
 
 function buildFullTriePanel() {
@@ -1387,6 +1683,19 @@ function buildFullTriePanel() {
       <div class="tt-char"></div>
       <div class="tt-info"></div>
     </div>`;
+}
+
+function buildEmptyResults() {
+  return `<div class="result-hero">
+      <div class="result-arabic" data-delay="100"></div>
+      <div class="result-sub">Press Space to insert</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="panel-label"><span class="num">3</span>Candidates</div>
+    <div class="cand-list" id="anim-cand-list"></div>
+    <div class="result-divider"></div>
+    <div class="panel-label" id="anim-exp-label">Expansions</div>
+    <div class="exp-list" id="anim-exp-list"></div>`;
 }
 
 function buildResults(matches, skeletal, totalExpansions) {
@@ -1457,8 +1766,7 @@ function animateDashboard(mode) {
       });
     });
   } else {
-    // Simple mode: path highlighting on hover
-    setupSimpleTrieInteraction();
+    // Simple mode: animation handles hover setup after it completes
   }
 }
 </script>
