@@ -221,8 +221,9 @@ configure_user() {
     case "$de" in
         *kde*|*plasma*)
             local desktop=""
-            [ -f /usr/share/applications/org.fcitx.Fcitx5.desktop ] && desktop="/usr/share/applications/org.fcitx.Fcitx5.desktop"
-            [ -z "$desktop" ] && [ -f /usr/share/applications/fcitx5-wayland-launcher.desktop ] && desktop="/usr/share/applications/fcitx5-wayland-launcher.desktop"
+            # Prefer wayland launcher (KDE 6+), fall back to standard desktop file
+            [ -f /usr/share/applications/fcitx5-wayland-launcher.desktop ] && desktop="/usr/share/applications/fcitx5-wayland-launcher.desktop"
+            [ -z "$desktop" ] && [ -f /usr/share/applications/org.fcitx.Fcitx5.desktop ] && desktop="/usr/share/applications/org.fcitx.Fcitx5.desktop"
             setup_kde "$home" "$user" "${desktop:-/usr/share/applications/org.fcitx.Fcitx5.desktop}"
             ;;
         *sway*)
