@@ -192,7 +192,10 @@ void RuleEngine::expand_dfs(std::string_view input, size_t pos,
             // Try each possible Arabic expansion
             for (const auto& ar_option : entry.arabic) {
                 if (ar_option.empty()) {
-                    // SKIP: vowel is short, don't append anything
+                    // SKIP: vowel is short, don't append anything.
+                    // But never skip at position 0 — Arabic words always
+                    // start with a consonant letter (alif/hamza for vowels).
+                    if (pos == 0) continue;
                     expand_dfs(input, pos + len, current, results, max_results);
                 } else {
                     current.append(ar_option);

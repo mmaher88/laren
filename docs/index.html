@@ -710,7 +710,7 @@ function expandDFS(input, maxResults = 2000) {
     const matches = getMatchesAt(input, pos);
     for (const match of matches) {
       for (const ar of match.arabic) {
-        if (ar === "\u2205") { dfs(pos + match.len, current); }
+        if (ar === "\u2205") { if (pos === 0) continue; dfs(pos + match.len, current); }
         else { for (const ch of ar) current.push(ch); dfs(pos + match.len, current); for (let i = 0; i < ar.length; i++) current.pop(); }
       }
     }
