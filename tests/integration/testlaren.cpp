@@ -152,6 +152,13 @@ int main() {
     std::filesystem::create_symlink(
         std::filesystem::path(LAREN_BINARY_DIR) / "src" / "laren.so", soLink);
 
+    // Create laren/ symlink so fcitx5 can find data files (dictionary.tsv etc.)
+    auto dataLink =
+        std::filesystem::path(TESTING_BINARY_DIR) / "laren";
+    std::filesystem::remove(dataLink);
+    std::filesystem::create_symlink(
+        std::filesystem::path(srcDir) / "data", dataLink);
+
     char arg0[] = "testlaren";
     char arg1[] = "--disable=all";
     char arg2[] = "--enable=testim,testfrontend,laren";
