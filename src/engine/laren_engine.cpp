@@ -13,13 +13,7 @@
 #include <fcitx/inputpanel.h>
 
 #include <filesystem>
-#include <fstream>
 #include "util/unicode.h"
-
-static void debugLog(const std::string& msg) {
-    std::ofstream f("/tmp/laren-debug.log", std::ios::app);
-    f << msg << std::endl;
-}
 
 namespace laren::engine {
 
@@ -34,7 +28,6 @@ LarenEngine::LarenEngine(fcitx::Instance* instance)
     loadHistory();
 
     instance->inputContextManager().registerProperty("larenState", &factory_);
-    debugLog("LarenEngine constructed, dict size=" + std::to_string(dictionary_->size()));
 }
 
 void LarenEngine::loadDictionary() {
@@ -73,7 +66,6 @@ void LarenEngine::loadDictionary() {
                                        "laren/user_dictionary.tsv");
 #endif
 
-    debugLog("Dictionary path: " + dict_path);
     dictionary_->load_tsv(dict_path);
 
     if (!user_dict_path.empty()) {
@@ -90,7 +82,6 @@ void LarenEngine::loadDictionary() {
 
 void LarenEngine::keyEvent(const fcitx::InputMethodEntry& /*entry*/,
                            fcitx::KeyEvent& keyEvent) {
-    debugLog("keyEvent called, sym=0x" + std::to_string(keyEvent.key().sym()));
     auto* ic = keyEvent.inputContext();
     auto* state = ic->propertyFor(&factory_);
 
@@ -146,9 +137,7 @@ void LarenEngine::loadEmoji() {
     }
 #endif
 
-    debugLog("Emoji path: " + emoji_path);
     emoji_map_.load_tsv(emoji_path);
-    debugLog("Emoji loaded, entries=" + std::to_string(emoji_map_.size()));
 }
 
 void LarenEngine::loadHistory() {
@@ -156,7 +145,6 @@ void LarenEngine::loadHistory() {
     if (!home) return;
     history_path_ = std::string(home) + "/.local/share/laren/history.tsv";
     history_.load(history_path_);
-    debugLog("History loaded, keys=" + std::to_string(history_.size()));
 }
 
 void LarenEngine::saveHistory() {

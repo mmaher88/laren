@@ -8,11 +8,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-static void debugLog(const std::string& msg) {
-    std::ofstream f("/tmp/laren-debug.log", std::ios::app);
-    f << msg << std::endl;
-}
 
 namespace laren::engine {
 
@@ -268,8 +263,6 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
         return false;
     }
 
-    debugLog("key sym=0x" + std::to_string(key.sym()) + " buffer=" + buffer_);
-
     int total_items = totalListItems();
 
     // Arrow Down: move selection down
@@ -394,9 +387,7 @@ void LarenState::updateCandidates() {
                   });
     }
 
-    debugLog("updateCandidates: buffer=" + buffer_ +
-             " history=" + std::to_string(history.size()) +
-             " candidates=" + std::to_string(cached_candidates_.size()));
+
 }
 
 int LarenState::totalListItems() const {
@@ -405,22 +396,22 @@ int LarenState::totalListItems() const {
 
 void LarenState::updateUI() {
     auto& panel = ic_->inputPanel();
-    panel.reset();
 
     if (buffer_.empty()) {
+        panel.reset();
         ic_->updatePreedit();
         ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
         return;
     }
 
-    // Show the Arabizi input as preedit (underlined in the text field)
+    // Show the Arabizi input as preedit
     fcitx::Text preedit;
     preedit.append(buffer_, fcitx::TextFormatFlag::Underline);
+    preedit.setCursor(static_cast<int>(buffer_.size()));
     if (ic_->capabilityFlags().test(fcitx::CapabilityFlag::Preedit)) {
         panel.setClientPreedit(preedit);
-    } else {
-        panel.setPreedit(preedit);
     }
+    panel.setPreedit(preedit);
 
     // Show the Arabizi input as header above the candidate list
     panel.setAuxUp(fcitx::Text(buffer_));
@@ -476,8 +467,6 @@ void LarenState::syncPageToCursor() {
 }
 
 void LarenState::commitSelected() {
-    debugLog("commitSelected: cursor=" + std::to_string(cursor_));
-
     int raw_index = static_cast<int>(cached_candidates_.size());
 
     if (cursor_ >= raw_index || cached_candidates_.empty()) {
@@ -499,11 +488,8 @@ void LarenState::commitCandidate(size_t index) {
     if (index < cached_candidates_.size()) {
         auto& arabic = cached_candidates_[index].arabic;
         auto utf8 = util::utf32_to_utf8(arabic);
-        debugLog("commitCandidate: index=" + std::to_string(index) + " text=" + utf8 + " buffer=" + buffer_);
         engine_->history().record(buffer_, arabic);
         commitText(utf8);
-    } else {
-        debugLog("commitCandidate: index=" + std::to_string(index) + " OUT OF RANGE (size=" + std::to_string(cached_candidates_.size()) + ")");
     }
 }
 
@@ -514,7 +500,6 @@ void LarenState::commitRaw() {
 void LarenState::commitEmoji(size_t index) {
     if (index < emoji_candidates_.size()) {
         auto& emoji = emoji_candidates_[index]->emoji;
-        debugLog("commitEmoji: " + emoji);
         emoji_mode_ = false;
         emoji_candidates_.clear();
         buffer_.clear();
@@ -569,10 +554,9 @@ void LarenState::commitText(const std::string& text) {
     buffer_.clear();
     cached_candidates_.clear();
     cursor_ = 0;
-    auto& panel = ic_->inputPanel();
-    panel.reset();
-    ic_->updatePreedit();
-    ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
+    // Don't reset panel or update UI here — let the next updateUI() call
+    // handle it. Avoids KDE/Wayland issue where hiding+reshowing the popup
+    // between commits causes it to not reappear.
 }
 
 void LarenState::reset() {
