@@ -46,6 +46,7 @@ echo ""
 %dir %{_datadir}/laren
 %{_datadir}/laren/dictionary.tsv
 %{_datadir}/laren/emoji.tsv
+%{_datadir}/laren/LICENSE
 %{_datadir}/laren/postinstall-common.sh
 %{_datadir}/fcitx5/default/profile
 %dir %{_datadir}/icons/hicolor

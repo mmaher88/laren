@@ -28,8 +28,8 @@ jobs:
           - distro: fedora-41
             container: fedora:41
             install: dnf install -y cmake make gcc-c++ git gettext fcitx5 fcitx5-devel gtest-devel
-          - distro: ubuntu-24.04
-            container: ubuntu:24.04
+          - distro: ubuntu-25.04
+            container: ubuntu:25.04
             install: apt-get update -qq && apt-get install -y cmake make g++ git gettext fcitx5 fcitx5-modules-dev libfcitx5core-dev libgtest-dev
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest

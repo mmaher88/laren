@@ -59,6 +59,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/laren-im.conf"
 
 install(FILES "${CMAKE_SOURCE_DIR}/data/dictionary.tsv"
               "${CMAKE_SOURCE_DIR}/data/emoji.tsv"
+              "${CMAKE_SOURCE_DIR}/data/LICENSE"
               "${CMAKE_SOURCE_DIR}/scripts/postinstall-common.sh"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/laren")
 
