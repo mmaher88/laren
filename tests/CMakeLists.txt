@@ -30,11 +30,29 @@ gtest_discover_tests(laren_tests
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-# Fcitx5 integration tests (requires TestFrontend module)
+# Fcitx5 integration tests (requires TestFrontend module + setupTestingEnvironmentPath)
 find_package(Fcitx5ModuleTestFrontend QUIET)
 find_package(Fcitx5ModuleTestIM QUIET)
 if(Fcitx5ModuleTestFrontend_FOUND AND Fcitx5ModuleTestIM_FOUND)
-    add_subdirectory(integration)
+    include(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_INCLUDES ${Fcitx5Core_INCLUDE_DIRS})
+    set(CMAKE_REQUIRED_LIBRARIES Fcitx5::Core)
+    set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+    check_cxx_source_compiles("
+        #include <filesystem>
+        #include <vector>
+        #include <fcitx-utils/testing.h>
+        int main() {
+            std::filesystem::path p;
+            std::vector<std::filesystem::path> v;
+            fcitx::setupTestingEnvironmentPath(p, v, v);
+        }
+    " HAVE_SETUP_TESTING_ENV_PATH)
+    if(HAVE_SETUP_TESTING_ENV_PATH)
+        add_subdirectory(integration)
+    else()
+        message(STATUS "Fcitx5 too old (missing setupTestingEnvironmentPath), skipping integration tests")
+    endif()
 else()
     message(STATUS "Fcitx5 TestFrontend/TestIM not found, skipping integration tests")
 endif()
