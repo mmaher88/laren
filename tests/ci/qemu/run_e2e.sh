@@ -513,6 +513,10 @@ EOF
 done'" 2>/dev/null
         vm_exec "sudo systemctl enable gdm3 2>/dev/null || sudo systemctl enable gdm 2>/dev/null || true" 2>/dev/null
         vm_exec "sudo systemctl set-default graphical.target" 2>/dev/null
+        # Fix .config ownership (cloud-init creates it as root)
+        vm_exec "sudo chown -R ${SSH_USER}:${SSH_USER} ~/.config" 2>/dev/null || true
+        # Enable AppIndicator extension for system tray (Fcitx5 icon)
+        vm_exec "mkdir -p ~/.config/dconf && DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u)/bus gsettings set org.gnome.shell enabled-extensions \"['appindicatorsupport@rgcjonas.gmail.com']\"" 2>/dev/null || true
         info "Configured GDM autologin for user ${SSH_USER}"
     else
         # Non-GNOME: create .bash_profile to auto-start the Wayland session on tty1 login
