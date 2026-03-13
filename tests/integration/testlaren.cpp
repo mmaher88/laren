@@ -485,6 +485,139 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "Candidate list still visible after double-colon emoji commit";
         }
 
+        // ── Classic emoji: :) commits 😊 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("parenright"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':)'";
+            auto first = cl->candidate(0).text().toString();
+            FCITX_ASSERT(first.find("\xf0\x9f\x98\x8a") != std::string::npos
+                       || first.find(")") != std::string::npos)
+                << "First candidate for ':)' unexpected: '" << first << "'";
+
+            // Commit with Enter
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x8a"); // 😊
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+
+            auto after = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!after || after->size() == 0)
+                << "Candidate list still visible after :) commit";
+        }
+
+        // ── Classic emoji: :( commits 😞 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("parenleft"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':('";
+
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x9e"); // 😞
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
+        // ── Classic emoji: :D commits 😃 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            // :D — uppercase D gets lowercased to 'd' in emoji search
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("D"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':D'";
+            // 'd' shortcode should be first (shortest exact match)
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x83"); // 😃
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
+        // ── Classic emoji with nose: :-) commits 😊 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("minus"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("parenright"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':-)'";
+
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x8a"); // 😊
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
+        // ── Classic emoji: :| commits 😐 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("bar"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':|'";
+
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x90"); // 😐
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
+        // ── Classic emoji: :'( commits 😢 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("apostrophe"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("parenleft"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':'('";
+
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\xa2"); // 😢
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
+        // ── Classic emoji: :# commits 🤐 ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("numbersign"), false);
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for ':#'";
+
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\xa4\x90"); // 🤐
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+        }
+
         // ── Key passthrough when buffer is empty ──
         {
             // With empty buffer, regular keys should NOT be consumed

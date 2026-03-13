@@ -11,7 +11,7 @@ void EmojiMap::load_tsv(const std::string& path) {
 
     std::string line;
     while (std::getline(file, line)) {
-        if (line.empty() || line[0] == '#') continue;
+        if (line.empty()) continue;
         auto tab = line.find('\t');
         if (tab == std::string::npos) continue;
 

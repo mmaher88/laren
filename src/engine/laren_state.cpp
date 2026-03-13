@@ -110,12 +110,18 @@ bool LarenState::processKey(fcitx::KeyEvent& event) {
     if (emoji_mode_) {
         if (key.isSimple()) {
             auto ch = key.sym();
-            // Accept letters, digits, underscore, hyphen, plus for shortcodes
+            // Accept letters, digits, underscore, hyphen, plus for shortcodes,
+            // and classic emoticon chars: ( ) / \ * | @ $ # '
             bool valid = (ch >= FcitxKey_a && ch <= FcitxKey_z) ||
                          (ch >= FcitxKey_A && ch <= FcitxKey_Z) ||
                          (ch >= FcitxKey_0 && ch <= FcitxKey_9) ||
                          ch == FcitxKey_underscore || ch == FcitxKey_minus ||
-                         ch == FcitxKey_plus;
+                         ch == FcitxKey_plus || ch == FcitxKey_parenleft ||
+                         ch == FcitxKey_parenright || ch == FcitxKey_slash ||
+                         ch == FcitxKey_backslash || ch == FcitxKey_asterisk ||
+                         ch == FcitxKey_bar || ch == FcitxKey_at ||
+                         ch == FcitxKey_dollar || ch == FcitxKey_numbersign ||
+                         ch == FcitxKey_apostrophe;
             if (valid) {
                 buffer_ += static_cast<char>(tolower(static_cast<int>(ch)));
                 cursor_ = 0;
