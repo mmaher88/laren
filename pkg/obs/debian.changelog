@@ -1,3 +1,9 @@
+fcitx5-laren (0.3.4-1) unstable; urgency=medium
+
+  * Expand test coverage, CI matrix, fix CMake warnings.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Fri, 13 Mar 2026 18:00:00 -0400
+
 fcitx5-laren (0.3.3-1) unstable; urgency=medium
 
   * Fix: candidate popup not dismissing after commit.
