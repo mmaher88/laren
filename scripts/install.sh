@@ -104,6 +104,11 @@ if pgrep -x fcitx5 >/dev/null 2>&1; then
     info "Restarting Fcitx5"
     qdbus6 org.fcitx.Fcitx5 /controller org.fcitx.Fcitx.Controller1.Restart 2>/dev/null \
         || fcitx5 -r -d 2>/dev/null || true
+    sleep 2
+    # On KDE Wayland, tell KWin to reconnect to the restarted Fcitx5
+    if echo "$_de" | grep -qi 'kde\|plasma'; then
+        qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+    fi
 else
     info "Starting Fcitx5"
     fcitx5 -d 2>/dev/null || true
