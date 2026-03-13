@@ -40,10 +40,6 @@ jobs:
           - distro: ubuntu-25.10
             container: ubuntu:25.10
             install: apt-get update -qq && apt-get install -y cmake make g++ git gettext fcitx5 fcitx5-modules-dev libfcitx5core-dev libgtest-dev
-          - distro: opensuse-leap
-            container: opensuse/leap:latest
-            install: zypper refresh && zypper install -y --force-resolution diffutils && zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel gtest
-            allow-failure: true
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest
             install: zypper refresh && zypper install -y --force-resolution diffutils && zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel gtest
