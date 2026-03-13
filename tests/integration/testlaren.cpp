@@ -281,6 +281,231 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 uuid, Key("Escape"), false);
         }
 
+        // ── Backspace removes last char, candidates update ──
+        {
+            sendString(testfrontend, uuid, "sala");
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for 'sala'";
+            auto preedit1 = ic->inputPanel().preedit().toString();
+            FCITX_ASSERT(preedit1 == "sala")
+                << "Preedit should be 'sala', got '" << preedit1 << "'";
+
+            // Backspace: "sala" -> "sal"
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("BackSpace"), false);
+            auto preedit2 = ic->inputPanel().preedit().toString();
+            FCITX_ASSERT(preedit2 == "sal")
+                << "After backspace, preedit should be 'sal', got '"
+                << preedit2 << "'";
+            auto cl2 = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl2 && cl2->size() > 0)
+                << "No candidates for 'sal' after backspace";
+
+            // Backspace three more times: "sal" -> "sa" -> "s" -> ""
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("BackSpace"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("BackSpace"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("BackSpace"), false);
+
+            // Buffer is now empty — should reset (no candidates)
+            auto afterEmpty = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterEmpty || afterEmpty->size() == 0)
+                << "Candidate list should be empty after backspacing to empty buffer";
+            auto preedit3 = ic->inputPanel().preedit().toString();
+            FCITX_ASSERT(preedit3.empty())
+                << "Preedit should be empty after backspacing all chars, got '"
+                << preedit3 << "'";
+        }
+
+        // ── Number key selects candidate by display index ──
+        // Note: keys 2-9 are Arabizi input chars, so only "1" works as
+        // a candidate selector (selects first candidate via commitByDisplayIndex)
+        {
+            sendString(testfrontend, uuid, "salam");
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() >= 1)
+                << "No candidates for number-key test";
+
+            // Press "1" to select first candidate (index 0)
+            auto first = cl->candidate(0).text().toString();
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                first + " ");
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key(static_cast<KeySym>(FcitxKey_1)), false);
+
+            auto afterNum = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterNum || afterNum->size() == 0)
+                << "Candidate list still visible after number-key commit — "
+                   "popup not dismissed";
+        }
+
+        // ── Arabic question mark ──
+        // "?" while buffer has content: commits current candidate then inserts ؟
+        {
+            sendString(testfrontend, uuid, "hal");
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for 'hal' in question-mark test";
+
+            auto top = cl->candidate(0).text().toString();
+            // Expect two commits: the candidate + space, then ؟
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                top + " ");
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xd8\x9f"); // ؟
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("question"), false);
+
+            auto afterQ = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterQ || afterQ->size() == 0)
+                << "Candidate list should be cleared after question mark";
+        }
+
+        // ── Apostrophe input for 3-char tokens (3', 7') ──
+        {
+            // 3' = غ (ghain)
+            sendString(testfrontend, uuid, "3");
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("apostrophe"), false);
+            sendString(testfrontend, uuid, "rb");
+            // Should now have "3'rb" in buffer
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for \"3'rb\"";
+
+            auto preedit = ic->inputPanel().preedit().toString();
+            FCITX_ASSERT(preedit == "3'rb")
+                << "Preedit should be \"3'rb\", got '" << preedit << "'";
+
+            // غرب should be among candidates
+            bool found_gharb = false;
+            for (int i = 0; i < cl->size(); i++) {
+                if (cl->candidate(i).text().toString().find(
+                        "\xd8\xba\xd8\xb1\xd8\xa8") != std::string::npos) {
+                    found_gharb = true;
+                    break;
+                }
+            }
+            FCITX_ASSERT(found_gharb)
+                << "غرب not found in candidates for \"3'rb\"";
+
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Escape"), false);
+        }
+
+        // ── Emoji mode: enter, search, commit, dismiss ──
+        {
+            // Enter emoji mode with ":"
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+
+            // Preedit should show ":"
+            auto preedit1 = ic->inputPanel().preedit().toString();
+            // clientPreedit may have it depending on capability flags;
+            // check panel preedit or auxUp for ":"
+            // (emoji mode uses setAuxUp for ":shortcode")
+
+            // Type "smile"
+            sendString(testfrontend, uuid, "smile");
+
+            // Should have emoji candidates
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No emoji candidates for ':smile'";
+
+            // First candidate should contain 😀
+            auto firstEmoji = cl->candidate(0).text().toString();
+            FCITX_ASSERT(firstEmoji.find("\xf0\x9f\x98\x80") != std::string::npos
+                       || firstEmoji.find("smile") != std::string::npos)
+                << "First emoji candidate for ':smile' unexpected: '"
+                << firstEmoji << "'";
+
+            // Commit with Enter
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x80"); // 😀
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+
+            // Popup should be dismissed
+            auto afterEmoji = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterEmoji || afterEmoji->size() == 0)
+                << "Candidate list still visible after emoji commit";
+        }
+
+        // ── Emoji mode: backspace and escape ──
+        {
+            // Enter emoji mode
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            sendString(testfrontend, uuid, "smi");
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No emoji candidates for ':smi'";
+
+            // Backspace: ":smi" -> ":sm"
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("BackSpace"), false);
+
+            // Still in emoji mode with candidates
+            auto cl2 = ic->inputPanel().candidateList();
+            // ":sm" may or may not have candidates, but shouldn't crash
+
+            // Escape: exit emoji mode
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Escape"), false);
+
+            auto afterEsc = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterEsc || afterEsc->size() == 0)
+                << "Candidate list should be cleared after Escape in emoji mode";
+        }
+
+        // ── Emoji mode: double colon commits first match ──
+        {
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+            sendString(testfrontend, uuid, "smile");
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No emoji candidates for double-colon test";
+
+            // Second colon commits first match
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                "\xf0\x9f\x98\x80"); // 😀
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("colon"), false);
+
+            auto afterDC = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterDC || afterDC->size() == 0)
+                << "Candidate list still visible after double-colon emoji commit";
+        }
+
+        // ── Key passthrough when buffer is empty ──
+        {
+            // With empty buffer, regular keys should NOT be consumed
+            // (sendKeyEvent returns false = not filtered)
+            bool consumed = testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("a"), false);
+            // 'a' is a valid Arabizi char, so Laren DOES consume it
+            FCITX_ASSERT(consumed)
+                << "Laren should consume 'a' even with empty buffer";
+
+            // Escape to clear
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Escape"), false);
+
+            // But non-Arabizi keys like F1 should pass through
+            bool f1consumed = testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("F1"), false);
+            FCITX_ASSERT(!f1consumed)
+                << "F1 should not be consumed when buffer is empty";
+        }
+
         // 9. Test Escape resets state
         sendString(testfrontend, uuid, "test");
         FCITX_ASSERT(ic->inputPanel().candidateList());
