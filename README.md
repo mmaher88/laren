@@ -85,6 +85,13 @@ sudo zypper ar https://download.opensuse.org/repositories/home:/mmaher88:/laren/
 sudo zypper refresh && sudo zypper install fcitx5-laren
 ```
 
+### openSUSE Leap 15.6
+
+```bash
+sudo zypper ar https://download.opensuse.org/repositories/home:/mmaher88:/laren/openSUSE_Leap_15.6/home:mmaher88:laren.repo
+sudo zypper refresh && sudo zypper install fcitx5-laren
+```
+
 ## Usage
 
 After installing, switch input method with **Ctrl+Space** and start typing in Arabizi.
