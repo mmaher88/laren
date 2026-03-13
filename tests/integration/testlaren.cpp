@@ -166,6 +166,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
         // After committing a candidate, the panel should have no candidate
         // list. If commitText() doesn't reset the panel, the popup stays.
         {
+            // Test 1: commit with Space (top candidate)
             sendString(testfrontend, uuid, "salam");
             auto cl = ic->inputPanel().candidateList();
             FCITX_ASSERT(cl && cl->size() > 0)
@@ -179,7 +180,32 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
 
             auto afterCommit = ic->inputPanel().candidateList();
             FCITX_ASSERT(!afterCommit || afterCommit->size() == 0)
-                << "Candidate list still visible after commit — "
+                << "Candidate list still visible after Space commit — "
+                   "popup not dismissed (v0.3.3 regression)";
+
+            // Test 2: arrow-select then commit with Enter
+            sendString(testfrontend, uuid, "ktb");
+            auto cl2 = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl2 && cl2->size() > 1)
+                << "Need >1 candidates for arrow-select test";
+
+            // Press Down twice to select third candidate
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Down"), false);
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Down"), false);
+
+            // The selected candidate is at index 2
+            auto cl2b = ic->inputPanel().candidateList();
+            auto selected = cl2b->candidate(2).text().toString();
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                selected + " ");
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Return"), false);
+
+            auto afterEnter = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterEnter || afterEnter->size() == 0)
+                << "Candidate list still visible after arrow-select + Enter — "
                    "popup not dismissed (v0.3.3 regression)";
         }
 
