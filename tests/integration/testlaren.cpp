@@ -162,6 +162,99 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
         testfrontend->call<ITestFrontend::sendKeyEvent>(
             uuid, Key("space"), false);
 
+        // ── Regression: popup must dismiss after commit (v0.3.3) ──
+        // After committing a candidate, the panel should have no candidate
+        // list. If commitText() doesn't reset the panel, the popup stays.
+        {
+            sendString(testfrontend, uuid, "salam");
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for 'salam' in popup-dismiss test";
+
+            auto top = cl->candidate(0).text().toString();
+            testfrontend->call<ITestFrontend::pushCommitExpectation>(
+                top + " ");
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("space"), false);
+
+            auto afterCommit = ic->inputPanel().candidateList();
+            FCITX_ASSERT(!afterCommit || afterCommit->size() == 0)
+                << "Candidate list still visible after commit — "
+                   "popup not dismissed (v0.3.3 regression)";
+        }
+
+        // ── Regression: preedit must not be doubled (v0.3.2) ──
+        // If both setPreedit and setAuxUp contain the buffer, the popup
+        // shows "salamsalam". Verify auxUp is empty or preedit == buffer.
+        {
+            sendString(testfrontend, uuid, "msr");
+
+            auto &p = ic->inputPanel();
+            auto preeditStr = p.preedit().toString();
+            auto auxUpStr = p.auxUp().toString();
+
+            // auxUp should be empty (we removed setAuxUp from updateUI)
+            FCITX_ASSERT(auxUpStr.empty())
+                << "auxUp is not empty ('" << auxUpStr
+                << "') — will concatenate with preedit and double the text "
+                   "(v0.3.2 regression)";
+
+            // Preedit should be exactly the input, not doubled
+            FCITX_ASSERT(preeditStr == "msr")
+                << "Preedit is '" << preeditStr
+                << "', expected 'msr' — text may be doubled "
+                   "(v0.3.2 regression)";
+
+            // Clean up: escape
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Escape"), false);
+        }
+
+        // ── Regression: initial vowel never skipped (v0.3.1) ──
+        // Words starting with a vowel (a, i, u, e, o) must always have an
+        // Arabic letter at position 0 — the SKIP option must be suppressed.
+        {
+            sendString(testfrontend, uuid, "ahlan");
+
+            auto cl = ic->inputPanel().candidateList();
+            FCITX_ASSERT(cl && cl->size() > 0)
+                << "No candidates for 'ahlan' in initial-vowel test";
+
+            // Arabic 'a' maps to: ا أ ى ه ة — these are the valid first chars.
+            // If SKIP were used at pos 0, we'd see candidates starting with
+            // ه (from 'h') or ل (from 'l') with no alif prefix.
+            std::string valid_starts[] = {
+                "\xd8\xa7",     // ا alef
+                "\xd8\xa3",     // أ alef hamza above
+                "\xd8\xa5",     // إ alef hamza below
+                "\xd9\x89",     // ى alef maqsura
+                "\xd9\x87",     // ه ha
+                "\xd8\xa9",     // ة ta marbuta
+            };
+
+            for (int i = 0; i < cl->size(); i++) {
+                auto text = cl->candidate(i).text().toString();
+                // Skip the raw arabizi fallback (last candidate)
+                if (text == "ahlan") continue;
+
+                bool starts_valid = false;
+                for (const auto &prefix : valid_starts) {
+                    if (text.substr(0, prefix.size()) == prefix) {
+                        starts_valid = true;
+                        break;
+                    }
+                }
+                FCITX_ASSERT(starts_valid)
+                    << "Candidate '" << text
+                    << "' for 'ahlan' does not start with an Arabic vowel "
+                       "letter — initial vowel was skipped (v0.3.1 regression)";
+            }
+
+            // Clean up: escape
+            testfrontend->call<ITestFrontend::sendKeyEvent>(
+                uuid, Key("Escape"), false);
+        }
+
         // 9. Test Escape resets state
         sendString(testfrontend, uuid, "test");
         FCITX_ASSERT(ic->inputPanel().candidateList());
@@ -172,7 +265,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
         FCITX_ASSERT(!afterEsc || afterEsc->size() == 0)
             << "Candidate list not cleared after Escape";
 
-        // 9. Clean up
+        // 10. Clean up
         testfrontend->call<ITestFrontend::destroyInputContext>(uuid);
 
         dispatcher.schedule([instance]() { instance->exit(); });
