@@ -115,7 +115,7 @@ else
 fi
 
 echo ""
-info "Laren installed successfully!"
+info "Laren installed! Log out and back in for best results."
 echo "  Switch input method: Ctrl+Space"
 echo "  Configure:           fcitx5-configtool"
 echo ""
