@@ -28,9 +28,22 @@ jobs:
           - distro: fedora-41
             container: fedora:41
             install: dnf install -y cmake make gcc-c++ git gettext fcitx5 fcitx5-devel gtest-devel
-          - distro: ubuntu-25.04
-            container: ubuntu:25.04
+          - distro: fedora-42
+            container: fedora:42
+            install: dnf install -y cmake make gcc-c++ git gettext fcitx5 fcitx5-devel gtest-devel
+          - distro: fedora-43
+            container: fedora:43
+            install: dnf install -y cmake make gcc-c++ git gettext fcitx5 fcitx5-devel gtest-devel
+          - distro: ubuntu-24.04
+            container: ubuntu:24.04
             install: apt-get update -qq && apt-get install -y cmake make g++ git gettext fcitx5 fcitx5-modules-dev libfcitx5core-dev libgtest-dev
+          - distro: ubuntu-25.10
+            container: ubuntu:25.10
+            install: apt-get update -qq && apt-get install -y cmake make g++ git gettext fcitx5 fcitx5-modules-dev libfcitx5core-dev libgtest-dev
+          - distro: opensuse-leap
+            container: opensuse/leap:latest
+            install: zypper refresh && zypper install -y --force-resolution diffutils && zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel gtest
+            allow-failure: true
           - distro: opensuse-tumbleweed
             container: opensuse/tumbleweed:latest
             install: zypper refresh && zypper install -y --force-resolution diffutils && zypper install -y cmake make gcc-c++ git gettext-tools fcitx5 fcitx5-devel gtest
@@ -86,9 +99,9 @@ jobs:
   # Job 2: Package build - Fedora RPM
   # --------------------------------------------------------------------------
   rpm:
-    name: RPM Package (Fedora 41)
+    name: RPM Package (Fedora 43)
     runs-on: ubuntu-latest
-    container: fedora:41
+    container: fedora:43
 
     steps:
       - name: Install dependencies
