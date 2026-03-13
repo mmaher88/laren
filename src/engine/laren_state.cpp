@@ -509,7 +509,7 @@ void LarenState::commitEmoji(size_t index) {
         cursor_ = 0;
         auto& panel = ic_->inputPanel();
         panel.reset();
-        ic_->commitString(emoji);
+        ic_->commitString(emoji + " ");
         ic_->updatePreedit();
         ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
     }

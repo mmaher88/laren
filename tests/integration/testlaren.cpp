@@ -426,7 +426,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
 
             // Commit with Enter
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x80"); // 😀
+                "\xf0\x9f\x98\x80 "); // 😀 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
 
@@ -476,7 +476,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
 
             // Second colon commits first match
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x80"); // 😀
+                "\xf0\x9f\x98\x80 "); // 😀 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("colon"), false);
 
@@ -502,7 +502,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
 
             // Commit with Enter
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x8a"); // 😊
+                "\xf0\x9f\x98\x8a "); // 😊 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
 
@@ -523,7 +523,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':('";
 
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x9e"); // 😞
+                "\xf0\x9f\x98\x9e "); // 😞 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
@@ -541,7 +541,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':D'";
             // 'd' shortcode should be first (shortest exact match)
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x83"); // 😃
+                "\xf0\x9f\x98\x83 "); // 😃 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
@@ -560,7 +560,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':-)'";
 
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x8a"); // 😊
+                "\xf0\x9f\x98\x8a "); // 😊 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
@@ -577,7 +577,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':|'";
 
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\x90"); // 😐
+                "\xf0\x9f\x98\x90 "); // 😐 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
@@ -596,7 +596,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':'('";
 
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\x98\xa2"); // 😢
+                "\xf0\x9f\x98\xa2 "); // 😢 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
@@ -613,7 +613,7 @@ void scheduleEvent(EventDispatcher &dispatcher, Instance *instance) {
                 << "No candidates for ':#'";
 
             testfrontend->call<ITestFrontend::pushCommitExpectation>(
-                "\xf0\x9f\xa4\x90"); // 🤐
+                "\xf0\x9f\xa4\x90 "); // 🤐 + space
             testfrontend->call<ITestFrontend::sendKeyEvent>(
                 uuid, Key("Return"), false);
         }
