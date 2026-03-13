@@ -1,3 +1,9 @@
+fcitx5-laren (0.3.3-1) unstable; urgency=medium
+
+  * Fix: candidate popup not dismissing after commit.
+
+ -- mmaher88 <mina.maher88@hotmail.com>  Thu, 13 Mar 2026 12:00:00 -0400
+
 fcitx5-laren (0.3.2-1) unstable; urgency=medium
 
   * Fix: preedit text doubled in candidate popup.
