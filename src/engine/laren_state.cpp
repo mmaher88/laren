@@ -551,9 +551,10 @@ void LarenState::commitText(const std::string& text) {
     buffer_.clear();
     cached_candidates_.clear();
     cursor_ = 0;
-    // Don't reset panel or update UI here — let the next updateUI() call
-    // handle it. Avoids KDE/Wayland issue where hiding+reshowing the popup
-    // between commits causes it to not reappear.
+    auto& panel = ic_->inputPanel();
+    panel.reset();
+    ic_->updatePreedit();
+    ic_->updateUserInterface(fcitx::UserInterfaceComponent::InputPanel);
 }
 
 void LarenState::reset() {
